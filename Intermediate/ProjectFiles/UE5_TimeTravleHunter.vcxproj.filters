@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\UE5_TimeTravleHunter.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{F31BBDD1-B3E8-3BCC-9652-680E16935819}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\UE5_TimeTravleHunter.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\UE5_TimeTravleHunterEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\.vsconfig" />
+    <Filter Include="Config">
+      <UniqueIdentifier>{FA535FFB-25E1-3D20-B416-52F9BE21E06E}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultInput.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\UE5_TimeTravleHunter">
+      <UniqueIdentifier>{1D2484B6-ACAA-3C43-A8CE-5E9023E31219}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\UE5_TimeTravleHunter\UE5_TimeTravleHunter.Build.cs">
+      <Filter>Source\UE5_TimeTravleHunter</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\UE5_TimeTravleHunter\UE5_TimeTravleHunter.cpp">
+      <Filter>Source\UE5_TimeTravleHunter</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\UE5_TimeTravleHunter\UE5_TimeTravleHunter.h">
+      <Filter>Source\UE5_TimeTravleHunter</Filter>
+    </ClInclude>
+    <Filter Include="Source\UE5_TimeTravleHunter\Private">
+      <UniqueIdentifier>{305DB5C5-5BA2-3C9E-BC83-C5A057DFF2EA}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\UE5_TimeTravleHunter\Private\TTH_GameMode.cpp">
+      <Filter>Source\UE5_TimeTravleHunter\Private</Filter>
+    </ClCompile>
+    <Filter Include="Source\UE5_TimeTravleHunter\Private\Character">
+      <UniqueIdentifier>{0E45B6DD-9DD2-3BF2-BEB9-6C812DCC68D3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\UE5_TimeTravleHunter\Private\Character\Player">
+      <UniqueIdentifier>{CD4CAED0-EF50-3A9D-A58A-C1A02184EF68}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\UE5_TimeTravleHunter\Private\Character\Player\PlayerCharacter.cpp">
+      <Filter>Source\UE5_TimeTravleHunter\Private\Character\Player</Filter>
+    </ClCompile>
+    <Filter Include="Source\UE5_TimeTravleHunter\Private\Controller">
+      <UniqueIdentifier>{BCC031A0-E814-347A-8DD6-0FDF8343E805}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\UE5_TimeTravleHunter\Private\Controller\PlayerCharacterController.cpp">
+      <Filter>Source\UE5_TimeTravleHunter\Private\Controller</Filter>
+    </ClCompile>
+    <Filter Include="Source\UE5_TimeTravleHunter\Public">
+      <UniqueIdentifier>{9B50F17A-4D40-32C7-99B8-DAC19B2698A0}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\UE5_TimeTravleHunter\Public\TTH_GameMode.h">
+      <Filter>Source\UE5_TimeTravleHunter\Public</Filter>
+    </ClInclude>
+    <Filter Include="Source\UE5_TimeTravleHunter\Public\Character">
+      <UniqueIdentifier>{918010D3-C339-330B-ACC7-4E363D9D02C1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\UE5_TimeTravleHunter\Public\Character\Player">
+      <UniqueIdentifier>{E1DC4518-1F04-3C9E-9E41-1594CBDFF317}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\UE5_TimeTravleHunter\Public\Character\Player\PlayerCharacter.h">
+      <Filter>Source\UE5_TimeTravleHunter\Public\Character\Player</Filter>
+    </ClInclude>
+    <Filter Include="Source\UE5_TimeTravleHunter\Public\Controller">
+      <UniqueIdentifier>{5345119F-0720-38C1-BA0B-E7B1DD66E8E6}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\UE5_TimeTravleHunter\Public\Controller\PlayerCharacterController.h">
+      <Filter>Source\UE5_TimeTravleHunter\Public\Controller</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

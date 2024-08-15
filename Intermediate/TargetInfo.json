@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "UE5_TimeTravleHunter",
+			"Path": "..\\Source\\UE5_TimeTravleHunter.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "UE5_TimeTravleHunterEditor",
+			"Path": "..\\Source\\UE5_TimeTravleHunterEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}
