@@ -6,6 +6,13 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
+class UCameraComponent;
+class USpringArmComponent;
+class UInputMappingContext;
+class UInputAction;
+
+struct FInputActionValue;
+
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API APlayerCharacter : public ACharacter
 {
@@ -36,26 +43,28 @@ protected:
 
 	// Component
 	UPROPERTY(EditAnywhere, Category = "Character | Camera", meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent *MainCamera;
+	UCameraComponent *MainCamera;
 
 	UPROPERTY(EditAnywhere, Category = "Character | Camera", meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent *CameraBoom;
+	USpringArmComponent *CameraBoom;
 
 
 
 	// Input
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	class UInputMappingContext *DefaultContext;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
+	UInputMappingContext *DefaultContext;
 
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	class UInputAction *Moving;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction *Moving;
 
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	class UInputAction *Jumping;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction *Jumping;
 
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	class UInputAction *Looking;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction *Looking;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction *Sprinting;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -64,9 +73,9 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
 
 	// InputFunction
-	void Move(const struct FInputActionValue &Value);
-	void Look(const struct FInputActionValue &Value);
-	void Sprint(const struct FInputActionValue &Value);
+	void Move(const FInputActionValue &Value);
+	void Look(const FInputActionValue &Value);
+	void Sprint(const FInputActionValue &Value);
 
 
 private:
@@ -80,8 +89,12 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
 	float CurrentHealth;
 
-	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
 	float AbilityStamina;
+
+	// 값의 범위는 0 ~ 1
+	UPROPERTY(EditAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
+	float LookingRotationValue;
 
 	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
 	bool bIsSprint;
