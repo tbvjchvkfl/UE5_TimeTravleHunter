@@ -18,13 +18,16 @@ APlayerCharacter::APlayerCharacter() :
 	MaxHealth(100.0f), 
 	CurrentHealth(MaxHealth), 
 	AbilityStamina(100.0f), 
+	LookingRotationValue(0.0f), 
 	bIsSprint(false)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true;
+
+	
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -38,30 +41,6 @@ APlayerCharacter::APlayerCharacter() :
 	GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 	GetCharacterMovement()->JumpZVelocity = 500.0f;
 	GetCharacterMovement()->AirControl = 1.0f;
-
-	/*{
-		static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputContext(TEXT("/Game/TimeTravleHunter/Input/IMC_DefaultContext"));
-		if (InputContext.Succeeded())
-		{
-			DefaultContext = InputContext.Object;
-		}
-
-		static ConstructorHelpers::FObjectFinder<UInputAction> MoveAction(TEXT("/Game/TimeTravleHunter/Input/Action/IA_Move"));
-		if (MoveAction.Succeeded())
-		{
-			Moving = MoveAction.Object;
-		}
-		static ConstructorHelpers::FObjectFinder<UInputAction> JumpAction(TEXT("/Game/TimeTravleHunter/Input/Action/IA_Jump"));
-		if (JumpAction.Succeeded())
-		{
-			Moving = JumpAction.Object;
-		}
-		static ConstructorHelpers::FObjectFinder<UInputAction> LookAction(TEXT("/Game/TimeTravleHunter/Input/Action/IA_Look"));
-		if (LookAction.Succeeded())
-		{
-			Moving = LookAction.Object;
-		}
-	}*/
 }
 
 void APlayerCharacter::BeginPlay()
@@ -86,14 +65,19 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			SubSystem->AddMappingContext(DefaultContext, 0);
 		}
 	}
-	if (auto *const Input = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	if (auto *const EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		Input->BindAction(Moving, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
+		EnhancedInputComponent->BindAction(Moving, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 		
-		Input->BindAction(Looking, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
+		EnhancedInputComponent->BindAction(Sprinting, ETriggerEvent::Started, this, &APlayerCharacter::Sprint);
+		EnhancedInputComponent->BindAction(Sprinting, ETriggerEvent::Completed, this, &APlayerCharacter::Sprint);
 
-		Input->BindAction(Jumping, ETriggerEvent::Started, this, &APlayerCharacter::Jump);
-		Input->BindAction(Jumping, ETriggerEvent::Completed, this, &APlayerCharacter::StopJumping);
+		EnhancedInputComponent->BindAction(Looking, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
+
+		EnhancedInputComponent->BindAction(Jumping, ETriggerEvent::Started, this, &APlayerCharacter::Jump);
+		EnhancedInputComponent->BindAction(Jumping, ETriggerEvent::Completed, this, &APlayerCharacter::StopJumping);
+
+
 	}
 }
 
@@ -112,7 +96,6 @@ void APlayerCharacter::Move(const FInputActionValue &Value)
 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, FString::Printf(TEXT("Move")), true);
 	}
 }
 
@@ -121,17 +104,23 @@ void APlayerCharacter::Look(const FInputActionValue &Value)
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 	if (Controller)
 	{
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		AddControllerYawInput(LookAxisVector.X * LookingRotationValue);
+		AddControllerPitchInput(LookAxisVector.Y * LookingRotationValue);
 	}
 }
 
 void APlayerCharacter::Sprint(const FInputActionValue &Value)
 {
-	bIsSprint = true;
 	if (bIsSprint)
 	{
+		bIsSprint = false;
+		GetCharacterMovement()->MaxWalkSpeed = 200.0f;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+	}
+	else
+	{
+		bIsSprint = true;
 		GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
 	}
 }
-
