@@ -6,9 +6,9 @@
 #include "GameFramework/PlayerController.h"
 #include "PlayerCharacterController.generated.h"
 
-/**
- * 
- */
+class APlayerCharacter;
+
+
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API APlayerCharacterController : public APlayerController
 {
@@ -17,14 +17,15 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-
-
+	UPROPERTY(EditAnywhere, Category = "Controller | Base")
+	TSubclassOf<APlayerCharacter>OwnerCharacter;
 
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
+	APlayerCharacterController();
 
-private:
+protected:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
@@ -34,4 +35,18 @@ private:
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
+	virtual void BeginPlay()override;
+	virtual void Tick(float DeltaTime)override;
+
+private:
+	//======================================================
+	//=					- Variables -					   =
+	//======================================================
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Status", meta = (AllowPrivateAccess = "true"))
+	APlayerCharacter *PlayerCharacter;
+
+	//======================================================
+	//=					- Functionary -					   =
+	//======================================================
+	
 };
