@@ -10,7 +10,9 @@
 -
 ### InGame
 - EnhancedInput
-- Advenced Ground LocoMotion
+- Advenced LocoMotion
+- Aim Offset
+- IK_Foot
 - Combat Locomotion
 
 ### OutGame
