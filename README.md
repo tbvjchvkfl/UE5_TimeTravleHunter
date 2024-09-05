@@ -2,6 +2,7 @@
 
 개요
 -
+This Game Is Adventure Action of Third Person
 
 플레이 영상
 -
@@ -14,6 +15,9 @@
 - Aim Offset
 - IK_Foot
 - Combat Locomotion
+- Item Data
+- Inventory
+
 
 ### OutGame
 - HUD
