@@ -17,7 +17,7 @@ This Game Is Adventure Action of Third Person
 - IK_Foot
 - Combat Locomotion
 - Item Data
-- Inventory
+- PickUpItem
 
 
 ### OutGame
