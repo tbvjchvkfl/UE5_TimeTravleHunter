@@ -18,7 +18,8 @@ This Game Is Adventure Action of Third Person
 - Combat Locomotion
 - Item Data
 - PickUpItem
-
+- Inventory Component
+- Inventory System
 
 ### OutGame
 - HUD
