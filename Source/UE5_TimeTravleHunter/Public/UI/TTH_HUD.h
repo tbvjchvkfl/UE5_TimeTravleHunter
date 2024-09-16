@@ -7,6 +7,7 @@
 #include "TTH_HUD.generated.h"
 
 class UGameHUD;
+class UInventory;
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API ATTH_HUD : public AHUD
@@ -20,10 +21,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI|Widget")
 	TSubclassOf<UGameHUD> GameHUD;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Widget")
+	TSubclassOf<UInventory> Inventory;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	ATTH_HUD();
+
+	void ToggleInventory();
 protected:
 	//======================================================
 	//=					- Variables -					   =
@@ -31,8 +37,13 @@ protected:
 	UPROPERTY()
 	UGameHUD *GameHUDWidget;
 
+	UPROPERTY()
+	UInventory *InventoryWidget;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void BeginPlay()override;
+
+private:
+	bool bIsInventory;
 };
