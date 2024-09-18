@@ -24,12 +24,13 @@ public:
 	//=					- Functionary -					   =
 	//======================================================
 	UInventoryComponent();
-	void AddItemInventory(class APickUpItem* Item);
-
+	
 	FORCEINLINE TArray<class APickUpItem*> GetItemInventory() { return ItemInventory; };
 	FORCEINLINE int32 GetCoinInventory() { return CoinInventory; };
-	
+	FORCEINLINE int32 GetColumns() { return Columns; };
+	FORCEINLINE int32 GetRows() { return Rows; };
 
+	void AddInventory(class APickUpItem *Item);
 protected:
 	//======================================================
 	//=					- Variables -					   =
@@ -40,10 +41,22 @@ protected:
 	UPROPERTY()
 	int32 CoinInventory;
 
+	UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+	int32 Columns;
+
+	UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+	int32 Rows;
+
+	UPROPERTY(VisibleAnywhere, Category = "Inventory | Property")
+	bool bIsDirty;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	void AddingItem(class APickUpItem* Item, int32 TopLeftIndex);
+	void AddItem(class APickUpItem *Item);
+	bool bIsRoomAvailable(class APickUpItem *Items, int32 TopLeftIndex) const;
 };
