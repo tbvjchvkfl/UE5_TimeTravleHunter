@@ -19,7 +19,8 @@ This Game Is Adventure Action of Third Person
 - Item Data
 - PickUpItem
 - Inventory Component
-- Inventory System
+- Spatial Inventory
+- UI Input
 
 ### OutGame
 - HUD
