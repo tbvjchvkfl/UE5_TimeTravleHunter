@@ -19,7 +19,7 @@ This Game Is Adventure Action of Third Person
 - Item Data
 - PickUpItem
 - Inventory Component
-- Spatial Inventory
+- MultiSlot Inventory
 - UI Input
 
 ### OutGame
