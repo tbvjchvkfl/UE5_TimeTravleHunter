@@ -27,27 +27,12 @@ public:
 	//======================================================
 	APickUpItem();
 	FORCEINLINE EItemType GetItemType() { return ItemType; };
-	FORCEINLINE int32 GetItemAmount() { return ItemAmount; };
-	
-	FIntPoint GetDimensions()const
-	{
-		if (bIsRotated)
-		{
-			return FIntPoint(Dimensions.Y, Dimensions.X);
-		}
-		return Dimensions;
-	};
+	FORCEINLINE int32 GetCurrentQuantity() { return CurrentQuantity; };
+	FORCEINLINE int32 GetMaxQuantity() { return MaxQuantity; };
+	FORCEINLINE FIntPoint GetItemSize() { return ItemSize; };
+	FORCEINLINE FString GetItemName() { return ItemName; };
 
-	UMaterialInterface* GetItemIcon()const
-	{
-		if (bIsRotated)
-		{
-			return ItemRotationIcon;
-		}
-		return ItemIcon;
-	};
-
-	bool ToggleRotated() { return bIsRotated = !bIsRotated; };
+	TArray<FVector2D> GetShape(float Rotation)const;
 protected:
 	//======================================================
 	//=					- Variables -					   =
@@ -68,9 +53,15 @@ protected:
 	FName DesiredItemID;
 
 	// Item Property
-	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
-	int32 ItemAmount;
+	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | ItemProperty")
+	FIntPoint ItemSize;
+
+	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | ItemProperty")
+	int32 CurrentQuantity;
 	
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
+	int32 MaxQuantity;
+
 	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
 	UTexture2D *ItemTexture;
 
@@ -82,19 +73,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
 	EItemType ItemType;
-	
-	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | Item Property", meta = (AllowPrivateAccess = "true"))
-	FIntPoint Dimensions;
 
-	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | Item Property", meta = (AllowPrivateAccess = "true"))
-	UMaterialInterface *ItemIcon;
-
-	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | Item Property", meta = (AllowPrivateAccess = "true"))
-	UMaterialInterface *ItemRotationIcon;
-
-	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Item Property")
-	bool bIsRotated;
-
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
+	TArray<FVector2D> ItemShape;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -102,6 +83,8 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void PickUpInteraction(class APlayerCharacter *Player) override;
+	void DesiredItemShape();
+
 
 	UFUNCTION()
 	virtual void OnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActor *OtherActor, UPrimitiveComponent *OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult &SweepResult);
