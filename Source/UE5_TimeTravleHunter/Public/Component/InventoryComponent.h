@@ -43,9 +43,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
 	TMap<FVector2D, APickUpItem *> ItemInventory;
 
-	UPROPERTY(VisibleAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
-	TMap<FVector2D, bool> InventoryState;
-
 	UPROPERTY()
 	int32 CoinInventory;
 
@@ -55,9 +52,6 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void InitializeInventory();
-	void AddingItem(class APickUpItem* Item, int32 TopLeftIndex);
 	void AddItem(class APickUpItem *Item);
-	bool bIsRoomAvailable(TArray<FVector2D> Shape) const;
-	//bool bIsRoomAvailable(TArray<FVector2D>Shape, class APickUpItem *Items, int32 TopLeftIndex) const;
-	bool bIsItemStackable(class APickUpItem *Item) const;
+	bool bIsRoomAvailable(TArray<FVector2D> Shape, FVector2D &ItemPosition) const;
 };
