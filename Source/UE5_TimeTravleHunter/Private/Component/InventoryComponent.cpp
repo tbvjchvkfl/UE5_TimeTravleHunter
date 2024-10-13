@@ -41,7 +41,6 @@ void UInventoryComponent::InitializeInventory()
 
 void UInventoryComponent::AddInventory(class APickUpItem *Item)
 {
-	// Add to InventoryArray
 	switch (Item->GetItemType())
 	{
 		case EItemType::Coin:
@@ -68,53 +67,47 @@ void UInventoryComponent::AddInventory(class APickUpItem *Item)
 	OnInventoryUpdate.Broadcast();
 }
 
-//TMap<class APickUpItem *, FVector2D> UInventoryComponent::GetAllItems()
-//{
-//	TMap<APickUpItem*, FVector2D> Items;
-//
-//	for (int i = 0; i < ItemInventory.Num(); i++)
-//	{
-//		if (ItemInventory[i] != nullptr && !Items.Contains(ItemInventory[i]))
-//		{
-//			Items.Add(ItemInventory[i], FVector2D(i % Columns, i / Columns));
-//		}
-//	}
-//	return Items;
-//}
-
 void UInventoryComponent::AddItem(APickUpItem *Items)
 {
-	if (Items)
+	FVector2D ItemPos = FVector2D(0, 0);
+	for (const auto &ItemInventoryElem : ItemInventory)
 	{
-		if (bIsRoomAvailable(Items->GetShape(0.0f)))
+		if (Items && ItemInventoryElem.Value)
 		{
-			
-		}
-	}
-	/*if (Items)
-	{
-		for (int32 i = 0; i < ItemInventory.Num(); i++)
-		{
-			if (bIsRoomAvailable(Items, i))
+			if (ItemInventoryElem.Value->GetItemName() == Items->GetItemName())
 			{
-				AddingItem(Items, i);
+				if (ItemInventoryElem.Value->GetMaxQuantity() > Items->GetCurrentQuantity())
+				{
+					int32 ItemQuantityReference = ItemInventoryElem.Value->GetCurrentQuantity() + Items->GetCurrentQuantity();
+
+					ItemInventoryElem.Value->SetCurrentQuantity(ItemQuantityReference);
+
+					ItemInventory.Add(ItemInventoryElem.Key, ItemInventoryElem.Value);
+
+					int32 RemainQuantity = ItemInventoryElem.Value->GetMaxQuantity() - ItemInventoryElem.Value->GetCurrentQuantity();
+
+					Items->SetCurrentQuantity(Items->GetCurrentQuantity() - RemainQuantity);
+					if (Items->GetCurrentQuantity() <= 0)
+					{
+						return;
+					}
+				}
 			}
 		}
-	}*/
+	}
+	if (bIsRoomAvailable(Items->GetShape(0), ItemPos))
+	{
+		ItemInventory.Add(ItemPos, Items);
+		return;
+	}
+	if (bIsRoomAvailable(Items->GetShape(90.0f), ItemPos))
+	{
+		ItemInventory.Add(ItemPos, Items);
+		return;
+	}
 }
 
-//bool UInventoryComponent::CheckRotationFits(AMultiSlotItem *ItemReference, float Rotation)
-//{
-//	if (WhereShapeFits(ItemReference->GetShape(Rotation)).Key == true)
-//	{
-//		AddToInventory(WhereShapeFits(ItemReference->GetShape(Rotation)).Value, ItemReference, true);
-//		return true;
-//	}
-//	return false;
-//
-//}
-
-bool UInventoryComponent::bIsRoomAvailable(TArray<FVector2D> Shape) const
+bool UInventoryComponent::bIsRoomAvailable(TArray<FVector2D> Shape, FVector2D &ItemPosition) const
 {
 	bool bIsFaild = false;
 	TArray<FVector2D> AllKeys;
@@ -144,34 +137,12 @@ bool UInventoryComponent::bIsRoomAvailable(TArray<FVector2D> Shape) const
 				}
 				else
 				{
+					ItemPosition = AllKeys[i];
 					return true;
 				}
 			}
 		}
 	}
+	ItemPosition = FVector2D(0, 0);
 	return false;
 }
-
-bool UInventoryComponent::bIsItemStackable(APickUpItem *Item) const
-{
-	TArray<FVector2D> AllKeys;
-	ItemInventory.GetKeys(AllKeys);
-	for (int32 i = 0; i < AllKeys.Num(); i++)
-	{
-		if (ItemInventory[AllKeys[i]]->GetItemName() == Item->GetItemName())
-		{
-			if (ItemInventory[AllKeys[i]]->GetMaxQuantity() > Item->GetCurrentQuantity())
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-void UInventoryComponent::AddingItem(class APickUpItem *Items, int32 TopLeftIndex)
-{
-
-}
-
-
