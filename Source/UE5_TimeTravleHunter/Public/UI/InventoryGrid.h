@@ -6,23 +6,13 @@
 #include "Blueprint/UserWidget.h"
 #include "InventoryGrid.generated.h"
 
-class UBorder;
-class UCanvasPanel;
+class UGridPanel;
 class UInventoryComponent;
 class UInventoryItem;
+class UInventorySlot;
+class APickUpItem;
+class APlayerCharacter;
 
-
-USTRUCT()
-struct FInventoryLine
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY(EditAnywhere)
-	FVector2D Start;
-
-	UPROPERTY(EditAnywhere)
-	FVector2D End;
-};
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UInventoryGrid : public UUserWidget
@@ -33,41 +23,56 @@ public:
 	//=					- Variables -					   =
 	//======================================================
 	UPROPERTY(meta = (BindWidget))
-	UBorder *GridBorder;
-
-	UPROPERTY(meta = (BindWidget))
-	UCanvasPanel *GridCanvas;
+	UGridPanel *InventoryGrid;
 
 	UPROPERTY(EditAnywhere, Category = "ItemWidget")
 	TSubclassOf<UInventoryItem> InventoryItem;
 
+	UPROPERTY(EditAnywhere, Category = "ItemWidget")
+	TSubclassOf<UInventorySlot> InventorySlot;
+
+	UPROPERTY(EditAnywhere, Category = "ItemWidget")
+	TMap<FVector2D, APickUpItem *> WidgetInventory;
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemWidget")
+	UInventoryComponent *InventoryComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemWidget")
+	int32 InventorySize;
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemWidget")
+	int32 InventoryWidth;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-	void GridInitialize(class UInventoryComponent *InventoryComp, float Tilesize);
-
-	virtual int32 NativePaint(const FPaintArgs &Args, const FGeometry &AllottedGeometry, const FSlateRect &MyCullingRect, FSlateWindowElementList &OutDrawElements, int32 LayerId, const FWidgetStyle &InWidgetStyle, bool bParentEnabled)const override;
+	void InventoryGridInitialize();
 
 protected:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-	UPROPERTY()
-	TArray<FInventoryLine> LINES;
-
-	UPROPERTY()
-	UInventoryComponent *ReferenceInventory;
+	APlayerCharacter *Player;
 
 	UPROPERTY()
 	UInventoryItem *ItemWidget;
 
 	UPROPERTY()
-	float GridTileSize;
+	UInventorySlot *SlotWidget;
+
+	UPROPERTY()
+	TArray<UInventorySlot *> GridSlot;
+
+	UPROPERTY()
+	TMap<FVector2D, UInventoryItem *> GridInventory;
+
+	UPROPERTY()
+	TMap<FVector2D, bool> GridState;
 
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-	void CreateLine(class UInventoryComponent *InventoryComp, float Tilesize);
-	void RefreshGridInventory();
-	void RemoveItemInWidget(class APickUpItem *PickUpItem);
+	void InitGrid();
+	void RefreshGrid();
+	void SetUpEmptyGrid();
 };

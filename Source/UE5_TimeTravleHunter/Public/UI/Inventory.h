@@ -8,7 +8,8 @@
 
 class UInventoryComponent;
 class APlayerCharacter;
-class UInventoryGird;
+class UInventoryGrid;
+class APickUpItem;
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UInventory : public UUserWidget
@@ -19,7 +20,7 @@ public:
 	//=					- Variables -					   =
 	//======================================================
 	UPROPERTY(meta = (BindWidget))
-	UInventoryGird *InventoryGrid;
+	UInventoryGrid *GridWidget;
 
 
 	//======================================================
@@ -36,14 +37,9 @@ protected:
 	UPROPERTY()
 	APlayerCharacter *Player;
 
-	UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
-	float TileSize;
-
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void NativeConstruct() override;
 	virtual bool NativeOnDrop(const FGeometry &InGeometry, const FDragDropEvent &InDragDropEvent, UDragDropOperation *InOperation)override;
-
-	void UpdateInventory();
 };
