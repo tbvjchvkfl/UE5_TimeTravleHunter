@@ -9,9 +9,9 @@ UInventoryComponent::UInventoryComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	CoinInventory = 0;
-	InventorySize = FIntPoint(10, 4);
+	InventorySize = 35;
+	InventoryWidth = 10;
 }
-
 
 void UInventoryComponent::BeginPlay()
 {
@@ -27,19 +27,40 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 void UInventoryComponent::InitializeInventory()
 {
 	ItemInventory.Empty();
-	if (ItemInventory.IsEmpty())
+	InventoryState.Empty();
+	if (InventoryState.IsEmpty())
 	{
-		for (int32 n = 0; n < InventorySize.Y; n++)
+		int32 Column = 0;
+		int32 Row = 0;
+		for (int32 i = 0; i < InventorySize; i++)
 		{
-			for (int32 m = 0; m < InventorySize.X; m++)
+			InventoryState.Add(FVector2D(Column, Row), false);
+			if (Column == InventoryWidth - 1)
 			{
-				ItemInventory.Add(FVector2D(m, n), nullptr);
+				Column = 0; 
+				Row++;
+			}
+			else
+			{
+				Column++;
 			}
 		}
 	}
 }
 
-void UInventoryComponent::AddInventory(class APickUpItem *Item)
+void UInventoryComponent::AddtoInventory(FVector2D ItemPosition, APickUpItem *Item, bool ModifyState)
+{
+	ItemInventory.Add(ItemPosition, Item);
+	if (ModifyState)
+	{
+		for (const FVector2D &ShapeElem : Item->GetShape(0.0f))
+		{
+			InventoryState.Add(ShapeElem + ItemPosition, true);
+		}
+	}
+}
+
+void UInventoryComponent::CheckItem(class APickUpItem *Item)
 {
 	switch (Item->GetItemType())
 	{
@@ -70,21 +91,23 @@ void UInventoryComponent::AddInventory(class APickUpItem *Item)
 void UInventoryComponent::AddItem(APickUpItem *Items)
 {
 	FVector2D ItemPos = FVector2D(0, 0);
-	for (const auto &ItemInventoryElem : ItemInventory)
+	TArray<FVector2D> AllKeys;
+	ItemInventory.GetKeys(AllKeys);
+	for (int32 i = 0; i < AllKeys.Num(); i++)
 	{
-		if (Items && ItemInventoryElem.Value)
+		if (Items && ItemInventory[AllKeys[i]])
 		{
-			if (ItemInventoryElem.Value->GetItemName() == Items->GetItemName())
+			if (ItemInventory[AllKeys[i]]->GetItemNumber() == Items->GetItemNumber())
 			{
-				if (ItemInventoryElem.Value->GetMaxQuantity() > Items->GetCurrentQuantity())
+				if (ItemInventory[AllKeys[i]]->GetMaxQuantity() > Items->GetCurrentQuantity())
 				{
-					int32 ItemQuantityReference = ItemInventoryElem.Value->GetCurrentQuantity() + Items->GetCurrentQuantity();
+					int32 ItemQuantityReference = ItemInventory[AllKeys[i]]->GetCurrentQuantity() + Items->GetCurrentQuantity();
 
-					ItemInventoryElem.Value->SetCurrentQuantity(ItemQuantityReference);
+					int32 RemainQuantity = ItemInventory[AllKeys[i]]->GetMaxQuantity() - ItemInventory[AllKeys[i]]->GetCurrentQuantity();
 
-					ItemInventory.Add(ItemInventoryElem.Key, ItemInventoryElem.Value);
+					ItemInventory[AllKeys[i]]->SetCurrentQuantity(ItemQuantityReference);
 
-					int32 RemainQuantity = ItemInventoryElem.Value->GetMaxQuantity() - ItemInventoryElem.Value->GetCurrentQuantity();
+					AddtoInventory(AllKeys[i], ItemInventory[AllKeys[i]], false);
 
 					Items->SetCurrentQuantity(Items->GetCurrentQuantity() - RemainQuantity);
 					if (Items->GetCurrentQuantity() <= 0)
@@ -95,14 +118,14 @@ void UInventoryComponent::AddItem(APickUpItem *Items)
 			}
 		}
 	}
-	if (bIsRoomAvailable(Items->GetShape(0), ItemPos))
+	if (Items && bIsRoomAvailable(Items->GetShape(0.0f), ItemPos))
 	{
-		ItemInventory.Add(ItemPos, Items);
+		AddtoInventory(ItemPos, Items, true);
 		return;
 	}
-	if (bIsRoomAvailable(Items->GetShape(90.0f), ItemPos))
+	if (Items && bIsRoomAvailable(Items->GetShape(90.0f), ItemPos))
 	{
-		ItemInventory.Add(ItemPos, Items);
+		AddtoInventory(ItemPos, Items, true);
 		return;
 	}
 }
@@ -111,21 +134,21 @@ bool UInventoryComponent::bIsRoomAvailable(TArray<FVector2D> Shape, FVector2D &I
 {
 	bool bIsFaild = false;
 	TArray<FVector2D> AllKeys;
-	ItemInventory.GetKeys(AllKeys);
+	InventoryState.GetKeys(AllKeys);
 	for (int32 i = 0; i < AllKeys.Num(); i++)
 	{
-		if (ItemInventory.Contains(AllKeys[i]))
+		if (InventoryState.Contains(AllKeys[i]))
 		{
-			if (ItemInventory[AllKeys[i]] == nullptr)
+			if (InventoryState[AllKeys[i]] == false)
 			{
 				for (const auto &ItemShapeElem : Shape)
 				{
-					if (ItemInventory.Contains(FVector2D(AllKeys[i].X + ItemShapeElem.X, AllKeys[i].Y + ItemShapeElem.Y)))
+					if (!InventoryState.Contains(FVector2D(AllKeys[i].X + ItemShapeElem.X, AllKeys[i].Y + ItemShapeElem.Y)))
 					{
 						bIsFaild = true;
 						break;
 					}
-					if (ItemInventory[FVector2D(AllKeys[i].X + ItemShapeElem.X, AllKeys[i].Y + ItemShapeElem.Y)] != nullptr)
+					if (InventoryState[FVector2D(AllKeys[i].X + ItemShapeElem.X, AllKeys[i].Y + ItemShapeElem.Y)] == true)
 					{
 						bIsFaild = true;
 						break;
