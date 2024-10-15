@@ -24,9 +24,3 @@ void UInventory::NativeConstruct()
 		GridWidget->InventoryGridInitialize();
 	}
 }
-
-bool UInventory::NativeOnDrop(const FGeometry &InGeometry, const FDragDropEvent &InDragDropEvent, UDragDropOperation *InOperation)
-{
-	//auto *Item = Cast<APickUpItem>(InOperation->Payload);
-	return false;
-}
