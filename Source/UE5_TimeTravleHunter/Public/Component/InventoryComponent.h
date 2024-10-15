@@ -30,18 +30,25 @@ public:
 	
 	FORCEINLINE TMap<FVector2D, APickUpItem *> GetItemInventory() { return ItemInventory; };
 	FORCEINLINE int32 GetCoinInventory() { return CoinInventory; };
-
-	void AddInventory(APickUpItem *Item);
+	FORCEINLINE int32 GetItemInventorySize() { return InventorySize; };
+	FORCEINLINE int32 GetInventoryWidth() { return InventoryWidth; };
+	void CheckItem(APickUpItem *Item);
 
 protected:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
 	UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
-	FIntPoint InventorySize;
+	int32 InventorySize;
+
+	UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+	int32 InventoryWidth;
 
 	UPROPERTY(VisibleAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
 	TMap<FVector2D, APickUpItem *> ItemInventory;
+
+	UPROPERTY(VisibleAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+	TMap<FVector2D, bool> InventoryState;
 
 	UPROPERTY()
 	int32 CoinInventory;
@@ -52,6 +59,8 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void InitializeInventory();
-	void AddItem(class APickUpItem *Item);
+	void AddtoInventory(FVector2D ItemPosition, APickUpItem *Item, bool ModifyState);
+	void AddItem(APickUpItem *Item);
 	bool bIsRoomAvailable(TArray<FVector2D> Shape, FVector2D &ItemPosition) const;
+	
 };
