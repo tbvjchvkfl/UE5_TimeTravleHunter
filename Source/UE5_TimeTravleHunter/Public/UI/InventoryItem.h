@@ -8,10 +8,13 @@
 
 class APickUpItem;
 class USizeBox;
+class UCanvasPanel;
 class UImage;
 class UTextBlock;
+class UItemVisibility;
+class UDropDown;
 
-//DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemovedItem, APickUpItem *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMoved, UInventoryItem *);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UInventoryItem : public UUserWidget
@@ -21,6 +24,7 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	FOnMoved OnMoved;
 
 	//FOnRemovedItem OnRemoveItem;
 
@@ -28,10 +32,19 @@ public:
 	USizeBox *BackGroundSizeBox;
 
 	UPROPERTY(meta = (BindWidget))
+	UCanvasPanel *WidgetCanvas;
+
+	UPROPERTY(meta = (BindWidget))
 	UImage *ItemImage;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock *ItemQuantityText;
+
+	UPROPERTY(EditAnywhere, Category = "ItemWidget | Widget Reference")
+	TSubclassOf<UItemVisibility> ItemVisibility;
+
+	UPROPERTY(EditAnywhere, Category = "ItemWidget | Widget Reference")
+	TSubclassOf<UDropDown> DropDown;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -43,7 +56,16 @@ protected:
 	//=					- Variables -					   =
 	//======================================================
 	UPROPERTY(EditAnywhere, Category = "ItemWidget | Property", meta = (AllowPrivateAccess = "true"))
-	float ItemTileSize;
+	float ItemGridSize;
+
+	UPROPERTY()
+	UItemVisibility *VisibilityWidget;
+
+	UPROPERTY()
+	UDropDown *DropDownWidget;
+
+	UPROPERTY()
+	TArray<UItemVisibility *> VisibilityContainer;
 
 	UPROPERTY()
 	FVector2D Size;
@@ -51,4 +73,12 @@ protected:
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
+	void MouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
+	bool GetMousePosition(FVector2D &MousePos) const;
+	void DropItem();
+	void RemoveItem();
+	void HoverItem();
+	void UnHoverItem();
+	void StartMovingItem();
+	void StopMovingItem();
 };

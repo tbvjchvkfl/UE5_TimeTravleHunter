@@ -9,9 +9,7 @@
 class USizeBox;
 class UImage;
 
-
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMouseButtonDown, FGeometry, FPointerEvent);
-
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMouseButtonDown, const FGeometry &, const FPointerEvent &);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UItemVisibility : public UUserWidget
@@ -29,18 +27,10 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UImage *HoverImage;
 
-	UPROPERTY(EditAnywhere, Category = "WidgetProperty")
-	float WidthOverride;
-
-	UPROPERTY(EditAnywhere, Category = "WidgetProperty")
-	float HeightOverride;
-
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-
 	void ChangeColor(FLinearColor Color);
-
-	virtual void NativeConstruct()override;
-	//virtual FReply OnMouseButtonDown(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent);
+	void VisibilityWidgetInit(float OverrideSize);
+	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
 };
