@@ -17,16 +17,17 @@ void UItemVisibility::ChangeColor(FLinearColor Color)
     HoverImage->SetColorAndOpacity(Color);
 }
 
-void UItemVisibility::NativeConstruct()
+void UItemVisibility::VisibilityWidgetInit(float OverrideSize)
 {
-    WidgetSizeBox->SetWidthOverride(WidthOverride);
-    WidgetSizeBox->SetHeightOverride(HeightOverride);
+    WidgetSizeBox->SetWidthOverride(OverrideSize);
+    WidgetSizeBox->SetHeightOverride(OverrideSize);
 }
 
-//FReply UItemVisibility::OnMouseButtonDown(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent)
-//{
-//    Super::OnMouseButtonDown(MyGeometry, MouseEvent);
-//
-//    OnMouseButtonPressed.Broadcast(MyGeometry, MouseEvent);
-//    return FReply::Handled();
-//}
+FReply UItemVisibility::NativeOnMouseButtonDown(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent)
+{
+    Super::NativeOnMouseButtonDown(MyGeometry, MouseEvent);
+
+    OnMouseButtonPressed.Broadcast(MyGeometry, MouseEvent);
+
+    return FReply::Handled();
+}
