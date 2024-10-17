@@ -12,6 +12,7 @@
 #include "Components/SizeBox.h"
 #include "Components/CanvasPanel.h"
 #include "Components/TextBlock.h"
+#include "Components/GridSlot.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
 void UInventoryItem::InitializeInventoryItem(APickUpItem *PickUpItem)
@@ -122,5 +123,37 @@ void UInventoryItem::StopMovingItem()
 	for (auto VisibilityElem : VisibilityContainer)
 	{
 		//VisibilityElem->StotBlinking();
+	}
+}
+
+bool UInventoryItem::IsOverlapping(FVector2D CurrentLocation, APickUpItem *Item) const
+{
+	for (const auto &ShapeElem : Item->GetShape(Item->GetItemRotation()))
+	{
+		if (ShapeElem + Location == CurrentLocation)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void UInventoryItem::GetCurrentGridLocation(float &LocationX, float &LocationY) const
+{
+	UGridSlot *GridSlot = Cast<UGridSlot>(this->Slot);
+	LocationX = GridSlot->GetColumn();
+	LocationY = GridSlot->GetRow();
+}
+
+void UInventoryItem::UpdateVisual(APickUpItem *Item, UGridSlot* GridSlot)
+{
+	ItemImage->SetRenderTransformAngle(Item->GetItemRotation());
+	if (Item->GetItemRotation() == 90.0f)
+	{
+		ItemImage->SetRenderTranslation(FVector2D(ItemGridSize * GridSlot->GetRowSpan(), 0.0f));
+	}
+	else
+	{
+		ItemImage->SetRenderTranslation(FVector2D(0.0f, 0.0f));
 	}
 }

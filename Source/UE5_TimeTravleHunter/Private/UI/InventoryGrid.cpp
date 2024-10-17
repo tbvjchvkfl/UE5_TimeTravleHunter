@@ -46,9 +46,11 @@ void UInventoryGrid::RefreshGrid()
 			ItemWidget = CreateWidget<UInventoryItem>(GetOwningPlayer(), InventoryItem);
 			ItemWidget->InitializeInventoryItem(WidgetInventory[AllKeys[i]]);
 			auto GridPanelSlot = InventoryGrid->AddChildToGrid(ItemWidget, AllKeys[i].Y, AllKeys[i].X);
+			ItemWidget->UpdateVisual(WidgetInventory[AllKeys[i]], GridPanelSlot);
 			GridPanelSlot->SetLayer(1);
 			GridPanelSlot->SetColumnSpan(WidgetInventory[AllKeys[i]]->GetMaxSize(WidgetInventory[AllKeys[i]]->GetItemRotation(), true).X);
 			GridPanelSlot->SetRowSpan(WidgetInventory[AllKeys[i]]->GetMaxSize(WidgetInventory[AllKeys[i]]->GetItemRotation(), true).Y);
+			
 		}
 	}
 }
