@@ -13,6 +13,7 @@ class UImage;
 class UTextBlock;
 class UItemVisibility;
 class UDropDown;
+class UGridSlot;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMoved, UInventoryItem *);
 
@@ -50,6 +51,7 @@ public:
 	//=					- Functionary -					   =
 	//======================================================
 	void InitializeInventoryItem(APickUpItem* PickUpItem);
+	void UpdateVisual(APickUpItem *Item, UGridSlot *GridSlot);
 
 protected:
 	//======================================================
@@ -68,7 +70,7 @@ protected:
 	TArray<UItemVisibility *> VisibilityContainer;
 
 	UPROPERTY()
-	FVector2D Size;
+	FVector2D Location;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -81,4 +83,6 @@ protected:
 	void UnHoverItem();
 	void StartMovingItem();
 	void StopMovingItem();
+	bool IsOverlapping(FVector2D CurrentLocation, APickUpItem* Item) const;
+	void GetCurrentGridLocation(float &LocationX, float &LocationY) const;
 };
