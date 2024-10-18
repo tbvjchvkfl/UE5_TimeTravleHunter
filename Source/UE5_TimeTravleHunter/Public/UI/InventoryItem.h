@@ -16,6 +16,9 @@ class UDropDown;
 class UGridSlot;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMoved, UInventoryItem *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnReMoved, UInventoryItem *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDropped, UInventoryItem *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnAdded, UInventoryItem *);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UInventoryItem : public UUserWidget
@@ -26,7 +29,9 @@ public:
 	//=					- Variables -					   =
 	//======================================================
 	FOnMoved OnMoved;
-
+	FOnReMoved OnRemoved;
+	FOnDropped OnDropped;
+	FOnAdded OnAdded;
 	//FOnRemovedItem OnRemoveItem;
 
 	UPROPERTY(meta = (BindWidget))
@@ -81,6 +86,7 @@ protected:
 	void RemoveItem();
 	void HoverItem();
 	void UnHoverItem();
+	void RemoveDropDown();
 	void StartMovingItem();
 	void StopMovingItem();
 	bool IsOverlapping(FVector2D CurrentLocation, APickUpItem* Item) const;

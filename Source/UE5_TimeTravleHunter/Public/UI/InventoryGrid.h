@@ -13,6 +13,9 @@ class UInventorySlot;
 class APickUpItem;
 class APlayerCharacter;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDropItem, FVector2D);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemoveItem, FVector2D);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAddItem, FVector2D, APickUpItem *);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UInventoryGrid : public UUserWidget
@@ -22,6 +25,10 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	FOnDropItem OnDropItem;
+	FOnRemoveItem OnRemoveItem;
+	FOnAddItem OnAddItem;
+
 	UPROPERTY(meta = (BindWidget))
 	UGridPanel *InventoryGrid;
 
@@ -69,10 +76,22 @@ protected:
 	UPROPERTY()
 	TMap<FVector2D, bool> GridState;
 
+	UPROPERTY()
+	FVector2D CurrentLocation;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	void InitGrid();
 	void RefreshGrid();
 	void SetUpEmptyGrid();
+	void ItemAdded(UInventoryItem*WidgetItem);
+	void ItemRemoved(UInventoryItem *WidgetItem);
+	void ItemDropped(UInventoryItem *WidgetItem);
+	void ItemMoved(UInventoryItem *WidgetItem);
+	void MouseEnter(FVector2D Pos);
+	void LeftMouseButtonPressed(FVector2D Pos);
+	void RightMouseButtonPressed(FVector2D Pos);
+	bool CanPlaceItem() const;
+	bool ItemStoppedMove();
 };

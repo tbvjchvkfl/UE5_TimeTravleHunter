@@ -27,10 +27,14 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UImage *HoverImage;
 
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation *Blink;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	void ChangeColor(FLinearColor Color);
 	void VisibilityWidgetInit(float OverrideSize);
 	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
+	void StartBlink();
+	void StopBlink();
 };

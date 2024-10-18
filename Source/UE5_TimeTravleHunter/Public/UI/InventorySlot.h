@@ -27,6 +27,6 @@ public:
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-	virtual void OnMouseEnter(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent);
-	virtual FReply OnMouseButtonDown(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent);
+	virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
+	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
 };
