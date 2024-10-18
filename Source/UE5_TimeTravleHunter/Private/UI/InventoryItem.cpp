@@ -50,7 +50,7 @@ void UInventoryItem::MouseButtonDown(const FGeometry &InGeometry, const FPointer
 	{
 		if (DropDown)
 		{
-			RemoveFromViewport();
+			//RemoveFromViewport();
 			DropDownWidget = CreateWidget<UDropDown>(GetOwningPlayer(), DropDown);
 			if (DropDownWidget)
 			{
@@ -106,14 +106,22 @@ void UInventoryItem::UnHoverItem()
 	}
 }
 
+void UInventoryItem::RemoveDropDown()
+{
+	if (DropDownWidget)
+	{
+		DropDownWidget->RemoveFromParent();
+	}
+}
+
 void UInventoryItem::StartMovingItem()
 {
-	//RemoveDropDown();
+	RemoveDropDown();
 	OnMoved.Broadcast(this);
 	WidgetCanvas->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	for (auto VisibilityElem : VisibilityContainer)
 	{
-		//VisibilityElem->StartBlinking();
+		VisibilityElem->StartBlink();
 	}
 }
 
@@ -122,7 +130,7 @@ void UInventoryItem::StopMovingItem()
 	WidgetCanvas->SetVisibility(ESlateVisibility::HitTestInvisible);
 	for (auto VisibilityElem : VisibilityContainer)
 	{
-		//VisibilityElem->StotBlinking();
+		VisibilityElem->StopBlink();
 	}
 }
 

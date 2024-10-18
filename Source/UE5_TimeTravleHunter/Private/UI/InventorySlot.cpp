@@ -3,14 +3,14 @@
 
 #include "UI/InventorySlot.h"
 
-void UInventorySlot::OnMouseEnter(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent)
+void UInventorySlot::NativeOnMouseEnter(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent)
 {
 	OnMouseButtonEnter.Broadcast(Key);
 }
 
-FReply UInventorySlot::OnMouseButtonDown(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent)
+FReply UInventorySlot::NativeOnMouseButtonDown(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent)
 {
-	Super::OnMouseButtonDown(MyGeometry, MouseEvent);
+	Super::NativeOnMouseButtonDown(MyGeometry, MouseEvent);
 	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		OnLeftMouseButtonPressed.Broadcast(Key);

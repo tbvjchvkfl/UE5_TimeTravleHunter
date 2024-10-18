@@ -8,6 +8,7 @@
 #include "Components/Image.h"
 #include "Components/SizeBox.h"
 
+
 void UItemVisibility::ChangeColor(FLinearColor Color)
 {
     /*if (!IsAnimationPlaying())
@@ -30,4 +31,14 @@ FReply UItemVisibility::NativeOnMouseButtonDown(const FGeometry &MyGeometry, con
     OnMouseButtonPressed.Broadcast(MyGeometry, MouseEvent);
 
     return FReply::Handled();
+}
+
+void UItemVisibility::StartBlink()
+{
+    PlayAnimation(Blink);
+}
+
+void UItemVisibility::StopBlink()
+{
+    StopAnimation(Blink);
 }
