@@ -32,7 +32,6 @@ public:
 	FOnReMoved OnRemoved;
 	FOnDropped OnDropped;
 	FOnAdded OnAdded;
-	//FOnRemovedItem OnRemoveItem;
 
 	UPROPERTY(meta = (BindWidget))
 	USizeBox *BackGroundSizeBox;
@@ -52,11 +51,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "ItemWidget | Widget Reference")
 	TSubclassOf<UDropDown> DropDown;
 
+	UPROPERTY()
+	APickUpItem *PickUpItems;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	void InitializeInventoryItem(APickUpItem* PickUpItem);
-	void UpdateVisual(APickUpItem *Item, UGridSlot *GridSlot);
+	void UpdateVisual(APickUpItem *Item);
+	void GetCurrentGridLocation(float &LocationX, float &LocationY) const;
+	void GetItemRotate();
 
 protected:
 	//======================================================
@@ -77,11 +80,16 @@ protected:
 	UPROPERTY()
 	FVector2D Location;
 
+
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
+	virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
+	virtual void NativeOnMouseLeave(const FPointerEvent &InMouseEvent);
+
 	void MouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
-	bool GetMousePosition(FVector2D &MousePos) const;
+	bool GetMousePositionInViewport(FVector2D &MousePos) const;
 	void DropItem();
 	void RemoveItem();
 	void HoverItem();
@@ -90,5 +98,5 @@ protected:
 	void StartMovingItem();
 	void StopMovingItem();
 	bool IsOverlapping(FVector2D CurrentLocation, APickUpItem* Item) const;
-	void GetCurrentGridLocation(float &LocationX, float &LocationY) const;
+	
 };
