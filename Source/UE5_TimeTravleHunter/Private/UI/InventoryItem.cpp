@@ -19,6 +19,7 @@ void UInventoryItem::InitializeInventoryItem(APickUpItem *PickUpItem)
 {
 	if (PickUpItem)
 	{
+		PickUpItems = PickUpItem;
 		for (const auto &ShapeElem : PickUpItem->GetShape(PickUpItem->GetItemRotation()))
 		{
 			if (ItemVisibility)
@@ -33,38 +34,51 @@ void UInventoryItem::InitializeInventoryItem(APickUpItem *PickUpItem)
 					VisibilityWidget->SetRenderTranslation(FVector2D(ShapeElem.X * ItemGridSize, ShapeElem.Y * ItemGridSize));
 				}
 			}
-
 		}
 
 		ItemImage->SetBrushFromTexture(PickUpItem->GetItemTexture());
 		ItemQuantityText->SetText(FText::FromString(FString::Printf(TEXT("%d"), PickUpItem->GetCurrentQuantity())));
+
+		UpdateVisual(PickUpItem);
 
 		BackGroundSizeBox->SetWidthOverride(PickUpItem->GetMaxSize(PickUpItem->GetItemRotation(), true).X * ItemGridSize);
 		BackGroundSizeBox->SetHeightOverride(PickUpItem->GetMaxSize(PickUpItem->GetItemRotation(), true).Y * ItemGridSize);
 	}
 }
 
+void UInventoryItem::NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent)
+{
+	HoverItem();
+}
+
+void UInventoryItem::NativeOnMouseLeave(const FPointerEvent &InMouseEvent)
+{
+	UnHoverItem();
+}
+
 void UInventoryItem::MouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent)
 {
 	if (InMouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
 	{
-		if (DropDown)
+		if (DropDownWidget && DropDownWidget->IsValidLowLevel())
 		{
-			//RemoveFromViewport();
+			DropDownWidget->RemoveFromParent();
+			DropDown = nullptr;
+		}
+		if(DropDown)
+		{
 			DropDownWidget = CreateWidget<UDropDown>(GetOwningPlayer(), DropDown);
 			if (DropDownWidget)
 			{
 				DropDownWidget->AddToViewport();
 				FVector2D MousePosition;
-				GetMousePosition(MousePosition);
+				GetMousePositionInViewport(MousePosition);
 				DropDownWidget->SetRenderTranslation(MousePosition);
-				DropDownWidget->OnDropItem.AddUObject(this, &UInventoryItem::DropItem);
-				DropDownWidget->OnRemoveItem.AddUObject(this, &UInventoryItem::RemoveItem);
-				DropDownWidget->OnMouseEnter.AddUObject(this, &UInventoryItem::HoverItem);
-				DropDownWidget->OnMouseLeave.AddUObject(this, &UInventoryItem::UnHoverItem);
+
+				DropDownWidget->OnDropButton.AddUObject(this, &UInventoryItem::DropItem);
+				DropDownWidget->OnRemoveButton.AddUObject(this, &UInventoryItem::RemoveItem);
 			}
 		}
-		
 	}
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
@@ -72,7 +86,7 @@ void UInventoryItem::MouseButtonDown(const FGeometry &InGeometry, const FPointer
 	}
 }
 
-bool UInventoryItem::GetMousePosition(FVector2D &MousePos) const
+bool UInventoryItem::GetMousePositionInViewport(FVector2D &MousePos) const
 {
 	auto PlayerController = Cast<APlayerCharacterController>(GetOwningPlayer());
 	if (PlayerController)
@@ -84,10 +98,16 @@ bool UInventoryItem::GetMousePosition(FVector2D &MousePos) const
 
 void UInventoryItem::DropItem()
 {
+	OnDropped.Broadcast(this);
+	RemoveDropDown();
+	RemoveFromParent();
 }
 
 void UInventoryItem::RemoveItem()
 {
+	OnRemoved.Broadcast(this);
+	RemoveDropDown();
+	RemoveFromParent();
 }
 
 void UInventoryItem::HoverItem()
@@ -108,26 +128,27 @@ void UInventoryItem::UnHoverItem()
 
 void UInventoryItem::RemoveDropDown()
 {
-	if (DropDownWidget)
+	if (DropDownWidget->IsValidLowLevel())
 	{
 		DropDownWidget->RemoveFromParent();
+		DropDownWidget = nullptr;
 	}
 }
 
 void UInventoryItem::StartMovingItem()
 {
-	RemoveDropDown();
-	OnMoved.Broadcast(this);
-	WidgetCanvas->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	for (auto VisibilityElem : VisibilityContainer)
+	WidgetCanvas->SetVisibility(ESlateVisibility::HitTestInvisible);
+	for (const auto& VisibilityElem : VisibilityContainer)
 	{
 		VisibilityElem->StartBlink();
 	}
+	RemoveDropDown();
+	OnMoved.Broadcast(this);
 }
 
 void UInventoryItem::StopMovingItem()
 {
-	WidgetCanvas->SetVisibility(ESlateVisibility::HitTestInvisible);
+	WidgetCanvas->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	for (auto VisibilityElem : VisibilityContainer)
 	{
 		VisibilityElem->StopBlink();
@@ -153,15 +174,42 @@ void UInventoryItem::GetCurrentGridLocation(float &LocationX, float &LocationY) 
 	LocationY = GridSlot->GetRow();
 }
 
-void UInventoryItem::UpdateVisual(APickUpItem *Item, UGridSlot* GridSlot)
+void UInventoryItem::UpdateVisual(APickUpItem *Item)
 {
-	ItemImage->SetRenderTransformAngle(Item->GetItemRotation());
-	if (Item->GetItemRotation() == 90.0f)
+	if (UGridSlot *GridSlot = Cast<UGridSlot>(this->Slot))
 	{
-		ItemImage->SetRenderTranslation(FVector2D(ItemGridSize * GridSlot->GetRowSpan(), 0.0f));
+		ItemImage->SetRenderTransformAngle(Item->GetItemRotation());
+		if (Item->GetItemRotation() == 90.0f)
+		{
+			ItemImage->SetRenderTranslation(FVector2D(ItemGridSize * GridSlot->GetRowSpan(), 0.0f));
+		}
+		else
+		{
+			ItemImage->SetRenderTranslation(FVector2D(0.0f, 0.0f));
+		}
+
+		TArray<FVector2D> ShapeContain = Item->GetShape(Item->GetItemRotation());
+
+		FVector2D Corner;
+
+		for (int32 i = 0; i < ShapeContain.Num(); i++)
+		{
+			VisibilityContainer[i]->SetRenderTranslation(FVector2D(ShapeContain[i].X * ItemGridSize, ShapeContain[i].Y * ItemGridSize));
+
+			if (ShapeContain[i].X >= Corner.X && ShapeContain[i].Y >= Corner.Y)
+			{
+				Corner = ShapeContain[i];
+			}
+		}
+
+		
+		FVector2D CalculateVector(Corner.X * ItemGridSize, Corner.Y * ItemGridSize);
+		ItemQuantityText->SetRenderTranslation(FVector2D(CalculateVector.X + 40.0f, CalculateVector.Y + 60.0f));
 	}
-	else
-	{
-		ItemImage->SetRenderTranslation(FVector2D(0.0f, 0.0f));
-	}
+}
+
+void UInventoryItem::GetItemRotate()
+{
+	PickUpItems->SetItemRotation(ItemImage->GetRenderTransformAngle() + 90.0f);
+	UpdateVisual(PickUpItems);
 }
