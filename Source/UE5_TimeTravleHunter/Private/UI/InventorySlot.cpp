@@ -2,6 +2,13 @@
 
 
 #include "UI/InventorySlot.h"
+#include "Controller/PlayerCharacterController.h"
+
+
+void UInventorySlot::InitializeSlot(int32 Slot_X, int32 Slot_Y)
+{
+	Key = FVector2D(Slot_X, Slot_Y);
+}
 
 void UInventorySlot::NativeOnMouseEnter(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent)
 {
@@ -11,6 +18,7 @@ void UInventorySlot::NativeOnMouseEnter(const FGeometry &MyGeometry, const FPoin
 FReply UInventorySlot::NativeOnMouseButtonDown(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent)
 {
 	Super::NativeOnMouseButtonDown(MyGeometry, MouseEvent);
+
 	if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		OnLeftMouseButtonPressed.Broadcast(Key);
