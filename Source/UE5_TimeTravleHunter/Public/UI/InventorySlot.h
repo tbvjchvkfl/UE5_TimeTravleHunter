@@ -27,6 +27,7 @@ public:
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
+	void InitializeSlot(int32 Slot_X, int32 Slot_Y);
 	virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
 	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
 };
