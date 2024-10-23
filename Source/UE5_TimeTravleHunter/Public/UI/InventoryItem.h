@@ -52,14 +52,23 @@ public:
 	TSubclassOf<UDropDown> DropDown;
 
 	UPROPERTY()
+	FVector2D WidgetLocation;
+
+	UPROPERTY()
 	APickUpItem *PickUpItems;
+
+	UPROPERTY()
+	bool bIsMovable;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-	void InitializeInventoryItem(APickUpItem* PickUpItem);
+	void InitializeInventoryItem(FVector2D Loc, APickUpItem* PickUpItem);
 	void UpdateVisual(APickUpItem *Item);
 	void GetCurrentGridLocation(float &LocationX, float &LocationY) const;
 	void GetItemRotate();
+	bool IsOverlapping(FVector2D CurrentLocation, APickUpItem *Item) const;
+	bool IsFullyStack(int32 &Remaining);
+	void ModifyQuantity(int32 NewQuantity);
 
 protected:
 	//======================================================
@@ -77,11 +86,6 @@ protected:
 	UPROPERTY()
 	TArray<UItemVisibility *> VisibilityContainer;
 
-	UPROPERTY()
-	FVector2D Location;
-
-
-
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -97,6 +101,4 @@ protected:
 	void RemoveDropDown();
 	void StartMovingItem();
 	void StopMovingItem();
-	bool IsOverlapping(FVector2D CurrentLocation, APickUpItem* Item) const;
-	
 };
