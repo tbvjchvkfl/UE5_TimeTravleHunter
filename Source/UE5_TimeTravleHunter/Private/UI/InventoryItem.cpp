@@ -15,11 +15,13 @@
 #include "Components/GridSlot.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
-void UInventoryItem::InitializeInventoryItem(APickUpItem *PickUpItem)
+void UInventoryItem::InitializeInventoryItem(FVector2D Loc, APickUpItem *PickUpItem)
 {
 	if (PickUpItem)
 	{
+		WidgetLocation = Loc;
 		PickUpItems = PickUpItem;
+		bIsMovable = false;
 		for (const auto &ShapeElem : PickUpItem->GetShape(PickUpItem->GetItemRotation()))
 		{
 			if (ItemVisibility)
@@ -63,20 +65,25 @@ void UInventoryItem::MouseButtonDown(const FGeometry &InGeometry, const FPointer
 		if (DropDownWidget && DropDownWidget->IsValidLowLevel())
 		{
 			DropDownWidget->RemoveFromParent();
-			DropDown = nullptr;
+			DropDownWidget = nullptr;
 		}
-		if(DropDown)
+		else
 		{
-			DropDownWidget = CreateWidget<UDropDown>(GetOwningPlayer(), DropDown);
-			if (DropDownWidget)
+			if (DropDown)
 			{
-				DropDownWidget->AddToViewport();
-				FVector2D MousePosition;
-				GetMousePositionInViewport(MousePosition);
-				DropDownWidget->SetRenderTranslation(MousePosition);
+				DropDownWidget = CreateWidget<UDropDown>(GetOwningPlayer(), DropDown);
+				if (DropDownWidget)
+				{
+					DropDownWidget->AddToViewport();
+					FVector2D MousePosition;
+					if (GetMousePositionInViewport(MousePosition))
+					{
+						DropDownWidget->SetRenderTranslation(MousePosition);
 
-				DropDownWidget->OnDropButton.AddUObject(this, &UInventoryItem::DropItem);
-				DropDownWidget->OnRemoveButton.AddUObject(this, &UInventoryItem::RemoveItem);
+						DropDownWidget->OnDropButton.AddUObject(this, &UInventoryItem::DropItem);
+						DropDownWidget->OnRemoveButton.AddUObject(this, &UInventoryItem::RemoveItem);
+					}
+				}
 			}
 		}
 	}
@@ -143,15 +150,30 @@ void UInventoryItem::StartMovingItem()
 		VisibilityElem->StartBlink();
 	}
 	RemoveDropDown();
+	bIsMovable = true;
 	OnMoved.Broadcast(this);
 }
 
 void UInventoryItem::StopMovingItem()
 {
 	WidgetCanvas->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	for (auto VisibilityElem : VisibilityContainer)
+	bIsMovable = false;
+	for (const auto& VisibilityElem : VisibilityContainer)
 	{
 		VisibilityElem->StopBlink();
+	}
+}
+
+void UInventoryItem::ModifyQuantity(int32 NewQuantity)
+{
+	if (PickUpItems->SetCurrentQuantity(NewQuantity) > 0)
+	{
+		ItemQuantityText->SetText(FText::FromString(FString::Printf(TEXT("%d"), PickUpItems->GetCurrentQuantity())));
+		OnAdded.Broadcast(this);
+	}
+	else
+	{
+		RemoveItem();
 	}
 }
 
@@ -159,12 +181,26 @@ bool UInventoryItem::IsOverlapping(FVector2D CurrentLocation, APickUpItem *Item)
 {
 	for (const auto &ShapeElem : Item->GetShape(Item->GetItemRotation()))
 	{
-		if (ShapeElem + Location == CurrentLocation)
+		if (ShapeElem + WidgetLocation == CurrentLocation)
 		{
 			return true;
 		}
 	}
 	return false;
+}
+
+bool UInventoryItem::IsFullyStack(int32 &Remaining)
+{
+	if (PickUpItems->GetMaxQuantity() - PickUpItems->GetCurrentQuantity() == 0)
+	{
+		Remaining = PickUpItems->GetMaxQuantity() - PickUpItems->GetCurrentQuantity();
+		return true;
+	}
+	else
+	{
+		Remaining = PickUpItems->GetMaxQuantity() - PickUpItems->GetCurrentQuantity();
+		return false;
+	}
 }
 
 void UInventoryItem::GetCurrentGridLocation(float &LocationX, float &LocationY) const
