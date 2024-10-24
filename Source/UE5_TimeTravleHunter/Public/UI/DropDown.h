@@ -21,8 +21,8 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-	FOnDropItem OnDropItem;
-	FOnRemoveItem OnRemoveItem;
+	FOnDropItem OnDropButton;
+	FOnRemoveItem OnRemoveButton;
 	FOnMouseEnter OnMouseEnter;
 	FOnMouseLeave OnMouseLeave;
 
@@ -36,7 +36,6 @@ public:
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void NativeConstruct() override;
-	virtual void NativeOnInitialized() override;
 	void DropItem();
 	void RemoveItem();
 	virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);

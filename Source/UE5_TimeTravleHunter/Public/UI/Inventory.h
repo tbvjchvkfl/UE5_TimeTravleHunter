@@ -26,7 +26,9 @@ public:
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-
+	void DropItem(FVector2D Pos);
+	void RemoveItem(FVector2D Pos);
+	void AddItem(FVector2D Pos, APickUpItem* Item);
 protected:
 	//======================================================
 	//=					- Variables -					   =
