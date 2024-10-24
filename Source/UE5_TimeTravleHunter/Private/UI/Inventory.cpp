@@ -11,6 +11,7 @@
 // Engine
 #include "Blueprint/DragDropOperation.h"
 
+
 void UInventory::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -21,6 +22,24 @@ void UInventory::NativeConstruct()
 		GridWidget->InventorySize = Player->GetItemInventory()->GetItemInventorySize();
 		GridWidget->InventoryWidth = Player->GetItemInventory()->GetInventoryWidth();
 		GridWidget->WidgetInventory = Player->GetItemInventory()->GetItemInventory();
+		GridWidget->OnDropItem.AddUObject(this, &UInventory::DropItem);
+		GridWidget->OnRemoveItem.AddUObject(this, &UInventory::RemoveItem);
+		GridWidget->OnAddItem.AddUObject(this, &UInventory::AddItem);
 		GridWidget->InventoryGridInitialize();
 	}
+}
+
+void UInventory::DropItem(FVector2D Pos)
+{
+
+}
+
+void UInventory::RemoveItem(FVector2D Pos)
+{
+
+}
+
+void UInventory::AddItem(FVector2D Pos, APickUpItem *Item)
+{
+
 }

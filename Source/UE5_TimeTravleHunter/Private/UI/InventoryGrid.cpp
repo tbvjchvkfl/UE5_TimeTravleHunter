@@ -172,6 +172,7 @@ void UInventoryGrid::LeftMouseButtonPressed(FVector2D Pos)
 
 void UInventoryGrid::RightMouseButtonPressed(FVector2D Pos)
 {
+	// MovingItem 변수 별도로 만들어서 해볼 것
 	if (ItemWidget && ItemWidget->IsValidLowLevel())
 	{
 		ItemWidget->GetItemRotate();
@@ -186,6 +187,7 @@ void UInventoryGrid::RightMouseButtonPressed(FVector2D Pos)
 
 bool UInventoryGrid::CanPlaceItem() const
 {
+	// 블루프린트 다시 확인해 볼 것.
 	APickUpItem *ItemReference = ItemWidget->PickUpItems;
 	float ItemLoc_X;
 	float ItemLoc_Y;
@@ -235,16 +237,13 @@ bool UInventoryGrid::CanPlaceItem() const
 			}
 			return false;
 		}
-		if (GridState[ShapeElem] == false)
-		{
-
-		}
 	}
-
 	return true;
 }
 
 bool UInventoryGrid::ItemStoppedMove()
 {
+	// 하다 말았음.
+	OnRemoveItem.Broadcast(ItemWidget->WidgetLocation);
 	return false;
 }

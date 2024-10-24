@@ -8,24 +8,18 @@
 
 void UDropDown::NativeConstruct()
 {
-	/*DropButton->OnClicked.AddDynamic(this, &UDropDown::DropItem);
-	RemoveButton->OnClicked.AddDynamic(this, &UDropDown::RemoveItem);*/
-}
-
-void UDropDown::NativeOnInitialized()
-{
-	DropButton->OnClicked.AddDynamic(this, &UDropDown::DropItem);
-	RemoveButton->OnClicked.AddDynamic(this, &UDropDown::RemoveItem);
+	//DropButton->OnClicked.AddDynamic(this, &UDropDown::DropItem);
+	//RemoveButton->OnClicked.AddDynamic(this, &UDropDown::RemoveItem);
 }
 
 void UDropDown::DropItem()
 {
-	OnDropItem.Broadcast();
+	OnDropButton.Broadcast();
 }
 
 void UDropDown::RemoveItem()
 {
-	OnRemoveItem.Broadcast();
+	OnRemoveButton.Broadcast();
 }
 
 void UDropDown::NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent)

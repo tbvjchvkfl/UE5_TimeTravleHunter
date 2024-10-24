@@ -246,6 +246,18 @@ void UInventoryItem::UpdateVisual(APickUpItem *Item)
 
 void UInventoryItem::GetItemRotate()
 {
-	PickUpItems->SetItemRotation(ItemImage->GetRenderTransformAngle() + 90.0f);
-	UpdateVisual(PickUpItems);
+	if (PickUpItems)
+	{
+		PickUpItems->SetItemRotation(ItemImage->GetRenderTransformAngle() + 90.0f);
+		UpdateVisual(PickUpItems);
+	}
+	/*if (PickUpItems->GetItemRotation() == 0.0f)
+	{
+		
+	}
+	if (PickUpItems->GetItemRotation() >= 90.0f)
+	{
+		PickUpItems->SetItemRotation(ItemImage->GetRenderTransformAngle() - 90.0f);
+	}*/
+	
 }

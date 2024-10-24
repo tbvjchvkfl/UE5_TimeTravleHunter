@@ -9,19 +9,18 @@
 #include "Components/SizeBox.h"
 
 
-void UItemVisibility::ChangeColor(FLinearColor Color)
-{
-    /*if (!IsAnimationPlaying())
-    {
-        HoverImage->SetColorAndOpacity(Color);
-    }*/
-    HoverImage->SetColorAndOpacity(Color);
-}
-
 void UItemVisibility::VisibilityWidgetInit(float OverrideSize)
 {
     WidgetSizeBox->SetWidthOverride(OverrideSize);
     WidgetSizeBox->SetHeightOverride(OverrideSize);
+}
+
+void UItemVisibility::ChangeColor(FLinearColor Color)
+{
+    if (!IsAnimationPlaying(Blink))
+    {
+        HoverImage->SetColorAndOpacity(Color);
+    }
 }
 
 FReply UItemVisibility::NativeOnMouseButtonDown(const FGeometry &MyGeometry, const FPointerEvent &MouseEvent)
@@ -35,7 +34,7 @@ FReply UItemVisibility::NativeOnMouseButtonDown(const FGeometry &MyGeometry, con
 
 void UItemVisibility::StartBlink()
 {
-    PlayAnimation(Blink);
+    PlayAnimation(Blink, 0.0f, 0);
 }
 
 void UItemVisibility::StopBlink()
