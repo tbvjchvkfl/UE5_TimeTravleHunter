@@ -48,10 +48,13 @@ void UInventoryGrid::RefreshGrid()
 			if (ItemWidget)
 			{
 				ItemWidget->InitializeInventoryItem(AllKeys[i], WidgetInventory[AllKeys[i]]);
+
 				ItemWidget->OnAdded.AddUObject(this, &UInventoryGrid::ItemAdded);
 				ItemWidget->OnRemoved.AddUObject(this, &UInventoryGrid::ItemRemoved);
 				ItemWidget->OnMoved.AddUObject(this, &UInventoryGrid::ItemMoved);
 				ItemWidget->OnDropped.AddUObject(this, &UInventoryGrid::ItemDropped);
+
+				AddToInventory(ItemWidget);
 
 				auto GridPanelSlot = InventoryGrid->AddChildToGrid(ItemWidget, AllKeys[i].Y, AllKeys[i].X);
 				GridPanelSlot->SetLayer(1);
@@ -102,14 +105,19 @@ void UInventoryGrid::SetUpEmptyGrid()
 
 void UInventoryGrid::ItemAdded(UInventoryItem *WidgetItem)
 {
+	AddToInventory(WidgetItem);
 }
 
 void UInventoryGrid::ItemRemoved(UInventoryItem *WidgetItem)
 {
+	RemoveFromInventory(WidgetItem->WidgetLocation);
+	OnRemoveItem.Broadcast(WidgetItem->WidgetLocation);
 }
 
 void UInventoryGrid::ItemDropped(UInventoryItem *WidgetItem)
 {
+	OnDropItem.Broadcast(WidgetItem->WidgetLocation);
+	RemoveFromInventory(WidgetItem->WidgetLocation);
 }
 
 void UInventoryGrid::ItemMoved(UInventoryItem *WidgetItem)
@@ -123,7 +131,10 @@ void UInventoryGrid::ItemMoved(UInventoryItem *WidgetItem)
 			GridInventory[Key]->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		}
 	}
-	if (auto *SlotGrid = Cast<UGridSlot>(WidgetItem->Slot))
+
+	RemoveFromInventory(WidgetItem->WidgetLocation);
+	MovingItem = WidgetItem;
+	if (auto *SlotGrid = Cast<UGridSlot>(MovingItem->Slot))
 	{
 		SlotGrid->SetLayer(2);
 	}
@@ -131,7 +142,33 @@ void UInventoryGrid::ItemMoved(UInventoryItem *WidgetItem)
 
 void UInventoryGrid::MouseEnter(FVector2D Pos)
 {
-	if (ItemWidget && ItemWidget->IsValidLowLevel() && ItemWidget->bIsMovable)
+	if (IsValid(MovingItem))
+	{
+		if (CurrentLocation == FVector2D(-999.0f, -999.0f))
+		{
+			CurrentLocation = Pos;
+		}
+		else
+		{
+			FVector2D OldLocation = CurrentLocation;
+			CurrentLocation = Pos;
+			UGridSlot *GridPanelSlot = Cast<UGridSlot>(MovingItem->Slot);
+			if (IsValid(GridPanelSlot))
+			{
+				FVector2D GettingSlotSize(GridPanelSlot->GetColumn(), GridPanelSlot->GetRow());
+				FVector2D CalculateLoc(CurrentLocation.X - OldLocation.X, CurrentLocation.Y - OldLocation.Y);
+
+				FVector2D AddingVector(GettingSlotSize.X + CalculateLoc.X, GettingSlotSize.Y + CalculateLoc.Y);
+
+				int32 ColSize = static_cast<int32>(AddingVector.X);
+				int32 RowSize = static_cast<int32>(AddingVector.Y);
+
+				GridPanelSlot->SetColumn(ColSize);
+				GridPanelSlot->SetRow(RowSize);
+			}
+		}
+	}
+	/*if (ItemWidget && ItemWidget->IsValidLowLevel() && ItemWidget->bIsMovable)
 	{
 		if (CurrentLocation == FVector2D(-999.0f, -999.0f))
 		{
@@ -156,16 +193,16 @@ void UInventoryGrid::MouseEnter(FVector2D Pos)
 				GridPanelSlot->SetRow(RowSize);
 			}
 		}
-	}
+	}*/
 }
 
 void UInventoryGrid::LeftMouseButtonPressed(FVector2D Pos)
 {
-	if (ItemWidget) 
+	if (IsValid(MovingItem))
 	{
 		if (CanPlaceItem())
 		{
-			ItemStoppedMove();
+			ItemMovedStop();
 		}
 	}
 }
@@ -173,7 +210,15 @@ void UInventoryGrid::LeftMouseButtonPressed(FVector2D Pos)
 void UInventoryGrid::RightMouseButtonPressed(FVector2D Pos)
 {
 	// MovingItem 변수 별도로 만들어서 해볼 것
-	if (ItemWidget && ItemWidget->IsValidLowLevel())
+	if (IsValid(MovingItem))
+	{
+		if (UGridSlot *GridtoSlot = Cast<UGridSlot>(MovingItem->Slot))
+		{
+			GridtoSlot->SetColumn(static_cast<int32>(Pos.X));
+			GridtoSlot->SetRow(static_cast<int32>(Pos.Y));
+		}
+	}
+	/*if (ItemWidget && ItemWidget->IsValidLowLevel())
 	{
 		ItemWidget->GetItemRotate();
 
@@ -182,68 +227,137 @@ void UInventoryGrid::RightMouseButtonPressed(FVector2D Pos)
 			GridtoSlot->SetColumn(static_cast<int32>(Pos.X));
 			GridtoSlot->SetRow(static_cast<int32>(Pos.Y));
 		}
-	}
+	}*/
 }
 
 bool UInventoryGrid::CanPlaceItem() const
 {
-	// 블루프린트 다시 확인해 볼 것.
-	APickUpItem *ItemReference = ItemWidget->PickUpItems;
-	float ItemLoc_X;
-	float ItemLoc_Y;
-	ItemWidget->GetCurrentGridLocation(ItemLoc_X, ItemLoc_Y);
-	FVector2D ItemLocation = FVector2D(ItemLoc_X, ItemLoc_Y);
-
-	TArray<FVector2D> ItemShape = ItemReference->GetShape(ItemReference->GetItemRotation());
-	for (auto ShapeElem : ItemShape)
+	if (MovingItem && IsValid(MovingItem))
 	{
-		FVector2D RoundedVector = FVector2D(FMath::RoundToInt(ItemLocation.X + ShapeElem.X), FMath::RoundToInt(ItemLocation.Y + ShapeElem.Y));
-		if (!GridState.Contains(RoundedVector))
+		APickUpItem *ItemReference = MovingItem->PickUpItems;
+		float ItemLoc_X;
+		float ItemLoc_Y;
+		MovingItem->GetCurrentGridLocation(ItemLoc_X, ItemLoc_Y);
+		FVector2D ItemLocation = FVector2D(ItemLoc_X, ItemLoc_Y);
+
+		TArray<FVector2D> ItemShape = ItemReference->GetShape(ItemReference->GetItemRotation());
+		for (auto ShapeElem : ItemShape)
 		{
-			return false;
-		}
-		if (GridState[RoundedVector] == true)
-		{
-			TArray<FVector2D> AllKeys;
-			GridInventory.GetKeys(AllKeys);
-			for (auto GridElem : AllKeys)
+			FVector2D RoundedVector = FVector2D(FMath::RoundToInt(ItemLocation.X + ShapeElem.X), FMath::RoundToInt(ItemLocation.Y + ShapeElem.Y));
+			if (!GridState.Contains(RoundedVector))
 			{
-				if (GridInventory[GridElem]->PickUpItems->GetItemNumber() == ItemReference->GetItemNumber())
+				return false;
+			}
+			if (GridState[RoundedVector] == true)
+			{
+				TArray<FVector2D> AllKeys;
+				GridInventory.GetKeys(AllKeys);
+				for (auto GridElem : AllKeys)
 				{
-					if (GridInventory[GridElem]->IsOverlapping(RoundedVector, ItemReference))
+					if (GridInventory[GridElem]->PickUpItems->GetItemNumber() == ItemReference->GetItemNumber())
 					{
-						int32 RemainQuantity;
-						if (!GridInventory[GridElem]->IsFullyStack(RemainQuantity))
+						if (GridInventory[GridElem]->IsOverlapping(RoundedVector))
 						{
-							RemainQuantity -= ItemReference->GetCurrentQuantity();
-							int32 ClampQuantity = FMath::Clamp(ItemReference->GetMaxQuantity() - RemainQuantity, 0, ItemReference->GetMaxQuantity());
-
-							GridInventory[GridElem]->ModifyQuantity(ClampQuantity);
-							
-							if (RemainQuantity >= 0)
+							int32 RemainQuantity;
+							if (!GridInventory[GridElem]->IsFullyStack(RemainQuantity))
 							{
-								ItemWidget->ModifyQuantity(RemainQuantity * -1);
+								RemainQuantity -= ItemReference->GetCurrentQuantity();
+								int32 ClampQuantity = FMath::Clamp(ItemReference->GetMaxQuantity() - RemainQuantity, 0, ItemReference->GetMaxQuantity());
 
-								GridInventory[GridElem]->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-								return false;
+								GridInventory[GridElem]->ModifyQuantity(ClampQuantity);
+
+								//여기 있는 애는 MovingItem이라는 변수로 해야할 듯...
+								MovingItem->ModifyQuantity(RemainQuantity * -1);
+
+								if (RemainQuantity >= 0)
+								{
+									ItemWidget->ModifyQuantity(RemainQuantity * -1);
+
+									GridInventory[GridElem]->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+									return false;
+								}
 							}
 						}
 					}
+					else
+					{
+						return false;
+					}
 				}
-				else
-				{
-					return false;
-				}
+				return false;
 			}
-			return false;
 		}
+		return true;
 	}
-	return true;
+	else
+	{
+		return false;
+	}
 }
 
-bool UInventoryGrid::ItemStoppedMove()
+void UInventoryGrid::ItemMovedStop()
 {
-	// 하다 말았음.
-	OnRemoveItem.Broadcast(ItemWidget->WidgetLocation);
-	return false;
+	if (MovingItem)
+	{
+		OnRemoveItem.Broadcast(MovingItem->WidgetLocation);
+		float Grid_X = 0.0f;
+		float Grid_Y = 0.0f;
+		MovingItem->GetCurrentGridLocation(Grid_X, Grid_Y);
+		MovingItem->WidgetLocation = FVector2D(Grid_X, Grid_Y);
+		CurrentLocation = FVector2D(-999.0f, -999.0f);
+		MovingItem->StopMovingItem();
+		if (UGridSlot *SlotGrid = Cast<UGridSlot>(MovingItem->Slot))
+		{
+			SlotGrid->SetLayer(1);
+
+			AddToInventory(MovingItem);
+
+			OnAddItem.Broadcast(MovingItem->WidgetLocation, MovingItem->PickUpItems);
+
+			// ItemWidget 여기 버그 생길 수도 있음 만약 버그생기면 MovingItem변수 따로 만들어볼 것.
+			MovingItem = nullptr;
+			TArray<FVector2D> AllKeys;
+			GridInventory.GetKeys(AllKeys);
+			for (auto GridInventoryElem : AllKeys)
+			{
+				GridInventory[GridInventoryElem]->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+		}
+	}
+}
+
+void UInventoryGrid::AddToInventory(UInventoryItem *WidgetItem)
+{
+	GridInventory.Add(WidgetItem->WidgetLocation, WidgetItem);
+	WidgetInventory.Add(WidgetItem->WidgetLocation, WidgetItem->PickUpItems);
+	AddToState(WidgetItem->WidgetLocation, WidgetItem->PickUpItems);
+}
+
+void UInventoryGrid::RemoveFromInventory(FVector2D WidgetLoc)
+{
+	RemoveFromState(WidgetLoc, WidgetInventory[WidgetLoc]);
+	WidgetInventory.Remove(WidgetLoc);
+	GridInventory.Remove(WidgetLoc);
+}
+
+void UInventoryGrid::AddToState(FVector2D WidgetLoc, APickUpItem *Item)
+{
+	if (Item)
+	{
+		for (const auto &ItemShapeElem : Item->GetShape(Item->GetItemRotation()))
+		{
+			GridState.Add(ItemShapeElem + WidgetLoc, true);
+		}
+	}
+}
+
+void UInventoryGrid::RemoveFromState(FVector2D WidgetLoc, APickUpItem *Item)
+{
+	if (IsValid(Item))
+	{
+		for (const auto &ItemShapeElem : Item->GetShape(Item->GetItemRotation()))
+		{
+			GridState.Add(ItemShapeElem + WidgetLoc, false);
+		}
+	}
 }
