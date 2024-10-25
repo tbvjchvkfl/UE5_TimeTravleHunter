@@ -79,13 +79,15 @@ protected:
 	UPROPERTY()
 	FVector2D CurrentLocation;
 
+	UPROPERTY()
+	UInventoryItem *MovingItem;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	void InitGrid();
 	void RefreshGrid();
 	void SetUpEmptyGrid();
-	void ItemAdded(UInventoryItem*WidgetItem);
+	void ItemAdded(UInventoryItem *WidgetItem);
 	void ItemRemoved(UInventoryItem *WidgetItem);
 	void ItemDropped(UInventoryItem *WidgetItem);
 	void ItemMoved(UInventoryItem *WidgetItem);
@@ -93,5 +95,9 @@ protected:
 	void LeftMouseButtonPressed(FVector2D Pos);
 	void RightMouseButtonPressed(FVector2D Pos);
 	bool CanPlaceItem() const;
-	bool ItemStoppedMove();
+	void ItemMovedStop();
+	void AddToInventory(UInventoryItem *WidgetItem);
+	void RemoveFromInventory(FVector2D WidgetLoc);
+	void AddToState(FVector2D WidgetLoc, APickUpItem *Item);
+	void RemoveFromState(FVector2D WidgetLoc, APickUpItem *Item);
 };
