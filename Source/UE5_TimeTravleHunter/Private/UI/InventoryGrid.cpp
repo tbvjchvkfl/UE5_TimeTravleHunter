@@ -168,32 +168,6 @@ void UInventoryGrid::MouseEnter(FVector2D Pos)
 			}
 		}
 	}
-	/*if (ItemWidget && ItemWidget->IsValidLowLevel() && ItemWidget->bIsMovable)
-	{
-		if (CurrentLocation == FVector2D(-999.0f, -999.0f))
-		{
-			CurrentLocation = Pos;
-		}
-		else
-		{
-			FVector2D OldLocation = CurrentLocation;
-			CurrentLocation = Pos;
-			if (UGridSlot *GridPanelSlot = Cast<UGridSlot>(ItemWidget->Slot))
-			{
-				FVector2D GettingSlotSize(GridPanelSlot->GetColumn(), GridPanelSlot->GetRow());
-				FVector2D CalculateLoc(CurrentLocation.X - OldLocation.X, CurrentLocation.Y - OldLocation.Y);
-
-				FVector2D AddingVector(GettingSlotSize.X + CalculateLoc.X, GettingSlotSize.Y + CalculateLoc.Y);
-
-				int32 ColSize = static_cast<int32>(AddingVector.X);
-				int32 RowSize = static_cast<int32>(AddingVector.Y);
-
-
-				GridPanelSlot->SetColumn(ColSize);
-				GridPanelSlot->SetRow(RowSize);
-			}
-		}
-	}*/
 }
 
 void UInventoryGrid::LeftMouseButtonPressed(FVector2D Pos)
@@ -209,25 +183,16 @@ void UInventoryGrid::LeftMouseButtonPressed(FVector2D Pos)
 
 void UInventoryGrid::RightMouseButtonPressed(FVector2D Pos)
 {
-	// MovingItem 변수 별도로 만들어서 해볼 것
 	if (IsValid(MovingItem))
 	{
+		MovingItem->ItemRotate();
+
 		if (UGridSlot *GridtoSlot = Cast<UGridSlot>(MovingItem->Slot))
 		{
 			GridtoSlot->SetColumn(static_cast<int32>(Pos.X));
 			GridtoSlot->SetRow(static_cast<int32>(Pos.Y));
 		}
 	}
-	/*if (ItemWidget && ItemWidget->IsValidLowLevel())
-	{
-		ItemWidget->GetItemRotate();
-
-		if (UGridSlot *GridtoSlot = Cast<UGridSlot>(ItemWidget->Slot))
-		{
-			GridtoSlot->SetColumn(static_cast<int32>(Pos.X));
-			GridtoSlot->SetRow(static_cast<int32>(Pos.Y));
-		}
-	}*/
 }
 
 bool UInventoryGrid::CanPlaceItem() const
