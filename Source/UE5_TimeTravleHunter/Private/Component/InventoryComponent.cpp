@@ -60,6 +60,42 @@ void UInventoryComponent::AddtoInventory(FVector2D ItemPosition, APickUpItem *It
 	}
 }
 
+void UInventoryComponent::RemoveFromInventory(FVector2D ItemPosition, bool ModifyState)
+{
+	ItemInventory.Remove(ItemPosition);
+	if (ModifyState)
+	{
+		for (const FVector2D &ShapeElem : ItemInventory[ItemPosition]->GetShape(0.0f))
+		{
+			InventoryState.Add(ShapeElem + ItemPosition, false);
+		}
+	}
+}
+
+void UInventoryComponent::DropItem(APickUpItem *Item)
+{
+	FVector Start{ GetOwner()->GetActorLocation() + (GetOwner()->GetActorForwardVector() * 600.0f) };
+	FVector End{ Start + FVector(0.0f, 0.0f, -500.0f) };
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner());
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.0f);
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECollisionChannel::ECC_Visibility, QueryParams))
+	{
+		FActorSpawnParameters SpawnParameter;
+		SpawnParameter.Owner = GetOwner();
+		SpawnParameter.Instigator = GetOwner()->GetInstigator();
+
+		auto DropItem = GetWorld()->SpawnActor<APickUpItem>(Item->GetClass(), Hit.ImpactPoint, GetOwner()->GetActorRotation(), SpawnParameter);
+
+		if (DropItem)
+		{
+			DropItem = Item;
+		}
+	}
+}
+
 void UInventoryComponent::CheckItem(class APickUpItem *Item)
 {
 	switch (Item->GetItemType())
