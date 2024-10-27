@@ -65,10 +65,12 @@ public:
 	void InitializeInventoryItem(FVector2D Loc, APickUpItem* PickUpItem);
 	void UpdateVisual(APickUpItem *Item);
 	void GetCurrentGridLocation(float &LocationX, float &LocationY) const;
-	void GetItemRotate();
-	bool IsOverlapping(FVector2D CurrentLocation, APickUpItem *Item) const;
+	void ItemRotate();
+	bool IsOverlapping(FVector2D CurrentLocation) const;
 	bool IsFullyStack(int32 &Remaining);
 	void ModifyQuantity(int32 NewQuantity);
+	void StartMovingItem();
+	void StopMovingItem();
 
 protected:
 	//======================================================
@@ -76,6 +78,9 @@ protected:
 	//======================================================
 	UPROPERTY(EditAnywhere, Category = "ItemWidget | Property", meta = (AllowPrivateAccess = "true"))
 	float ItemGridSize;
+
+	UPROPERTY()
+	bool bIsItemRotated;
 
 	UPROPERTY()
 	UItemVisibility *VisibilityWidget;
@@ -99,6 +104,4 @@ protected:
 	void HoverItem();
 	void UnHoverItem();
 	void RemoveDropDown();
-	void StartMovingItem();
-	void StopMovingItem();
 };

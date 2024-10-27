@@ -36,8 +36,12 @@ public:
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void NativeConstruct() override;
-	void DropItem();
-	void RemoveItem();
 	virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
 	virtual void NativeOnMouseLeave(const FPointerEvent &InMouseEvent);
+
+	UFUNCTION()
+	void DropItem();
+
+	UFUNCTION()
+	void RemoveItem();
 };
