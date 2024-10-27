@@ -1,3 +1,3 @@
-1. Inventory System
+Inventory System
 -
 
