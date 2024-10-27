@@ -8,8 +8,8 @@
 
 void UDropDown::NativeConstruct()
 {
-	//DropButton->OnClicked.AddDynamic(this, &UDropDown::DropItem);
-	//RemoveButton->OnClicked.AddDynamic(this, &UDropDown::RemoveItem);
+	DropButton->OnClicked.AddDynamic(this, &UDropDown::DropItem);
+	RemoveButton->OnClicked.AddDynamic(this, &UDropDown::RemoveItem);
 }
 
 void UDropDown::DropItem()

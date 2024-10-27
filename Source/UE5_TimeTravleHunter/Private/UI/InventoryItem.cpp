@@ -177,9 +177,9 @@ void UInventoryItem::ModifyQuantity(int32 NewQuantity)
 	}
 }
 
-bool UInventoryItem::IsOverlapping(FVector2D CurrentLocation, APickUpItem *Item) const
+bool UInventoryItem::IsOverlapping(FVector2D CurrentLocation) const
 {
-	for (const auto &ShapeElem : Item->GetShape(Item->GetItemRotation()))
+	for (const auto &ShapeElem : PickUpItems->GetShape(PickUpItems->GetItemRotation()))
 	{
 		if (ShapeElem + WidgetLocation == CurrentLocation)
 		{
@@ -244,20 +244,20 @@ void UInventoryItem::UpdateVisual(APickUpItem *Item)
 	}
 }
 
-void UInventoryItem::GetItemRotate()
+void UInventoryItem::ItemRotate()
 {
 	if (PickUpItems)
 	{
-		PickUpItems->SetItemRotation(ItemImage->GetRenderTransformAngle() + 90.0f);
+		if (bIsItemRotated)
+		{
+			PickUpItems->SetItemRotation(ItemImage->GetRenderTransformAngle() - 90.0f);
+			bIsItemRotated = false;
+		}
+		else
+		{
+			PickUpItems->SetItemRotation(ItemImage->GetRenderTransformAngle() + 90.0f);
+			bIsItemRotated = true;
+		}
 		UpdateVisual(PickUpItems);
 	}
-	/*if (PickUpItems->GetItemRotation() == 0.0f)
-	{
-		
-	}
-	if (PickUpItems->GetItemRotation() >= 90.0f)
-	{
-		PickUpItems->SetItemRotation(ItemImage->GetRenderTransformAngle() - 90.0f);
-	}*/
-	
 }

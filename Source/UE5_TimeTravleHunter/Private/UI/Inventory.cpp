@@ -18,10 +18,8 @@ void UInventory::NativeConstruct()
 	Player = Cast<APlayerCharacter>(GetOwningPlayerPawn());
 	if (Player)
 	{
-		GridWidget->InventoryComponent = Player->GetItemInventory();
-		GridWidget->InventorySize = Player->GetItemInventory()->GetItemInventorySize();
-		GridWidget->InventoryWidth = Player->GetItemInventory()->GetInventoryWidth();
-		GridWidget->WidgetInventory = Player->GetItemInventory()->GetItemInventory();
+		InventoryComponent = Player->GetItemInventory();
+
 		GridWidget->OnDropItem.AddUObject(this, &UInventory::DropItem);
 		GridWidget->OnRemoveItem.AddUObject(this, &UInventory::RemoveItem);
 		GridWidget->OnAddItem.AddUObject(this, &UInventory::AddItem);
@@ -31,15 +29,18 @@ void UInventory::NativeConstruct()
 
 void UInventory::DropItem(FVector2D Pos)
 {
-
+	InventoryComponent->DropItem(InventoryComponent->GetItemInventory()[Pos]);
+	RemoveItem(Pos);
 }
 
 void UInventory::RemoveItem(FVector2D Pos)
 {
-
+	InventoryComponent->GetItemInventory().Remove(Pos);
+	InventoryComponent->RemoveFromInventory(Pos, false);
 }
 
 void UInventory::AddItem(FVector2D Pos, APickUpItem *Item)
 {
-
+	InventoryComponent->GetItemInventory().Add(Pos, Item);
+	InventoryComponent->AddtoInventory(Pos, Item, false);
 }

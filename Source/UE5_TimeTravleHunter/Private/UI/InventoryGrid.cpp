@@ -174,7 +174,7 @@ void UInventoryGrid::LeftMouseButtonPressed(FVector2D Pos)
 {
 	if (IsValid(MovingItem))
 	{
-		if (CanPlaceItem())
+		if (CanPlaceItem() == true)
 		{
 			ItemMovedStop();
 		}
@@ -231,7 +231,6 @@ bool UInventoryGrid::CanPlaceItem() const
 
 								GridInventory[GridElem]->ModifyQuantity(ClampQuantity);
 
-								//여기 있는 애는 MovingItem이라는 변수로 해야할 듯...
 								MovingItem->ModifyQuantity(RemainQuantity * -1);
 
 								if (RemainQuantity >= 0)
@@ -279,7 +278,6 @@ void UInventoryGrid::ItemMovedStop()
 
 			OnAddItem.Broadcast(MovingItem->WidgetLocation, MovingItem->PickUpItems);
 
-			// ItemWidget 여기 버그 생길 수도 있음 만약 버그생기면 MovingItem변수 따로 만들어볼 것.
 			MovingItem = nullptr;
 			TArray<FVector2D> AllKeys;
 			GridInventory.GetKeys(AllKeys);
@@ -318,7 +316,7 @@ void UInventoryGrid::AddToState(FVector2D WidgetLoc, APickUpItem *Item)
 
 void UInventoryGrid::RemoveFromState(FVector2D WidgetLoc, APickUpItem *Item)
 {
-	if (IsValid(Item))
+	if (Item)
 	{
 		for (const auto &ItemShapeElem : Item->GetShape(Item->GetItemRotation()))
 		{
