@@ -23,6 +23,10 @@ public:
 
 	FOnInventoryUpdate OnInventoryUpdate;
 
+	FHitResult Hit;
+
+	UPROPERTY(EditAnywhere, Category = "DropItem")
+	TSubclassOf<APickUpItem> DroppingItem;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -33,7 +37,9 @@ public:
 	FORCEINLINE int32 GetItemInventorySize() { return InventorySize; };
 	FORCEINLINE int32 GetInventoryWidth() { return InventoryWidth; };
 	void CheckItem(APickUpItem *Item);
-
+	void AddtoInventory(FVector2D ItemPosition, APickUpItem *Item, bool ModifyState);
+	void RemoveFromInventory(FVector2D ItemPosition, bool ModifyState);
+	void DropItem(APickUpItem* Item);
 protected:
 	//======================================================
 	//=					- Variables -					   =
@@ -59,8 +65,6 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void InitializeInventory();
-	void AddtoInventory(FVector2D ItemPosition, APickUpItem *Item, bool ModifyState);
 	void AddItem(APickUpItem *Item);
 	bool bIsRoomAvailable(TArray<FVector2D> Shape, FVector2D &ItemPosition) const;
-	
 };
