@@ -61,7 +61,7 @@ Inventory System
    </code>
   </pre>
   
-    > - InventoryComponent::BeginPlay()함수에 초기화함수를 호출해주었습니다.
+    > - InventoryComponent::BeginPlay()함수에서 초기화함수를 호출해주었습니다.
     > - 처음에는 FVector2D 타입이나, FIntPoint타입의 변수를 사용하여 인벤토리의 크기를 설정해주려하였으나, 그렇게 되면 이중 for루프를 돌게 되어 시간 복잡도가 n^2이 되어 아래 코드와 같은 방식으로 for루프를 한번만 돌도록 구현하였습니다.
   <pre>
    <code>
@@ -90,3 +90,58 @@ Inventory System
       }
    </code>
   </pre>
+
+    > - InventoryComponent::BeginPlay()함수에서 초기화함수를 호출해주었습니다.
+    > - 처음에는 FVector2D 타입이나, FIntPoint타입의 변수를 사용하여 인벤토리의 크기를 설정해주려하였으나, 그렇게 되면 이중 for루프를 돌게 되어 시간 복잡도가 n^2이 되어 아래 코드와 같은 방식으로 for루프를 한번만 돌도록 구현하였습니다.
+    
+  <pre>
+   <code>
+      void UInventoryComponent::AddItem(APickUpItem *Items)
+      {
+      	FVector2D ItemPos = FVector2D(0, 0);
+      	TArray<FVector2D> AllKeys;
+      	ItemInventory.GetKeys(AllKeys);
+      	for (int32 i = 0; i < AllKeys.Num(); i++)
+      	{
+      		if (Items && ItemInventory[AllKeys[i]])
+      		{
+      			if (ItemInventory[AllKeys[i]]->GetItemNumber() == Items->GetItemNumber())
+      			{
+      				if (ItemInventory[AllKeys[i]]->GetMaxQuantity() > Items->GetCurrentQuantity())
+      				{
+      					int32 ItemQuantityReference = ItemInventory[AllKeys[i]]->GetCurrentQuantity() + Items->GetCurrentQuantity();
+      
+      					int32 RemainQuantity = ItemInventory[AllKeys[i]]->GetMaxQuantity() - ItemInventory[AllKeys[i]]->GetCurrentQuantity();
+      
+      					ItemInventory[AllKeys[i]]->SetCurrentQuantity(ItemQuantityReference);
+      
+      					AddtoInventory(AllKeys[i], ItemInventory[AllKeys[i]], false);
+      
+      					Items->SetCurrentQuantity(Items->GetCurrentQuantity() - RemainQuantity);
+      					if (Items->GetCurrentQuantity() <= 0)
+      					{
+      						return;
+      					}
+      				}
+      			}
+      		}
+      	}
+      	if (Items && bIsRoomAvailable(Items->GetShape(0.0f), ItemPos))
+      	{
+      		AddtoInventory(ItemPos, Items, true);
+      		return;
+      	}
+      	if (Items && bIsRoomAvailable(Items->GetShape(90.0f), ItemPos))
+      	{
+      		AddtoInventory(ItemPos, Items, true);
+      		return;
+      	}
+      }
+   </code>
+  </pre>
+
+- ### Inventory & Grid Inventory
+
+
+
+
