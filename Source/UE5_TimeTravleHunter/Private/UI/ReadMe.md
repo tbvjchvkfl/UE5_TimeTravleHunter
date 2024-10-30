@@ -7,6 +7,22 @@ Contents
 Inventory System
 -
 
+예시 영상
+-
+
+
+클래스 구조도
+-
+
+
+순서도
+-
+
+
+핵심 기능
+-
+
+
 - ### Inventory Component
   > - 자료구조 Map을 사용해서 인벤토리 내 위치와 그 위치에 따른 값을 가지도록 구현했습니다. 
   > - 인벤토리가 가지고 있어야 하는 Size와 인벤토리의 가로 크기 Width를 지정하였고, 현재 인벤토리의 공간이 비어있는지 채워져있는지를 판단하기 위해 TMap<FVector2D, bool> InventoryState를 만들어주었습니다.
