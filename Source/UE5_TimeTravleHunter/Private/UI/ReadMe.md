@@ -156,7 +156,7 @@ Inventory System
    </code>
   </pre>
 
-- ### Inventory & Grid Inventory
+- ### Inventory & Grid Inventory (Widget)
 
 
 
