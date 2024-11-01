@@ -16,11 +16,7 @@ Mouse Hover, Click에 대한 상호작용 기능을 구현했습니다.
 
 클래스 구조도
 -
-
-
-순서도
--
-
+![Inventory_System drawio](https://github.com/user-attachments/assets/5bf79fca-0350-4ad1-8149-55530f5d8961)
 
 핵심 기능
 -
