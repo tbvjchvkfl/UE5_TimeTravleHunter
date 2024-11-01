@@ -21,11 +21,10 @@ Mouse Hover, Click에 대한 상호작용 기능을 구현했습니다.
 핵심 기능
 -
 
-
 - ### Inventory Component
-  > - 자료구조 Map을 사용해서 인벤토리 내 위치와 그 위치에 따른 값을 가지도록 구현했습니다. 
-  > - 인벤토리가 가지고 있어야 하는 Size와 인벤토리의 가로 크기 Width를 지정하였고, 현재 인벤토리의 공간이 비어있는지 채워져있는지를 판단하기 위해 TMap<FVector2D, bool> InventoryState를 만들어주었습니다.
-  > - 게임 내에서 재화를 습득했을 경우 인벤토리가 단순 텍스트로 별도 표시해줄 생각이었으므로 CoinInventory라는 변수를 만들어 주었고, 실제 아이템에 대한 정보를 담아둘 TMap<FVector2D, APickUpItem*> ItemInventory를 만들어주었습니다.
+  > - 언리얼 엔진 TMap을 사용해서 인벤토리 내 위치와 그 위치에 따른 값을 가지도록 구현했습니다. 
+  > - 인벤토리가 가지고있을 슬롯의 개수 Size와 한 행에 들어갈 슬롯의 개수 Width를 지정하였고, 현재 인벤토리의 공간이 비어있는지 채워져있는지를 판단하기 위해 TMap<FVector2D, bool> InventoryState를 만들어주었습니다.
+  > - 게임 내에서 재화를 습득했을 경우 인벤토리의 슬롯이 아닌 단순 텍스트로 별도 표시해줄 생각이었으므로 CoinInventory라는 변수를 만들어 주었고, APickUpItem에 아이템 타입을 Enum class로 지정하여 구분해주었습니다.
   <pre>
    <code>
       UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
@@ -46,38 +45,40 @@ Mouse Hover, Click에 대한 상호작용 기능을 구현했습니다.
   </pre>
 
     > - 캐릭터가 APickUpItem과 인터렉션 하면 CheckItem 함수를 통해 Item의 타입을 확인하여 Coin이면 CoinInventory에 값이 추가되고 그 외 타입이면 AddItem함수가 호출되도록 구현해주었습니다.
-    > - 멀티 캐스트 델리게이트를 바인딩하여 아이템을 획득할 때마다 인벤토리 내용이 업데이트 될 수 있도록 구현했습니다.
+    > - 멀티 캐스트 델리게이트를 바인딩하여 아이템을 획득할 때마다 위젯 인벤토리의 내용이 업데이트 될 수 있도록 구현했습니다.
     <pre>
    <code>
-      switch (Item->GetItemType())
+      void UInventoryComponent::CheckItem(class APickUpItem *Item)
       {
-      	case EItemType::Coin:
+      	switch (Item->GetItemType())
       	{
-      		CoinInventory += Item->GetCurrentQuantity();
+      		case EItemType::Coin:
+      		{
+      			CoinInventory += Item->GetCurrentQuantity();
+      		}
+      		break;
+      		case EItemType::Weapon:
+      		{
+      			AddItem(Item);
+      		}
+      		break;
+      		case EItemType::Consumable:
+      		{
+      			AddItem(Item);
+      		}
+      		break;
+      		default:
+      		{
+      			return;
+      		}
+      		break;
       	}
-      	break;
-      	case EItemType::Weapon:
-      	{
-      		AddItem(Item);
-      	}
-      	break;
-      	case EItemType::Consumable:
-      	{
-      		AddItem(Item);
-      	}
-      	break;
-      	default:
-      	{
-      		return;
-      	}
-      	break;
+      	OnInventoryUpdate.Broadcast();
       }
-      OnInventoryUpdate.Broadcast();
    </code>
   </pre>
   
-    > - InventoryComponent::BeginPlay()함수에서 초기화함수를 호출해주었습니다.
-    > - 처음에는 FVector2D 타입이나, FIntPoint타입의 변수를 사용하여 인벤토리의 크기를 설정해주려하였으나, 그렇게 되면 이중 for루프를 돌게 되어 시간 복잡도가 n^2이 되어 아래 코드와 같은 방식으로 for루프를 한번만 돌도록 구현하였습니다.
+    > - Inventory Component의 초기화 작업을 할 때, 처음에는 FVector2D 타입이나 FIntPoint타입의 변수를 사용하여 인벤토리의 크기를 설정해주려하였으나, 그렇게 되면 이중 for루프를 돌게 되어 시간 복잡도가 n^2이 되어 아래 코드와 같은 방식으로 for루프를 한번만 돌도록 구현하였습니다.
   <pre>
    <code>
       void UInventoryComponent::InitializeInventory()
@@ -106,9 +107,9 @@ Mouse Hover, Click에 대한 상호작용 기능을 구현했습니다.
    </code>
   </pre>
 
-    > - InventoryComponent::BeginPlay()함수에서 초기화함수를 호출해주었습니다.
-    > - 처음에는 FVector2D 타입이나, FIntPoint타입의 변수를 사용하여 인벤토리의 크기를 설정해주려하였으나, 그렇게 되면 이중 for루프를 돌게 되어 시간 복잡도가 n^2이 되어 아래 코드와 같은 방식으로 for루프를 한번만 돌도록 구현하였습니다.
-    
+    > - CheckItem이 후, AddItem 함수가 호출 되면 우선적으로 ItemInventory를 순회하며 Inventory안에 Item이 있거나, 해당 아이템의 값이 nullptr이 아닐 경우 아이템 중복 체크를 위해 만들어둔 ItemNumber를 서로 비교하여 만약, 같은 아이템이라면 아이템의 수량만 증가되도록 구현하였습니다.
+    > - Inventory가 비어있거나, 획득한 아이템이 기존의 아이템과 같은 아이템이 아니라면 bIsRoomAvailable함수를 호출하여 현재 Inventory에 획득한 아이템이 들어갈 수 있는 공간이 있는지 확인하였고, 해당 함수가 true를 리턴하면 아이템이 추가되도록 구현하였습니다.
+        
   <pre>
    <code>
       void UInventoryComponent::AddItem(APickUpItem *Items)
@@ -152,11 +153,70 @@ Mouse Hover, Click에 대한 상호작용 기능을 구현했습니다.
       		return;
       	}
       }
+                  
+      bool UInventoryComponent::bIsRoomAvailable(TArray<FVector2D> Shape, FVector2D &ItemPosition) const
+      {
+      	bool bIsFaild = false;
+      	TArray<FVector2D> AllKeys;
+      	InventoryState.GetKeys(AllKeys);
+      	for (int32 i = 0; i < AllKeys.Num(); i++)
+      	{
+      		if (InventoryState.Contains(AllKeys[i]))
+      		{
+      			if (InventoryState[AllKeys[i]] == false)
+      			{
+      				for (const auto &ItemShapeElem : Shape)
+      				{
+      					if (!InventoryState.Contains(FVector2D(AllKeys[i].X + ItemShapeElem.X, AllKeys[i].Y + ItemShapeElem.Y)))
+      					{
+      						bIsFaild = true;
+      						break;
+      					}
+      					if (InventoryState[FVector2D(AllKeys[i].X + ItemShapeElem.X, AllKeys[i].Y + ItemShapeElem.Y)] == true)
+      					{
+      						bIsFaild = true;
+      						break;
+      					}
+      				}
+      				if (bIsFaild)
+      				{
+      					bIsFaild = false;
+      				}
+      				else
+      				{
+      					ItemPosition = AllKeys[i];
+      					return true;
+      				}
+      			}
+      		}
+      	}
+      	ItemPosition = FVector2D(0, 0);
+      	return false;
+      }
    </code>
   </pre>
 
-- ### Inventory & Grid Inventory (Widget)
-
-
+- ### Grid Inventory (Widget)
+  > - 언리얼 엔진 TMap을 사용해서 인벤토리 내 위치와 그 위치에 따른 값을 가지도록 구현했습니다. 
+  > - 인벤토리가 가지고있을 슬롯의 개수 Size와 한 행에 들어갈 슬롯의 개수 Width를 지정하였고, 현재 인벤토리의 공간이 비어있는지 채워져있는지를 판단하기 위해 TMap<FVector2D, bool> InventoryState를 만들어주었습니다.
+  > - 게임 내에서 재화를 습득했을 경우 인벤토리의 슬롯이 아닌 단순 텍스트로 별도 표시해줄 생각이었으므로 CoinInventory라는 변수를 만들어 주었고, APickUpItem에 아이템 타입을 Enum class로 지정하여 구분해주었습니다.
+  <pre>
+   <code>
+      UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+      int32 InventorySize;
+      
+      UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+      int32 InventoryWidth;
+      
+      UPROPERTY(VisibleAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+      TMap<FVector2D, APickUpItem *> ItemInventory;
+      
+      UPROPERTY(VisibleAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+      TMap<FVector2D, bool> InventoryState;
+      
+      UPROPERTY()
+      int32 CoinInventory;
+   </code>
+  </pre>
 
 
