@@ -8,6 +8,7 @@
 
 class UGameHUD;
 class UInventory;
+class APlayerCharacterController;
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API ATTH_HUD : public AHUD
@@ -30,10 +31,15 @@ public:
 	ATTH_HUD();
 
 	void ToggleInventory();
+	void ShowInventory();
+	void HideInventory();
 protected:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	UPROPERTY()
+	APlayerCharacterController *Controller;
+
 	UPROPERTY()
 	UGameHUD *GameHUDWidget;
 
@@ -45,5 +51,6 @@ protected:
 	virtual void BeginPlay()override;
 
 private:
-	bool bIsInventory;
+	UPROPERTY()
+	bool bIsPaused;
 };
