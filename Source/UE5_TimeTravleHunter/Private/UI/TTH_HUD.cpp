@@ -1,48 +1,72 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+
+// GameFramework
 #include "UI/TTH_HUD.h"
 #include "UI/GameHUD.h"
 #include "UI/Inventory.h"
+#include "Controller/PlayerCharacterController.h"
+
+
+// Engine
 #include "Kismet/GameplayStatics.h"
 
 ATTH_HUD::ATTH_HUD()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	GameHUDWidget = nullptr;
-	bIsInventory = true;
+	bIsPaused = false;
 }
 
 void ATTH_HUD::ToggleInventory()
 {
-	if (bIsInventory)
+	if (bIsPaused)
 	{
-		bIsInventory = false;
-		
-		InventoryWidget->SetVisibility(ESlateVisibility::Visible);
-
-		FInputModeGameAndUI GameAndUIInputMode;
-		//GetOwningPlayerController()->SetPause(true);
-		GetOwningPlayerController()->SetInputMode(GameAndUIInputMode);
-		GetOwningPlayerController()->SetShowMouseCursor(true);
-		
+		HideInventory();
 	}
 	else
 	{
-		bIsInventory = true;
-
-		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
-
-		FInputModeGameOnly GameOnlyInputMode;
-		//GetOwningPlayerController()->SetPause(false);
-		GetOwningPlayerController()->SetInputMode(GameOnlyInputMode);
-		GetOwningPlayerController()->SetShowMouseCursor(false);
+		ShowInventory();
 	}
+}
+
+void ATTH_HUD::ShowInventory()
+{
+	bIsPaused = true;
+
+	InventoryWidget->SetVisibility(ESlateVisibility::Visible);
+
+	FInputModeGameAndUI GameAndUIMode;
+
+	GameAndUIMode.SetWidgetToFocus(InventoryWidget->TakeWidget());
+
+	Controller->SetInputMode(GameAndUIMode);
+	Controller->SetShowMouseCursor(true);
+
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+}
+
+void ATTH_HUD::HideInventory()
+{
+	bIsPaused = false;
+
+	InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+	FInputModeGameOnly GameOnlyInputMode;
+
+	Controller->SetInputMode(GameOnlyInputMode);
+	Controller->SetShowMouseCursor(false);
+
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
 }
 
 void ATTH_HUD::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Controller = Cast<APlayerCharacterController> (GetOwningPlayerController());
+
 	if (GameHUD)
 	{
 		GameHUDWidget = CreateWidget<UGameHUD>(GetWorld(), GameHUD);
@@ -53,6 +77,6 @@ void ATTH_HUD::BeginPlay()
 	{
 		InventoryWidget = CreateWidget<UInventory>(GetWorld(), Inventory);
 		InventoryWidget->AddToViewport();
-		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);          
+		InventoryWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
