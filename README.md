@@ -16,11 +16,7 @@ This Game Is Adventure Action of Third Person
 - Aim Offset
 - IK_Foot
 - Combat Locomotion
-- Item Data
-- PickUpItem
-- Inventory Component
-- GridSlot Inventory
-- UI Input
+- Inventory System
 
 ### OutGame
 - HUD
