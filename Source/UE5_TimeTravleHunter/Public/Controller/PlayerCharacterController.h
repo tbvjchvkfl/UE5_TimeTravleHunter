@@ -27,6 +27,28 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Controller | Property")
 	float LookingRotationValue;
 
+	// Character Locomotion
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
+	bool bIsWalk;
+
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
+	bool bIsSprint;
+
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
+	bool bIsCrouch;
+
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
+	bool bIsAimming;
+
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
+	bool bIsPistol;
+
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
+	bool bIsRifle;
+
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
+	bool bIsShotgun;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -44,76 +66,19 @@ protected:
 	//======================================================
 	virtual void BeginPlay()override;
 	virtual void Tick(float DeltaTime)override;
-	virtual void SetupInputComponent()override;
+
 private:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-	UPROPERTY(VisibleAnywhere, Category = "Controller | Status", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Property", meta = (AllowPrivateAccess = "true"))
 	APlayerCharacter *PlayerCharacter;
 
 	UPROPERTY()
 	ATTH_HUD *OwningHUD;
 
-	// Input
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputMappingContext *DefaultContext;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *Moving;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *Jumping;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *Looking;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *Sprinting;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *Crouching;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *MoveSwitching;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *Aimming;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *SwitchingMainWeapon;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *SwitchingSubWeapon;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *Interacting;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
-	UInputAction *Inventory;
-
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 
-	// Input Function
-	void Move(const FInputActionValue &Value);
-	void Look(const FInputActionValue &Value);
-	void Sprint(const FInputActionValue &Value);
-	void Crouch(const FInputActionValue &Value);
-	void WalktoJog(const FInputActionValue &Value);
-	void JumpStart();
-	void JumpStop();
-
-
-	void StartAimming();
-	void StopAimming();
-	void SwitchingWeaponMain();
-	void SwitchingWeaponSub();
-	void SprintCameraMoving();
-
-	void Interaction();
-	void ShowInventory();
-
-	void TestFunction();
 };
