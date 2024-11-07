@@ -17,12 +17,13 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 APlayerCharacter::APlayerCharacter() : 
 	MaxHealth(100.0f), 
 	CurrentHealth(MaxHealth),  
 	MaxStamina(80.0f),
-	CurrentStamina(MaxStamina), 
+	CurrentStamina(MaxStamina),
 	LookingRotationValue(1.0f)
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -53,6 +54,7 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	OwningHUD = Cast<ATTH_HUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+	OwningController = Cast<APlayerCharacterController>(GetController());
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -80,6 +82,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(Moving, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 
 		EnhancedInputComponent->BindAction(Sprinting, ETriggerEvent::Triggered, this, &APlayerCharacter::Sprint);
+
+		EnhancedInputComponent->BindAction(Sprinting, ETriggerEvent::Triggered, this, &APlayerCharacter::Vaulting);
 
 		EnhancedInputComponent->BindAction(Crouching, ETriggerEvent::Triggered, this, &APlayerCharacter::Crouch);
 
@@ -126,29 +130,29 @@ void APlayerCharacter::Look(const FInputActionValue &Value)
 
 void APlayerCharacter::Sprint(const FInputActionValue &Value)
 {
-	if (!bIsSprint)
+	if (!OwningController->bIsSprint)
 	{
-		bIsSprint = true;
+		OwningController->bIsSprint = true;
 		GetCharacterMovement()->MaxWalkSpeed = 800.0f;
 	}
 	else
 	{
-		bIsSprint = false;
+		OwningController->bIsSprint = false;
 		GetCharacterMovement()->MaxWalkSpeed = 500.0f;
 	}
 }
 
 void APlayerCharacter::Crouch(const FInputActionValue &Value)
 {
-	if (!bIsCrouch)
+	if (!OwningController->bIsCrouch)
 	{
-		bIsCrouch = true;
+		OwningController->bIsCrouch = true;
 		GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 	}
 	else
 	{
-		bIsCrouch = false;
-		if (bIsWalk)
+		OwningController->bIsCrouch = false;
+		if (OwningController->bIsWalk)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 		}
@@ -161,23 +165,59 @@ void APlayerCharacter::Crouch(const FInputActionValue &Value)
 
 void APlayerCharacter::WalktoJog(const FInputActionValue &Value)
 {
-	if (!bIsWalk)
+	if (!OwningController->bIsWalk)
 	{
-		bIsWalk = true;
+		OwningController->bIsWalk = true;
 		GetCharacterMovement()->MaxWalkSpeed = 200.0f;
 	}
 	else
 	{
-		bIsWalk = false;
+		OwningController->bIsWalk = false;
 		GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+	}
+}
+
+void APlayerCharacter::Vaulting()
+{
+	for (int32 i = 0; i <= 2; i++)
+	{
+		FVector Start = GetActorLocation() + FVector(0.0f, 0.0f, i * 30);
+		FVector End = Start + (GetActorRotation().Vector() * 180.0f);
+		FHitResult HitResult;
+		TArray<AActor *> IgnoreActorList;
+		/*if (GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeSphere(50.0f)))
+		{
+			
+		}
+
+		DrawDebugSphere(GetWorld(), Start, 5.0f, 12, FColor::Red, false, 3.0f);
+		DrawDebugSphere(GetWorld(), Start, 5.0f, 12, FColor::Red, false, 3.0f);*/
+
+		// 우선은 이렇게 하지만, LineTrace로 해도 문제 없을 듯... 나중에 바꿀 것.
+		if (UKismetSystemLibrary::SphereTraceSingle(GetWorld(), Start, End, 5.0f, ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActorList, EDrawDebugTrace::ForDuration, HitResult, true))
+		{
+			for (int32 j = 0; j <= 5; j++)
+			{
+				FVector InitPos = FVector(HitResult.Location + FVector(0.0f, 0.0f, 100.0f));
+				FVector ForwardVector = FVector(j * 50.0f * GetActorRotation().Vector());
+				FVector SubStart = InitPos + ForwardVector;
+				FVector SubEnd = SubStart - FVector(0.0f, 0.0f, 100.0f);
+
+				if (UKismetSystemLibrary::SphereTraceSingle(GetWorld(), SubStart, SubEnd, 5.0f, ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActorList, EDrawDebugTrace::ForDuration, HitResult, true))
+				{
+					
+				}
+			}
+			break;
+		}
 	}
 }
 
 void APlayerCharacter::StartAimming()
 {
-	if (!bIsAimming)
+	if (!OwningController->bIsAimming)
 	{
-		bIsAimming = true;
+		OwningController->bIsAimming = true;
 		bUseControllerRotationYaw = true;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		GetCharacterMovement()->MaxWalkSpeed = 200.0f;
@@ -187,12 +227,12 @@ void APlayerCharacter::StartAimming()
 
 void APlayerCharacter::StopAimming()
 {
-	if (bIsAimming)
+	if (OwningController->bIsAimming)
 	{
-		bIsAimming = false;
+		OwningController->bIsAimming = false;
 		bUseControllerRotationYaw = false;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
-		if (!bIsWalk)
+		if (!OwningController->bIsWalk)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = 500.0f;
 		}
@@ -206,15 +246,15 @@ void APlayerCharacter::SwitchingWeaponMain()
 
 void APlayerCharacter::SwitchingWeaponSub()
 {
-	if (bIsPistol)
+	if (OwningController->bIsPistol)
 	{
-		bIsPistol = false;
+		OwningController->bIsPistol = false;
 	}
-	if (bIsRifle)
+	if (OwningController->bIsRifle)
 	{
 
 	}
-	if (bIsShotgun)
+	if (OwningController->bIsShotgun)
 	{
 
 	}
@@ -222,7 +262,7 @@ void APlayerCharacter::SwitchingWeaponSub()
 
 void APlayerCharacter::SprintCameraMoving()
 {
-	if (bIsSprint)
+	if (OwningController->bIsSprint)
 	{
 
 	}
