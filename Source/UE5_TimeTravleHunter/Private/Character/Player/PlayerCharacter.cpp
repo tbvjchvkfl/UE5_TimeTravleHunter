@@ -184,28 +184,53 @@ void APlayerCharacter::Vaulting()
 		FVector Start = GetActorLocation() + FVector(0.0f, 0.0f, i * 30);
 		FVector End = Start + (GetActorRotation().Vector() * 180.0f);
 		FHitResult HitResult;
+		FCollisionQueryParams CollisionParams;
+		CollisionParams.AddIgnoredActor(this);
+
 		TArray<AActor *> IgnoreActorList;
-		/*if (GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_Visibility, FCollisionShape::MakeSphere(50.0f)))
+		IgnoreActorList.Add(this);
+
+		/*DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.0f);
+
+		if(GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams))
 		{
-			
-		}
+			for (int32 j = 0; j < 6; j++)
+			{
+				FVector SecondStart = HitResult.Location + FVector(0.0f, 0.0f, 100.0f) + (GetActorRotation().Vector() * j * 50);
+				FVector SecondEnd = SecondStart - FVector(0.0f, 0.0f, 100.0f);
+				FHitResult SecondHit;
+				FCollisionQueryParams SecondParams;
+				SecondParams.AddIgnoredActor(this);
 
-		DrawDebugSphere(GetWorld(), Start, 5.0f, 12, FColor::Red, false, 3.0f);
-		DrawDebugSphere(GetWorld(), Start, 5.0f, 12, FColor::Red, false, 3.0f);*/
+				if(GetWorld()->LineTraceSingleByChannel(SecondHit, SecondStart, SecondEnd, ECC_Visibility, SecondParams))
+				{
 
-		// 우선은 이렇게 하지만, LineTrace로 해도 문제 없을 듯... 나중에 바꿀 것.
+				}
+				DrawDebugLine(GetWorld(), SecondStart, SecondEnd, FColor::Blue, false, 3.0f);
+			}
+			break;
+		}*/
+		
 		if (UKismetSystemLibrary::SphereTraceSingle(GetWorld(), Start, End, 5.0f, ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActorList, EDrawDebugTrace::ForDuration, HitResult, true))
 		{
 			for (int32 j = 0; j <= 5; j++)
 			{
-				FVector InitPos = FVector(HitResult.Location + FVector(0.0f, 0.0f, 100.0f));
-				FVector ForwardVector = FVector(j * 50.0f * GetActorRotation().Vector());
-				FVector SubStart = InitPos + ForwardVector;
+				FVector SubStart = HitResult.Location + FVector(0.0f, 0.0f, 100.0f) + (GetActorRotation().Vector() * j * 50);
 				FVector SubEnd = SubStart - FVector(0.0f, 0.0f, 100.0f);
 
-				if (UKismetSystemLibrary::SphereTraceSingle(GetWorld(), SubStart, SubEnd, 5.0f, ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActorList, EDrawDebugTrace::ForDuration, HitResult, true))
+				FHitResult SubHit;
+
+				if (UKismetSystemLibrary::SphereTraceSingle(GetWorld(), SubStart, SubEnd, 5.0f, ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActorList, EDrawDebugTrace::ForDuration, SubHit, true))
 				{
-					
+					if (j == 0)
+					{
+						FVector VaultStartPos = SubHit.Location;
+						
+						DrawDebugSphere(GetWorld(), VaultStartPos, 10.0f, 12, FColor::Blue, false, 10.0f);
+					}
+					FVector VaultMiddlePos = SubHit.Location;
+					DrawDebugSphere(GetWorld(), VaultMiddlePos, 10.0f, 12, FColor::Yellow, false, 10.0f);
+
 				}
 			}
 			break;
