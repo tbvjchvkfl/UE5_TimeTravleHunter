@@ -232,6 +232,25 @@ void APlayerCharacter::Vaulting()
 					DrawDebugSphere(GetWorld(), VaultMiddlePos, 10.0f, 12, FColor::Yellow, false, 10.0f);
 
 				}
+				else
+				{
+					FHitResult LineHit;
+					FVector LineStart = SubHit.TraceStart + GetActorRotation().Vector() * 80.0f;
+					FVector LineEnd = LineStart - FVector(0.0f, 0.0f, 1000.0f);
+					FCollisionQueryParams LineCollisionParam;
+					LineCollisionParam.AddIgnoredActor(this);
+
+					if (GetWorld()->LineTraceSingleByChannel(LineHit, LineStart, LineEnd, ECC_Visibility, LineCollisionParam))
+					{
+						FVector LandingPos = LineHit.Location;
+
+						DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Black, false, 3.0f);
+
+						break;
+					}
+					
+					
+				}
 			}
 			break;
 		}
