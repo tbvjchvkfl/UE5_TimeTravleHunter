@@ -13,6 +13,7 @@ class UInputAction;
 class UInventoryComponent;
 class ATTH_HUD;
 class APlayerCharacterController;
+class UMotionWarpingComponent;
 
 struct FInputActionValue;
 
@@ -32,6 +33,11 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
 	APlayerCharacterController *OwningController;
+
+	// Vault
+	FVector VaultStartPos;
+	FVector VaultMiddlePos;
+	FVector VaultLandingPos;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -120,6 +126,7 @@ protected:
 	void Sprint(const FInputActionValue &Value);
 	void Crouch(const FInputActionValue &Value);
 	void WalktoJog(const FInputActionValue &Value);
+	// Vault
 	void Vaulting();
 
 	void StartAimming();
@@ -132,14 +139,23 @@ protected:
 	void ShowInventory();
 
 	void TestFunction();
+
+	// Vault
+	void VaultMotionWarp();
 private:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
 	
 	// Character Component
-	UPROPERTY(VisibleAnywhere, Category = "Character | Inventory")
+	UPROPERTY(VisibleAnywhere, Category = "Character | Inventory", meta = (AllowPrivateAccess = "true"))
 	UInventoryComponent *ItemInventory;
+
+	UPROPERTY(EditAnywhere, Category = "Character | MotionWarping", meta = (AllowPrivateAccess = "true"))
+	UMotionWarpingComponent *CharacterMotionWarping;
+
+	UPROPERTY(EditAnywhere, Category = "Character | MotionWarping", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
 	// Character Locomotion
 	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
@@ -157,6 +173,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Character | Property", meta = (AllowPrivateAccess = "true"))
 	float LookingRotationValue;
 
+	UPROPERTY(EditAnywhere, Category = "Character | Animation", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage *Vaulting;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
