@@ -13,6 +13,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "MotionWarpingComponent.h"
+#include "Animation/AnimInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -48,6 +50,8 @@ APlayerCharacter::APlayerCharacter() :
 	GetCharacterMovement()->AirControl = 1.0f;
 
 	ItemInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+
+	CharacterMotionWarping = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
 void APlayerCharacter::BeginPlay()
@@ -82,8 +86,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(Moving, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 
 		EnhancedInputComponent->BindAction(Sprinting, ETriggerEvent::Triggered, this, &APlayerCharacter::Sprint);
-
-		EnhancedInputComponent->BindAction(Sprinting, ETriggerEvent::Triggered, this, &APlayerCharacter::Vaulting);
 
 		EnhancedInputComponent->BindAction(Crouching, ETriggerEvent::Triggered, this, &APlayerCharacter::Crouch);
 
@@ -224,13 +226,15 @@ void APlayerCharacter::Vaulting()
 				{
 					if (j == 0)
 					{
-						FVector VaultStartPos = SubHit.Location;
+						VaultStartPos = SubHit.Location;
 						
 						DrawDebugSphere(GetWorld(), VaultStartPos, 10.0f, 12, FColor::Blue, false, 10.0f);
 					}
-					FVector VaultMiddlePos = SubHit.Location;
+					VaultMiddlePos = SubHit.Location;
+
 					DrawDebugSphere(GetWorld(), VaultMiddlePos, 10.0f, 12, FColor::Yellow, false, 10.0f);
 
+					OwningController->bIsVault = true;
 				}
 				else
 				{
@@ -242,7 +246,7 @@ void APlayerCharacter::Vaulting()
 
 					if (GetWorld()->LineTraceSingleByChannel(LineHit, LineStart, LineEnd, ECC_Visibility, LineCollisionParam))
 					{
-						FVector LandingPos = LineHit.Location;
+						VaultLandingPos = LineHit.Location;
 
 						DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Black, false, 3.0f);
 
@@ -341,4 +345,36 @@ void APlayerCharacter::ShowInventory()
 void APlayerCharacter::TestFunction()
 {
 
+}
+
+void APlayerCharacter::VaultMotionWarp()
+{
+	if (OwningController->bIsVault)
+	{
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+		SetActorEnableCollision(false);
+
+		FMotionWarpingTarget Target;
+		Target.Name = FName("VaultStart");
+		Target.Location = VaultStartPos;
+		Target.Rotation = GetActorRotation();
+
+		CharacterMotionWarping->AddOrUpdateWarpTarget(Target);
+
+		FMotionWarpingTarget MiddleTarget;
+		MiddleTarget.Name = FName("VaultMiddle");
+		MiddleTarget.Location = VaultMiddlePos;
+		MiddleTarget.Rotation = GetActorRotation();
+
+		CharacterMotionWarping->AddOrUpdateWarpTarget(MiddleTarget);
+
+		FMotionWarpingTarget LandingTarget;
+		LandingTarget.Name = FName("VaultLand");
+		LandingTarget.Location = VaultLandingPos;
+		LandingTarget.Rotation = GetActorRotation();
+
+		CharacterMotionWarping->AddOrUpdateWarpTarget(LandingTarget);
+
+		GetMesh()->PlayAnimMontage(Vaulting, false);
+	}
 }
