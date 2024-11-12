@@ -4,6 +4,7 @@
 // GameFramework
 #include "Character/Player/PlayerCharacter.h"
 #include "Controller/PlayerCharacterController.h"
+#include "AnimInstance/PlayerAnimInstance.h"
 #include "Interface/InteractionInterface.h"
 #include "Component/InventoryComponent.h"
 #include "Object/PickUpItem.h"
@@ -14,7 +15,6 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MotionWarpingComponent.h"
-#include "Animation/AnimInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -59,6 +59,7 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	OwningHUD = Cast<ATTH_HUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 	OwningController = Cast<APlayerCharacterController>(GetController());
+	OwningAnimInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -87,6 +88,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		EnhancedInputComponent->BindAction(Sprinting, ETriggerEvent::Triggered, this, &APlayerCharacter::Sprint);
 
+		EnhancedInputComponent->BindAction(Sprinting, ETriggerEvent::Triggered, this, &APlayerCharacter::Vaulting);
+
 		EnhancedInputComponent->BindAction(Crouching, ETriggerEvent::Triggered, this, &APlayerCharacter::Crouch);
 
 		EnhancedInputComponent->BindAction(Looking, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
@@ -105,6 +108,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		EnhancedInputComponent->BindAction(SwitchingMainWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchingWeaponMain);
 		EnhancedInputComponent->BindAction(SwitchingSubWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchingWeaponSub);
+
+		EnhancedInputComponent->BindAction(Test, ETriggerEvent::Triggered, this, &APlayerCharacter::TestFunction);
 	}
 }
 
@@ -192,27 +197,6 @@ void APlayerCharacter::Vaulting()
 		TArray<AActor *> IgnoreActorList;
 		IgnoreActorList.Add(this);
 
-		/*DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.0f);
-
-		if(GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, CollisionParams))
-		{
-			for (int32 j = 0; j < 6; j++)
-			{
-				FVector SecondStart = HitResult.Location + FVector(0.0f, 0.0f, 100.0f) + (GetActorRotation().Vector() * j * 50);
-				FVector SecondEnd = SecondStart - FVector(0.0f, 0.0f, 100.0f);
-				FHitResult SecondHit;
-				FCollisionQueryParams SecondParams;
-				SecondParams.AddIgnoredActor(this);
-
-				if(GetWorld()->LineTraceSingleByChannel(SecondHit, SecondStart, SecondEnd, ECC_Visibility, SecondParams))
-				{
-
-				}
-				DrawDebugLine(GetWorld(), SecondStart, SecondEnd, FColor::Blue, false, 3.0f);
-			}
-			break;
-		}*/
-		
 		if (UKismetSystemLibrary::SphereTraceSingle(GetWorld(), Start, End, 5.0f, ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActorList, EDrawDebugTrace::ForDuration, HitResult, true))
 		{
 			for (int32 j = 0; j <= 5; j++)
@@ -256,10 +240,60 @@ void APlayerCharacter::Vaulting()
 					
 				}
 			}
+			VaultMotionWarp();
 			break;
 		}
 	}
 }
+
+void APlayerCharacter::VaultMotionWarp()
+{
+	float Min = GetMesh()->GetComponentLocation().Z - 50.0f;
+	float Max = GetMesh()->GetComponentLocation().Z + 50.0f;
+	
+	bool InRange = FMath::IsWithinInclusive(VaultLandingPos.Z, Min, Max);
+	
+	if (OwningController->bIsVault && InRange)
+	{
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+		SetActorEnableCollision(false);
+
+		FMotionWarpingTarget Target;
+		Target.Name = FName("Vault_Start");
+		Target.Location = VaultStartPos;
+		Target.Rotation = GetActorRotation();
+
+		CharacterMotionWarping->AddOrUpdateWarpTarget(Target);
+
+		FMotionWarpingTarget MiddleTarget;
+		MiddleTarget.Name = FName("Vault_Middle");
+		MiddleTarget.Location = VaultMiddlePos;
+		MiddleTarget.Rotation = GetActorRotation();
+
+		CharacterMotionWarping->AddOrUpdateWarpTarget(MiddleTarget);
+
+		FMotionWarpingTarget LandingTarget;
+		LandingTarget.Name = FName("Vault_End");
+		LandingTarget.Location = VaultLandingPos;
+		LandingTarget.Rotation = GetActorRotation();
+
+		CharacterMotionWarping->AddOrUpdateWarpTarget(LandingTarget);
+
+		OwningAnimInstance->PlayVaulting();
+
+		GetWorld()->GetTimerManager().SetTimer(VaultTimerHandle, this, &APlayerCharacter::VaultEnd, OwningAnimInstance->Vaulting_Anim->GetPlayLength(), false);
+
+		SetActorEnableCollision(true);
+		OwningController->bIsVault = false;
+		VaultLandingPos = FVector(0.0f, 0.0f, 20000.0f);
+	}
+}
+
+void APlayerCharacter::VaultEnd()
+{
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+}
+
 
 void APlayerCharacter::StartAimming()
 {
@@ -344,37 +378,6 @@ void APlayerCharacter::ShowInventory()
 
 void APlayerCharacter::TestFunction()
 {
-
+	PlayAnimMontage(TestMontage);
 }
 
-void APlayerCharacter::VaultMotionWarp()
-{
-	if (OwningController->bIsVault)
-	{
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
-		SetActorEnableCollision(false);
-
-		FMotionWarpingTarget Target;
-		Target.Name = FName("VaultStart");
-		Target.Location = VaultStartPos;
-		Target.Rotation = GetActorRotation();
-
-		CharacterMotionWarping->AddOrUpdateWarpTarget(Target);
-
-		FMotionWarpingTarget MiddleTarget;
-		MiddleTarget.Name = FName("VaultMiddle");
-		MiddleTarget.Location = VaultMiddlePos;
-		MiddleTarget.Rotation = GetActorRotation();
-
-		CharacterMotionWarping->AddOrUpdateWarpTarget(MiddleTarget);
-
-		FMotionWarpingTarget LandingTarget;
-		LandingTarget.Name = FName("VaultLand");
-		LandingTarget.Location = VaultLandingPos;
-		LandingTarget.Rotation = GetActorRotation();
-
-		CharacterMotionWarping->AddOrUpdateWarpTarget(LandingTarget);
-
-		GetMesh()->PlayAnimMontage(Vaulting, false);
-	}
-}
