@@ -14,6 +14,7 @@ class UInventoryComponent;
 class ATTH_HUD;
 class APlayerCharacterController;
 class UMotionWarpingComponent;
+class UPlayerAnimInstance;
 
 struct FInputActionValue;
 
@@ -30,9 +31,6 @@ public:
 	// Interface
 	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
 	TScriptInterface<class IInteractionInterface> InteractionInterface;
-
-	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
-	APlayerCharacterController *OwningController;
 
 	// Vault
 	FVector VaultStartPos;
@@ -108,10 +106,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction *Inventory;
 
-	// UI
+	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction *Test;
+
+	// Player Property
+	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
 	ATTH_HUD *OwningHUD;
 
-	
+	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
+	UPlayerAnimInstance *OwningAnimInstance;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
+	APlayerCharacterController *OwningController;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -128,6 +134,8 @@ protected:
 	void WalktoJog(const FInputActionValue &Value);
 	// Vault
 	void Vaulting();
+	void VaultMotionWarp();
+	void VaultEnd();
 
 	void StartAimming();
 	void StopAimming();
@@ -139,9 +147,7 @@ protected:
 	void ShowInventory();
 
 	void TestFunction();
-
-	// Vault
-	void VaultMotionWarp();
+	
 private:
 	//======================================================
 	//=					- Variables -					   =
@@ -151,11 +157,8 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Character | Inventory", meta = (AllowPrivateAccess = "true"))
 	UInventoryComponent *ItemInventory;
 
-	UPROPERTY(EditAnywhere, Category = "Character | MotionWarping", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, Category = "Character | MotionWarping", meta = (AllowPrivateAccess = "true"))
 	UMotionWarpingComponent *CharacterMotionWarping;
-
-	UPROPERTY(EditAnywhere, Category = "Character | MotionWarping", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UMotionWarpingComponent> MotionWarpingComponent;
 
 	// Character Locomotion
 	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
@@ -170,11 +173,12 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
 	float CurrentStamina;
 
-	UPROPERTY(EditAnywhere, Category = "Character | Property", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
 	float LookingRotationValue;
 
-	UPROPERTY(EditAnywhere, Category = "Character | Animation", meta = (AllowPrivateAccess = "true"))
-	UAnimMontage *Vaulting;
+	// Timer
+	FTimerHandle VaultTimerHandle;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
