@@ -294,6 +294,22 @@ void APlayerCharacter::VaultEnd()
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 }
 
+void APlayerCharacter::Assasination()
+{
+	FHitResult BackHit;
+	FVector StartPos = GetActorLocation();
+	FVector EndPos = StartPos * GetActorRotation().Vector() + 10000.0f;
+	FCollisionQueryParams CollisionParam;
+	CollisionParam.AddIgnoredActor(this);
+	if (GetWorld()->LineTraceSingleByChannel(BackHit, StartPos, EndPos, ECC_Visibility, CollisionParam))
+	{
+		if (BackHit.bBlockingHit && auto EnemyCharacter = Cast<AEnemyCharacter>(BackHit.GetActor()))
+		{
+			
+		}
+	}
+}
+
 
 void APlayerCharacter::StartAimming()
 {
