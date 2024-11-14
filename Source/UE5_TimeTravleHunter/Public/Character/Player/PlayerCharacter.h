@@ -15,6 +15,7 @@ class ATTH_HUD;
 class APlayerCharacterController;
 class UMotionWarpingComponent;
 class UPlayerAnimInstance;
+class AEnemyCharacter;
 
 struct FInputActionValue;
 
@@ -31,6 +32,9 @@ public:
 	// Interface
 	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
 	TScriptInterface<class IInteractionInterface> InteractionInterface;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Animation")
+	UAnimMontage *TestMontage;
 
 	// Vault
 	FVector VaultStartPos;
@@ -119,6 +123,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
 	APlayerCharacterController *OwningController;
 
+	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
+	AEnemyCharacter *EnemyCharacter;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -126,16 +133,19 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
 
-	// Input Function
+	// Locomotion
 	void Move(const FInputActionValue &Value);
 	void Look(const FInputActionValue &Value);
 	void Sprint(const FInputActionValue &Value);
 	void Crouch(const FInputActionValue &Value);
 	void WalktoJog(const FInputActionValue &Value);
-	// Vault
+
+	// Action
 	void Vaulting();
 	void VaultMotionWarp();
 	void VaultEnd();
+
+	void Assasination();
 
 	void StartAimming();
 	void StopAimming();
