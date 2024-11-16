@@ -9,6 +9,7 @@
 
 class USphereComponent;
 class APlayerCharacter;
+class UEnemyAnimInstance;
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API AEnemyCharacter : public ACharacter, public ICharacterActionInterface
@@ -31,11 +32,14 @@ protected:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-	UPROPERTY(EditAnywhere, Category = "Enemy | Component")
+	UPROPERTY(EditAnywhere, Category = "Character | Component")
 	USphereComponent *AssasinationCollision;
 
-	UPROPERTY(EditAnywhere, Category = "Enemy | Property")
+	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
 	APlayerCharacter *TargetCharacter;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
+	UEnemyAnimInstance *EOwningAnimInstance;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -54,7 +58,8 @@ private:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-
+	UPROPERTY(EditAnywhere, Category = "Character | ActionReference", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent *AssasinationPosMesh;
 
 	//======================================================
 	//=					- Functionary -					   =
