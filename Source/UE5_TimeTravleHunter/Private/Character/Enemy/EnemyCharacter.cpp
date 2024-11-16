@@ -3,6 +3,7 @@
 // GameFramework
 #include "Character/Enemy/EnemyCharacter.h"
 #include "Character/Player/PlayerCharacter.h"
+#include "AnimInstance/EnemyAnimInstance.h"
 
 // Engine
 #include "Components/SphereComponent.h"
@@ -13,12 +14,15 @@ AEnemyCharacter::AEnemyCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	AssasinationCollision = CreateDefaultSubobject<USphereComponent>(TEXT("AssasinationColl"));
 	AssasinationCollision->SetupAttachment(RootComponent);
+	AssasinationPosMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("AssasinationMesh"));
+	AssasinationPosMesh->SetupAttachment(RootComponent);
 }
 
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	TargetCharacter = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	EOwningAnimInstance = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
 
 	AssasinationCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapBegin);
 	AssasinationCollision->OnComponentEndOverlap.AddDynamic(this, &AEnemyCharacter::OnOverlapEnd);
@@ -54,5 +58,7 @@ void AEnemyCharacter::OnOverlapEnd(UPrimitiveComponent *OverlappedComp, AActor *
 
 void AEnemyCharacter::StealthAssain(FVector &Location, FRotator &Rotation)
 {
-
+	EOwningAnimInstance->PlayAssasination_Vic();
+	Location = AssasinationPosMesh->GetComponentLocation();
+	Rotation = AssasinationPosMesh->GetComponentRotation();
 }
