@@ -30,16 +30,11 @@ public:
 	//======================================================
 
 	// Interface
-	UPROPERTY(VisibleAnywhere, Category = "Character | Interaction")
+	UPROPERTY(VisibleAnywhere, Category = "Character | Interface")
 	TScriptInterface<class IInteractionInterface> InteractionInterface;
 
-	UPROPERTY(VisibleAnywhere, Category = "Character | Animation")
-	UAnimMontage *TestMontage;
-
-	// Vault
-	FVector VaultStartPos;
-	FVector VaultMiddlePos;
-	FVector VaultLandingPos;
+	UPROPERTY(VisibleAnywhere, Category = "Character | Interface")
+	TScriptInterface<class ICharacterActionInterface> ActionInterface;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -185,6 +180,15 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
 	float LookingRotationValue;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
+	FVector VaultStartPos;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
+	FVector VaultMiddlePos;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
+	FVector VaultLandingPos;
 
 	// Timer
 	FTimerHandle VaultTimerHandle;
