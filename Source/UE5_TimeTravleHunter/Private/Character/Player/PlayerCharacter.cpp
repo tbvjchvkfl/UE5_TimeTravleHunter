@@ -6,6 +6,7 @@
 #include "Controller/PlayerCharacterController.h"
 #include "AnimInstance/PlayerAnimInstance.h"
 #include "Interface/InteractionInterface.h"
+#include "Interface/CharacterActionInterface.h"
 #include "Component/InventoryComponent.h"
 #include "Object/PickUpItem.h"
 #include "UI/TTH_HUD.h"
@@ -236,8 +237,6 @@ void APlayerCharacter::Vaulting()
 
 						break;
 					}
-					
-					
 				}
 			}
 			VaultMotionWarp();
@@ -296,17 +295,22 @@ void APlayerCharacter::VaultEnd()
 
 void APlayerCharacter::Assasination()
 {
-	FHitResult BackHit;
-	FVector StartPos = GetActorLocation();
-	FVector EndPos = StartPos * GetActorRotation().Vector() + 10000.0f;
-	FCollisionQueryParams CollisionParam;
-	CollisionParam.AddIgnoredActor(this);
-	if (GetWorld()->LineTraceSingleByChannel(BackHit, StartPos, EndPos, ECC_Visibility, CollisionParam))
+	TArray<AActor*> OverlappingActor;
+	GetOverlappingActors(OverlappingActor);
+	for (auto OverlapElem : OverlappingActor)
 	{
-		if (BackHit.bBlockingHit && auto EnemyCharacter = Cast<AEnemyCharacter>(BackHit.GetActor()))
-		{
-			
-		}
+		ActionInterface = OverlapElem;
+		FVector ActionLoc;
+		FRotator ActionRot;
+		ActionInterface->StealthAssain(ActionLoc, ActionRot);
+		
+		OwningAnimInstance->PlayAssasination();
+
+		FMotionWarpingTarget ActionTarget;
+		ActionTarget.Name = FName("AssasinationWarp");
+		ActionTarget.Location = ActionLoc;
+		ActionTarget.Rotation = ActionRot;
+		CharacterMotionWarping->AddOrUpdateWarpTarget(ActionTarget);
 	}
 }
 
@@ -394,6 +398,5 @@ void APlayerCharacter::ShowInventory()
 
 void APlayerCharacter::TestFunction()
 {
-	PlayAnimMontage(TestMontage);
+	Assasination();
 }
-
