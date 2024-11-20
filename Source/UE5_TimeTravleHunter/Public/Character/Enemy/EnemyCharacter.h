@@ -23,10 +23,12 @@ public:
 
 	bool bIsAssasinationable;
 
+	FTimerHandle RagDollTimer;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	AEnemyCharacter();
+	
 
 protected:
 	//======================================================
@@ -65,4 +67,5 @@ private:
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void StealthAssain(FVector &Location, FRotator &Rotation) override;
+	void RagDoll();
 };
