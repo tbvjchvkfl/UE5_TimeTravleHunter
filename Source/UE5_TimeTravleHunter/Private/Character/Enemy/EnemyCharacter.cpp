@@ -59,6 +59,12 @@ void AEnemyCharacter::OnOverlapEnd(UPrimitiveComponent *OverlappedComp, AActor *
 void AEnemyCharacter::StealthAssain(FVector &Location, FRotator &Rotation)
 {
 	EOwningAnimInstance->PlayAssasination_Vic();
+	GetWorld()->GetTimerManager().SetTimer(RagDollTimer, this, &AEnemyCharacter::RagDoll, EOwningAnimInstance->Assasination_Vic->GetPlayLength(), false);
 	Location = AssasinationPosMesh->GetComponentLocation();
-	Rotation = AssasinationPosMesh->GetComponentRotation();
+	Rotation = GetActorRotation();
+}
+
+void AEnemyCharacter::RagDoll()
+{
+	GetMesh()->SetSimulatePhysics(true);
 }
