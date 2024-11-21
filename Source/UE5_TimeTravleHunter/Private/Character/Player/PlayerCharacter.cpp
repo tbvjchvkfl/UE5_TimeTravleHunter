@@ -187,60 +187,47 @@ void APlayerCharacter::WalktoJog(const FInputActionValue &Value)
 
 void APlayerCharacter::Vaulting()
 {
-	for (int32 i = 0; i <= 2; i++)
+	if (OwningController->bIsParkour)
 	{
-		FVector Start = GetActorLocation() + FVector(0.0f, 0.0f, i * 30);
-		FVector End = Start + (GetActorRotation().Vector() * 180.0f);
-		FHitResult HitResult;
+		FHitResult DetectingWallHit;
+		FVector DetectingStart = GetActorLocation();
+		FVector DetectingEnd = DetectingStart + (GetActorRotation().Vector() * 180.0f);
 		FCollisionQueryParams CollisionParams;
 		CollisionParams.AddIgnoredActor(this);
 
-		TArray<AActor *> IgnoreActorList;
-		IgnoreActorList.Add(this);
+		DrawDebugLine(GetWorld(), DetectingStart, DetectingEnd, FColor::Red, false, 3.0f);
 
-		if (UKismetSystemLibrary::SphereTraceSingle(GetWorld(), Start, End, 5.0f, ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActorList, EDrawDebugTrace::ForDuration, HitResult, true))
+		if (GetWorld()->LineTraceSingleByChannel(DetectingWallHit, DetectingStart, DetectingEnd, ECollisionChannel::ECC_Visibility, CollisionParams))
 		{
-			for (int32 j = 0; j <= 5; j++)
+			for (int32 i = 0; i <= 5; i++)
 			{
-				FVector SubStart = HitResult.Location + FVector(0.0f, 0.0f, 100.0f) + (GetActorRotation().Vector() * j * 50);
-				FVector SubEnd = SubStart - FVector(0.0f, 0.0f, 100.0f);
+				FHitResult DetectingHeightHit;
+				FVector DetectingHeightStart = DetectingWallHit.Location + FVector(0.0f, 0.0f, 500.0f) + GetActorRotation().Vector() * i * 50.0f;
+				FVector DetectingHeightEnd = DetectingHeightStart - FVector(0.0f, 0.0f, 500.0f);
 
-				FHitResult SubHit;
-
-				if (UKismetSystemLibrary::SphereTraceSingle(GetWorld(), SubStart, SubEnd, 5.0f, ETraceTypeQuery::TraceTypeQuery1, false, IgnoreActorList, EDrawDebugTrace::ForDuration, SubHit, true))
+				if (GetWorld()->LineTraceSingleByChannel(DetectingHeightHit, DetectingHeightStart, DetectingHeightEnd, ECollisionChannel::ECC_Visibility, CollisionParams))
 				{
-					if (j == 0)
+					if (i == 0)
 					{
-						VaultStartPos = SubHit.Location;
-						
-						DrawDebugSphere(GetWorld(), VaultStartPos, 10.0f, 12, FColor::Blue, false, 10.0f);
+						VaultStartPos = DetectingHeightHit.Location;
 					}
-					VaultMiddlePos = SubHit.Location;
-
-					DrawDebugSphere(GetWorld(), VaultMiddlePos, 10.0f, 12, FColor::Yellow, false, 10.0f);
-
-					OwningController->bIsVault = true;
+					VaultMiddlePos = DetectingHeightHit.Location;
+					DrawDebugLine(GetWorld(), DetectingHeightStart, DetectingHeightEnd, FColor::Green, false, 3.0f);
 				}
 				else
 				{
-					FHitResult LineHit;
-					FVector LineStart = SubHit.TraceStart + GetActorRotation().Vector() * 80.0f;
-					FVector LineEnd = LineStart - FVector(0.0f, 0.0f, 1000.0f);
-					FCollisionQueryParams LineCollisionParam;
-					LineCollisionParam.AddIgnoredActor(this);
-
-					if (GetWorld()->LineTraceSingleByChannel(LineHit, LineStart, LineEnd, ECC_Visibility, LineCollisionParam))
+					FHitResult LandingHit;
+					FVector LandingStart = DetectingHeightHit.TraceStart + GetActorRotation().Vector() * 80.0f;
+					FVector LnadingEnd = LandingStart - FVector(0.0f, 0.0f, 1000.0f);
+					if (GetWorld()->LineTraceSingleByChannel(LandingHit, LandingStart, LnadingEnd, ECollisionChannel::ECC_Visibility, CollisionParams))
 					{
-						VaultLandingPos = LineHit.Location;
-
-						DrawDebugLine(GetWorld(), LineStart, LineEnd, FColor::Black, false, 3.0f);
-
+						VaultLandingPos = LandingHit.Location;
+						DrawDebugLine(GetWorld(), LandingStart, LnadingEnd, FColor::Blue, false, 3.0f);
 						break;
 					}
 				}
 			}
 			VaultMotionWarp();
-			break;
 		}
 	}
 }
@@ -252,7 +239,7 @@ void APlayerCharacter::VaultMotionWarp()
 	
 	bool InRange = FMath::IsWithinInclusive(VaultLandingPos.Z, Min, Max);
 	
-	if (OwningController->bIsVault && InRange)
+	if (OwningController->bIsParkour && InRange)
 	{
 		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
 		SetActorEnableCollision(false);
@@ -283,7 +270,7 @@ void APlayerCharacter::VaultMotionWarp()
 		GetWorld()->GetTimerManager().SetTimer(VaultTimerHandle, this, &APlayerCharacter::VaultEnd, OwningAnimInstance->Vaulting_Anim->GetPlayLength(), false);
 
 		SetActorEnableCollision(true);
-		OwningController->bIsVault = false;
+		OwningController->bIsParkour = false;
 		VaultLandingPos = FVector(0.0f, 0.0f, 20000.0f);
 	}
 }
