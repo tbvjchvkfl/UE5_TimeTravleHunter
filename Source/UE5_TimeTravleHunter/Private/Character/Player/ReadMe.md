@@ -3,8 +3,8 @@ PlayerCharacter
 
 Contents
 -
-- Locomotion (Basic Moving) With MotionMatching
+- Advanced Locomotion
+- Traversal (Vaulting, Hurdling, Mantling)
 - Combat Combo Action
-- Vaulting
 - Assasination With MotionWarping
 - RagDoll System
