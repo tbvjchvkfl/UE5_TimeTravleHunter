@@ -131,14 +131,16 @@ protected:
 	// Locomotion
 	void Move(const FInputActionValue &Value);
 	void Look(const FInputActionValue &Value);
-	void Sprint(const FInputActionValue &Value);
-	void Crouch(const FInputActionValue &Value);
-	void WalktoJog(const FInputActionValue &Value);
+	void Sprint();
+	void DoJump();
+	void DoCrouch();
+	void WalktoJog();
 
 	// Action
+	void Parkour();
 	void Vaulting();
-	void VaultMotionWarp();
-	void VaultEnd();
+	//void VaultMotionWarp();
+	void TraversalEnd();
 
 	void Assasination();
 
