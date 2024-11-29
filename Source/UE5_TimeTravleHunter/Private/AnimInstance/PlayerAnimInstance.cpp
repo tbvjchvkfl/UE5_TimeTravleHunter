@@ -15,6 +15,10 @@ void UPlayerAnimInstance::NativeInitializeAnimation()
 	Super::NativeInitializeAnimation();
 	OwnerCharacter = Cast<APlayerCharacter>(TryGetPawnOwner());
 	OwnerController = Cast<APlayerCharacterController>(GetWorld()->GetFirstPlayerController());
+	if (OwnerCharacter)
+	{
+		OwnerCharacterMovement = OwnerCharacter->GetCharacterMovement();
+	}
 }
 
 void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -28,38 +32,66 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		OwnerCharacter = Cast<APlayerCharacter>(TryGetPawnOwner());
 	}
-
-	if (OwnerCharacter && OwnerController)
+	if (OwnerCharacter && !OwnerCharacterMovement)
+	{
+		OwnerCharacterMovement = OwnerCharacter->GetCharacterMovement();
+	}
+	if (OwnerCharacter && OwnerController && OwnerCharacterMovement)
 	{
 		SetMovementData();
 	}
-
-	//DeltaX_Time = DeltaSeconds;
-	//DetermineLocomotionState();
-	/*TrackLocomotionState(ECharacterMovementState::IDLE);
-	TrackLocomotionState(ECharacterMovementState::WALK);
-	TrackLocomotionState(ECharacterMovementState::JOG);*/
 }
 
 void UPlayerAnimInstance::SetMovementData()
 {
-	CharacterVelocity = OwnerCharacter->GetCharacterMovement()->Velocity;
+	CharacterVelocity = OwnerCharacterMovement->Velocity;
 	MovementSpeed = CharacterVelocity.Size();
-	bIsInAir = OwnerCharacter->GetCharacterMovement()->IsFalling();
-	bIsAccelation = OwnerCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.0f;
+	bIsInAir = OwnerCharacterMovement->IsFalling();
+	bIsAccelation = OwnerCharacterMovement->GetCurrentAcceleration().Size() > 0.0f;
 	bIsCrouch = OwnerController->bIsCrouch;
 	bIsWalk = OwnerController->bIsWalk;
 	bIsSprint = OwnerController->bIsSprint;
-	bIsAimming = OwnerController->bIsAimming;
 	bIsParkour = OwnerController->bIsParkour;
+
+	GEngine->AddOnScreenDebugMessage(0, 3, FColor::Green, FString::Printf(TEXT("Last Input Vector Size : %f"), OwnerCharacterMovement->GetLastInputVector().Size()), true);
+
+	FVector InputVector = OwnerCharacterMovement->GetLastInputVector();
+	InputVector.GetClampedToSize(0.0f, 1.0f);
+	GEngine->AddOnScreenDebugMessage(1, 3, FColor::Green, FString::Printf(TEXT("Clamp Last Input Vector Size : %f, %f, %f"), InputVector.X, InputVector.Y, InputVector.Z));
+
+	GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("CharacterVelocity : %f, %f, %f"), CharacterVelocity.X, CharacterVelocity.Y, CharacterVelocity.Z));
+
+	FVector NormCV = CharacterVelocity.GetSafeNormal();
+	GEngine->AddOnScreenDebugMessage(4, 3, FColor::Green, FString::Printf(TEXT("Normal CharacterVelocity : %f, %f, %f"), NormCV.X, NormCV.Y, NormCV.Z));
+
+	GEngine->AddOnScreenDebugMessage(5, 3, FColor::Green, FString::Printf(TEXT("CurrentAcceleration : %f, %f, %f"), OwnerCharacterMovement->GetCurrentAcceleration().X, OwnerCharacterMovement->GetCurrentAcceleration().Y, OwnerCharacterMovement->GetCurrentAcceleration().Z));
+
+	auto NormAcc = OwnerCharacterMovement->GetCurrentAcceleration().GetSafeNormal();
+	GEngine->AddOnScreenDebugMessage(6, 3, FColor::Green, FString::Printf(TEXT("Normal CurrentAcceleration : %f, %f, %f"), NormAcc.X, NormAcc.Y, NormAcc.Z));
+	
+	double DotV = FVector::DotProduct(NormCV, NormAcc);
+	GEngine->AddOnScreenDebugMessage(7, 3, FColor::Green, FString::Printf(TEXT("Dot Product Vector : %f"), DotV));
+
+	if (DotV < -0.5f)
+	{
+		GEngine->AddOnScreenDebugMessage(8, 3, FColor::Green, FString::Printf(TEXT("true")));
+	}
 
 	FRotator BaseAimRotation = OwnerCharacter->GetBaseAimRotation();
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(OwnerCharacter->GetVelocity());
 	MovementYawDelta = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, BaseAimRotation).Yaw;
+}
 
-	//MaxSpeed = OwnerCharacter->GetCharacterMovement()->GetMaxSpeed();
-	//LastInputVector = OwnerCharacter->GetCharacterMovement()->GetLastInputVector();
-	//LastInputVector.GetClampedToSize(0.0f, 1.0f);
+void UPlayerAnimInstance::DetermineLocomotionState()
+{
+	if (bIsWalk && bIsAccelation && !bIsInAir)
+	{
+		CharacterMovementState = ECharacterMovementState::WALK;
+	}
+	if (!bIsWalk && bIsAccelation && !bIsInAir && MovementSpeed >= 250.0f)
+	{
+		CharacterMovementState = ECharacterMovementState::JOG;
+	}
 }
 
 void UPlayerAnimInstance::PlayCrouchVaulting()
@@ -93,210 +125,3 @@ void UPlayerAnimInstance::PlayAssasination()
 		Montage_Play(Assasination_Anim, 1.0f);
 	}
 }
-
-//float UPlayerAnimInstance::SafeDivide(float Numerator, float Denominator, float DefaultValue) const
-//{
-//	if (FMath::Abs(Denominator) > KINDA_SMALL_NUMBER)
-//	{
-//		return Numerator / Denominator;
-//	}
-//	else
-//	{
-//		return DefaultValue;
-//	}
-//}
-//
-//void UPlayerAnimInstance::NativePostEvaluateAnimation()
-//{
-//	if (OwnerCharacter)
-//	{
-//		UpdateCharacterRotation();
-//
-//	}
-//}
-//
-//void UPlayerAnimInstance::ResetTransition()
-//{
-//}
-//
-//bool UPlayerAnimInstance::IsMovementWithInThresholds(float MinCurrentSpeed, float MinMaxSpeed, float MinInputAccelation) const
-//{
-//	if (MinCurrentSpeed <= MovementSpeed && MinMaxSpeed <= MaxSpeed && MinInputAccelation <= LastInputVector.Size())
-//	{
-//		return true;
-//	}
-//	return false;
-//}
-//
-//void UPlayerAnimInstance::DetermineLocomotionState()
-//{
-//	if (!bIsInAir)
-//	{
-//		if (OwnerCharacter)
-//		{
-//			if (FVector::DotProduct(CharacterVelocity.GetSafeNormal(), OwnerCharacter->GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal()) < 0.5f)
-//			{
-//				CharacterMovementState = ECharacterMovementState::IDLE;
-//			}
-//			if (IsMovementWithInThresholds(1.0f, 300.0f, 0.5f))
-//			{
-//				CharacterMovementState = ECharacterMovementState::JOG;
-//			}
-//			else if (IsMovementWithInThresholds(1.0f, 0.0f, 0.01f))
-//			{
-//				CharacterMovementState = ECharacterMovementState::WALK;
-//			}
-//			else
-//			{
-//				CharacterMovementState = ECharacterMovementState::IDLE;
-//			}
-//		}
-//	}
-//}
-//
-//void UPlayerAnimInstance::TrackLocomotionState(ECharacterMovementState LocomotionState)
-//{
-//	bool bHasFirstFlag = false;
-//	bool bHasSecondFlag = false;
-//
-//	if (CharacterMovementState == LocomotionState)
-//	{
-//		if (!bHasFirstFlag)
-//		{
-//			bHasFirstFlag = true;
-//			bHasSecondFlag = false;
-//			if (LocomotionState == ECharacterMovementState::WALK)
-//			{
-//				UpdateOnWalkEntry();
-//			}
-//			if (LocomotionState == ECharacterMovementState::JOG)
-//			{
-//				UpdateOnJogEntry();
-//			}
-//		}
-//		if (LocomotionState != ECharacterMovementState::IDLE)
-//		{
-//			UpdateLocomotionValue();
-//		}
-//	}
-//	else
-//	{
-//		if (!bHasSecondFlag)
-//		{
-//			bHasSecondFlag = true;
-//			bHasFirstFlag = false;
-//		}
-//	}
-//}
-//
-//void UPlayerAnimInstance::ResetTargetRotation()
-//{
-//	PrimaryTargetRotation = OwnerCharacter->GetActorRotation();
-//	SecondaryTargetRotation = PrimaryTargetRotation;
-//}
-//
-//void UPlayerAnimInstance::UpdateLocomotionValue()
-//{
-//	PlayRate = SafeDivide(MovementSpeed, FMath::Clamp(GetCurveValue(FName("MoveData_Speed")), 50.0f, 1000.0f));
-//}
-//
-//void UPlayerAnimInstance::UpdateOnWalkEntry()
-//{
-//	if (MovementSpeed < 50.0f)
-//	{
-//		StartRotation = OwnerCharacter->GetActorRotation();
-//		PrimaryTargetRotation = LastInputVector.Rotation();
-//		SecondaryTargetRotation = PrimaryTargetRotation;
-//
-//		FRotator DeltaRotation = PrimaryTargetRotation - SecondaryTargetRotation;
-//		WalkStartRotation = DeltaRotation.Yaw;
-//		bIsPlayWalkStart = true;
-//	}
-//	else
-//	{
-//		ResetTargetRotation();
-//	}
-//}
-//
-//void UPlayerAnimInstance::UpdateOnJogEntry()
-//{
-//	if (MovementSpeed < 200.0f)
-//	{
-//		StartRotation = OwnerCharacter->GetActorRotation();
-//		PrimaryTargetRotation = LastInputVector.Rotation();
-//		SecondaryTargetRotation = PrimaryTargetRotation;
-//
-//		FRotator DeltaRotation = PrimaryTargetRotation - SecondaryTargetRotation;
-//		JogStartRotation = DeltaRotation.Yaw;
-//		bIsPlayJogStart = true;
-//	}
-//	else
-//	{
-//		ResetTargetRotation();
-//	}
-//}
-//
-//void UPlayerAnimInstance::UpdateCharacterRotation()
-//{
-//	if (LocomotionStateData.IsRelevant(*this) && !OwnerCharacter->HasAnyRootMotion())
-//	{
-//		switch (CharacterMovementState)
-//		{
-//			case ECharacterMovementState::IDLE:
-//			{
-//
-//			}
-//			break;
-//			case ECharacterMovementState::JOG:
-//			{
-//				PrimaryTargetRotation = UKismetMathLibrary::RInterpTo(PrimaryTargetRotation, GetTargetRotation(), DeltaX_Time, 1000.0f);
-//
-//				SecondaryTargetRotation = UKismetMathLibrary::RInterpTo(SecondaryTargetRotation, PrimaryTargetRotation, DeltaX_Time, 10.0f);
-//
-//				float CalculateAngle = SafeDivide(GetCurveValue(FName("MoveData_JogRotationDelta")), JogStateData.GetGlobalWeight(*this));
-//
-//
-//				OwnerCharacter->SetActorRotation(FRotator(SecondaryTargetRotation.Pitch, SecondaryTargetRotation.Roll, SecondaryTargetRotation.Yaw + CalculateAngle));
-//			}
-//			break;
-//			case ECharacterMovementState::WALK:
-//			{
-//				PrimaryTargetRotation = UKismetMathLibrary::RInterpTo(PrimaryTargetRotation, GetTargetRotation(), DeltaX_Time, 1000.0f);
-//
-//				SecondaryTargetRotation = UKismetMathLibrary::RInterpTo(SecondaryTargetRotation, PrimaryTargetRotation, DeltaX_Time, 10.0f);
-//
-//				float CalculateAngle = SafeDivide(GetCurveValue(FName("MoveData_WalkRotationDelta")), WalkStateData.GetGlobalWeight(*this));
-//
-//
-//				OwnerCharacter->SetActorRotation(FRotator(SecondaryTargetRotation.Pitch, SecondaryTargetRotation.Roll, SecondaryTargetRotation.Yaw + CalculateAngle));
-//			}
-//			break;
-//			case ECharacterMovementState::CROUCH:
-//			{
-//
-//			}
-//			break;
-//			case ECharacterMovementState::SPRINT:
-//			{
-//
-//			}
-//			break;
-//		}
-//	}
-//	else
-//	{
-//		ResetTargetRotation();
-//	}
-//}
-//
-//FRotator UPlayerAnimInstance::GetTargetRotation() const
-//{
-//	if (DoInputVectorRotation)
-//	{
-//		return FRotator(0.0f, 0.0f, LastInputVector.Rotation().Yaw);
-//	}
-//	else
-//	{
-//		return FRotator(0.0f, 0.0f, CharacterVelocity.Rotation().Yaw);
-//	}
-//}
