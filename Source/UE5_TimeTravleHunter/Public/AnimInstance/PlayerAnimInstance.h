@@ -13,6 +13,7 @@ class UCharacterMovementComponent;
 class APlayerCharacterController;
 class UAnimMontage;
 
+struct FCachedAnimStateData;
 
 UENUM()
 enum class ECharacterMovementState : uint8
@@ -23,6 +24,16 @@ enum class ECharacterMovementState : uint8
 	CROUCH UMETA(Displayname = "Crouch"),
 	SPRINT UMETA(Displayname = "Sprint"),
 	JUMP UMETA(Displayname = "Jump")
+};
+
+UENUM()
+enum class ECharacterMovementDirection : uint8
+{
+	FOWARD UMETA(DisplayName = "Foward"),
+	TURNLEFT_90 UMETA(DisplayName = "TurnLeft_90"),
+	TURNLEFT_180 UMETA(DisplayName = "TurnLeft_180"),
+	TURNRIGHT_90 UMETA(DisplayName = "TurnRight_90"),
+	TURNRIGHT_180 UMETA(DisplayName = "TurnRight_180")
 };
 
 UCLASS()
@@ -44,9 +55,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Action")
 	UAnimMontage *Assasination_Anim;
-
-	// MontageDelegate
-	FOnMontageEnded VaultMontageDelegate;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -75,27 +83,30 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
 	ECharacterMovementState CharacterMovementState;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
-	FVector LastInputVector;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
 	FVector CharacterVelocity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
 	float MovementSpeed;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
+	float ActualGroundSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
+	FVector PreviousLocation;
+
 	// Character Rotation Data
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
+	ECharacterMovementDirection CharacterMovementDirection;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
 	float MovementYawDelta;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
-	float WalkStartAngle;
+	float MovementStartAngle;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
-	FRotator StartRotation;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
-	FRotator MainRotation;
+	float DeltaTime;
 
 	// Character Locomotion State
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
@@ -123,12 +134,130 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
 	bool CanJogStartSkip;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
+	float PlayRate;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void NativeInitializeAnimation() override;
-	virtual void NativeUpdateAnimation(float DeltaSeconds)override;
+	virtual void NativeBeginPlay() override;
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+	virtual void NativePostEvaluateAnimation() override;
 
+	void InitAnimationInstance();
 	void SetMovementData();
 	void DetermineLocomotionState();
+	
+	bool SetMovementDirection(float MinValue, float MaxValue, float &Direction) const;
+	void DetermineMovementDirection();
+
+	void CalculateActualSpeed();
+	void SetRotationRate(float MinLocomotionSpeed, float MaxLocomotionSpeed);
+	
+
+//private:
+//	//======================================================
+//	//=					- Variables -					   =
+//	//======================================================
+//
+//	//Character Reference
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Reference", meta = (AllowPrivateAccess = "true"))
+//	APlayerCharacter *OwnerCharacter;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Reference", meta = (AllowPrivateAccess = "true"))
+//	UCharacterMovementComponent *OwnerCharacterMovement;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Reference", meta = (AllowPrivateAccess = "true"))
+//	APlayerCharacterController *OwnerController;
+//
+//	// Character Movement Data
+//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
+//	ECharacterMovementState CharacterMovementState;
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
+//	FVector LastInputVector;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
+//	FVector CharacterVelocity;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
+//	float MovementSpeed;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
+//	float PlayRate;
+//
+//	// Character Rotation Data
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
+//	float MovementYawDelta;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
+//	float WalkStartAngle;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
+//	float JogStartAngle;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
+//	FRotator StartRotation;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
+//	FRotator MainRotation;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
+//	FRotator SubRotation;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
+//	float DeltaTime;
+//
+//	// Character Locomotion State
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
+//	bool bIsAccelation;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
+//	bool bIsInAir;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
+//	bool bIsCrouch;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
+//	bool bIsWalk;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
+//	bool bIsSprint;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
+//	bool bIsParkour;
+//
+//	// Character Locomotion SubState
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
+//	bool CanWalkStartSkip;
+//
+//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
+//	bool CanJogStartSkip;
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
+//	FCachedAnimStateData LocomotionStateData;
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
+//	FCachedAnimStateData WalkStateData;
+//
+//	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
+//	FCachedAnimStateData JogStateData;
+//
+//	//======================================================
+//	//=					- Functionary -					   =
+//	//======================================================
+//	virtual void NativeInitializeAnimation() override;
+//	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+//	virtual void NativePostEvaluateAnimation() override;
+//
+//	void SetMovementData();
+//	void DetermineLocomotionState();
+//	void UpdatePlayRate();
+//
+//	void TrackLocomotionState(ECharacterMovementState LocomotionState);
+//	void UpdateOnWalkEntry();
+//	void UpdateOnJogEntry();
+//
+//	void UpdateCharacterRotation();
+//	void ResetRotation();
 };
