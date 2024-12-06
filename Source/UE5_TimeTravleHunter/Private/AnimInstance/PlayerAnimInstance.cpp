@@ -45,7 +45,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		DeltaTime = DeltaSeconds;
 		SetMovementData();
 		DetermineLocomotionState();
-		//DetermineMovementDirection();
+		DetermineMovementDirection();
 	}
 }
 
@@ -79,15 +79,17 @@ void UPlayerAnimInstance::SetMovementData()
 	MovementYawDelta = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, BaseAimRotation).Yaw;
 
 	SetRotationRate(0.0f, 500.0f);
+
+	GEngine->AddOnScreenDebugMessage(66, 3, FColor::Green, FString::Printf(TEXT("SecMovementAngle : %f"), OwnerCharacterMovement->MaxAcceleration));
 }
 
 void UPlayerAnimInstance::DetermineLocomotionState()
 {
-	if (bIsWalk && !bIsInAir && MovementSpeed >= 10.0f)
+	if (bIsWalk && !bIsInAir && bIsAccelation)
 	{
 		CharacterMovementState = ECharacterMovementState::WALK;
 	}
-	else if (!bIsWalk && !bIsInAir && MovementSpeed >= 250.0f)
+	else if (!bIsWalk && !bIsInAir && bIsAccelation)
 	{
 		CharacterMovementState = ECharacterMovementState::JOG;
 	}
@@ -105,9 +107,16 @@ void UPlayerAnimInstance::DetermineLocomotionState()
 	}
 }
 
-void UPlayerAnimInstance::SetRotationRate(float MinLocomotionSpeed, float MaxLocomotionSpeed)
+void UPlayerAnimInstance::SetMaxAccelAndPlayRate()
 {
-	float ClampedRotValue = UKismetMathLibrary::MapRangeClamped(GetCurveValue(FName("SubMovementRotation")), 0.0f, 1.0f, MinLocomotionSpeed, MaxLocomotionSpeed);
+	OwnerCharacterMovement->MaxAcceleration = GetCurveValue(FName("Movement_Speed"));
+	float ClampValue = FMath::Clamp(GetCurveValue(FName("MoveData_Speed")), 50.0f, 1000.0f);
+	PlayRate = UKismetMathLibrary::SafeDivide(MovementSpeed, ClampValue);
+}
+
+void UPlayerAnimInstance::SetRotationRate(float MinLocomotionValue, float MaxLocomotionValue)
+{
+	float ClampedRotValue = UKismetMathLibrary::MapRangeClamped(GetCurveValue(FName("Movement_Rotation")), 0.0f, 1.0f, MinLocomotionValue, MaxLocomotionValue);
 	OwnerCharacterMovement->RotationRate = FRotator(0.0f, ClampedRotValue, 0.0f);
 
 	GEngine->AddOnScreenDebugMessage(33, 3, FColor::Green, FString::Printf(TEXT("Current Rotation Rate : %f, %f, %f"), OwnerCharacterMovement->RotationRate.Pitch, OwnerCharacterMovement->RotationRate.Yaw, OwnerCharacterMovement->RotationRate.Roll));
@@ -120,8 +129,14 @@ bool UPlayerAnimInstance::SetMovementDirection(float MinValue, float MaxValue, f
 	if (OwnerCharacter)
 	{
 		float MovementAngle = CalculateDirection(OwnerCharacterMovement->GetLastInputVector(), OwnerCharacter->GetActorRotation());
+
+		float SecMovementAngle = CalculateDirection(OwnerCharacter->GetLastMovementInputVector(), OwnerCharacter->GetActorRotation());
+
 		GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementAngle));
-		if (UKismetMathLibrary::InRange_FloatFloat(MovementAngle, MinValue, MaxValue, false, true))
+
+		GEngine->AddOnScreenDebugMessage(4, 3, FColor::Green, FString::Printf(TEXT("SecMovementAngle : %f"), SecMovementAngle));
+
+		if (UKismetMathLibrary::InRange_FloatFloat(MovementAngle, MinValue, MaxValue, true, true))
 		{
 			Direction = MovementAngle;
 			return true;
