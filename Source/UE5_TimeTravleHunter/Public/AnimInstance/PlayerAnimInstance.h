@@ -146,7 +146,9 @@ private:
 	void InitAnimationInstance();
 	void SetMovementData();
 	void DetermineLocomotionState();
-	void SetRotationRate(float MinLocomotionSpeed, float MaxLocomotionSpeed);
+
+	void SetMaxAccelAndPlayRate();
+	void SetRotationRate(float MinLocomotionValue, float MaxLocomotionValue);
 
 	bool SetMovementDirection(float MinValue, float MaxValue, float &Direction) const;
 	UFUNCTION(BlueprintCallable)
