@@ -139,6 +139,8 @@ protected:
 	// Action
 	void Parkour();
 	void Vaulting();
+	void Hurdling();
+	void Mantling();
 	//void VaultMotionWarp();
 	void TraversalEnd();
 
@@ -193,7 +195,7 @@ private:
 	FVector VaultLandingPos;
 
 	// Timer
-	FTimerHandle VaultTimerHandle;
+	FTimerHandle ParkourTimerHandle;
 
 	//======================================================
 	//=					- Functionary -					   =
