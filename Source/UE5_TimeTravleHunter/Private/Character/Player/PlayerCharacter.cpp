@@ -45,13 +45,18 @@ APlayerCharacter::APlayerCharacter() :
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = false;
-
+	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bUseSeparateBrakingFriction = true;
+	GetCharacterMovement()->BrakingFrictionFactor = 0.0f;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+	GetCharacterMovement()->MaxAcceleration = 500.0f;
 	GetCharacterMovement()->JumpZVelocity = 500.0f;
 	GetCharacterMovement()->AirControl = 1.0f;
-
+	GetCharacterMovement()->GroundFriction = 8.0f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 800.0f;
+	
 	ItemInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
 	CharacterMotionWarping = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
@@ -188,7 +193,7 @@ void APlayerCharacter::WalktoJog()
 	if (!OwningController->bIsWalk)
 	{
 		OwningController->bIsWalk = true;
-		GetCharacterMovement()->MaxWalkSpeed = 200.0f;
+		GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 	}
 	else
 	{
@@ -253,12 +258,7 @@ void APlayerCharacter::Parkour()
 				FVector HurdleLandEnd = HurdleLandStart - FVector(0.0f, 0.0f, 1000.0f);
 				if (GetWorld()->LineTraceSingleByChannel(HurdleLandHit, HurdleLandStart, HurdleLandEnd, ECollisionChannel::ECC_Visibility, CollisionParams))
 				{
-					GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
-					SetActorEnableCollision(false);
-
-					OwningAnimInstance->PlayHurdling();
-
-					GetWorld()->GetTimerManager().SetTimer(VaultTimerHandle, this, &APlayerCharacter::VaultEnd, OwningAnimInstance->Vaulting_Anim->GetPlayLength(), false);
+					Hurdling();
 				}
 			}
 		}
@@ -293,13 +293,48 @@ void APlayerCharacter::Vaulting()
 
 	if (OwningController->bIsCrouch)
 	{
-		OwningAnimInstance->PlayVaulting();
+		OwningAnimInstance->PlayCrouchVaulting();
 
-		GetWorld()->GetTimerManager().SetTimer(VaultTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->Vaulting_Anim->GetPlayLength(), false);
+		GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->CrouchVaulting_Anim->GetPlayLength(), false);
 	}
 	else
 	{
-		
+		OwningAnimInstance->PlayNormalVaulting();
+		GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->NormalVaulting_Anim->GetPlayLength(), false);
+	}
+}
+
+void APlayerCharacter::Hurdling()
+{
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+	SetActorEnableCollision(false);
+
+	OwningAnimInstance->PlayHurdling();
+
+	GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->Hurdling_Anim->GetPlayLength(), false);
+}
+
+void APlayerCharacter::Mantling()
+{
+	for (int32 i = 0; i < 9; i++)
+	{
+		FHitResult MantlingHit;
+		FVector MantlingStartPos{ GetActorLocation() + FVector(0.0f, 0.0f, 150.0f) * i * 20.0f };
+		FVector MantlingEndPos{ MantlingStartPos * GetActorForwardVector() * 200.0f };
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+
+		if (GetWorld()->LineTraceSingleByChannel(MantlingHit, MantlingStartPos, MantlingEndPos, ECollisionChannel::ECC_GameTraceChannel2, QueryParams))
+		{
+			FHitResult LandingHit;
+			FVector LandingStartPos = MantlingHit.Location + FVector(0.0f, 0.0f, 500.0f) + GetActorForwardVector() * 20.0f;
+			FVector LandingEndPos = LandingStartPos - FVector(0.0f, 0.0f, 500.0f);
+			if (GetWorld()->LineTraceSingleByChannel(LandingHit, LandingStartPos, LandingEndPos, ECollisionChannel::ECC_GameTraceChannel2, QueryParams))
+			{
+				GEngine->AddOnScreenDebugMessage(1, 3, FColor::Green, FString("Mantling"));
+			}
+			break;
+		}
 	}
 }
 
@@ -364,18 +399,7 @@ void APlayerCharacter::SwitchingWeaponMain()
 
 void APlayerCharacter::SwitchingWeaponSub()
 {
-	if (OwningController->bIsPistol)
-	{
-		OwningController->bIsPistol = false;
-	}
-	if (OwningController->bIsRifle)
-	{
 
-	}
-	if (OwningController->bIsShotgun)
-	{
-
-	}
 }
 
 void APlayerCharacter::SprintCameraMoving()
@@ -414,7 +438,8 @@ void APlayerCharacter::ShowInventory()
 
 void APlayerCharacter::TestFunction()
 {
-	Assasination();
+	//Assasination();
+	Mantling();
 }
 
 //void APlayerCharacter::VaultMotionWarp()
