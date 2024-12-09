@@ -194,6 +194,9 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
 	FVector VaultLandingPos;
 
+	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
+	FVector MantlePos;
+
 	// Timer
 	FTimerHandle ParkourTimerHandle;
 
