@@ -9,8 +9,7 @@
 #include "Interface/CharacterActionInterface.h"
 #include "Component/InventoryComponent.h"
 #include "Object/PickUpItem.h"
-#include "Object/VaultingWall.h"
-#include "Object/HurdleWall.h"
+#include "Object/ParkourWall.h"
 #include "UI/TTH_HUD.h"
 
 // Engine
@@ -214,39 +213,55 @@ void APlayerCharacter::Parkour()
 
 	if (GetWorld()->LineTraceSingleByChannel(DetectingWallHit, DetectingStart, DetectingEnd, ECollisionChannel::ECC_GameTraceChannel2, CollisionParams))
 	{
-		if (AVaultingWall* VaultingWall = Cast<AVaultingWall>(DetectingWallHit.GetActor()))
+		if (AParkourWall *ParkourWall = Cast<AParkourWall>(DetectingWallHit.GetActor()))
 		{
-			for (int32 i = 0; i <= 5; i++)
+			if (ParkourWall->GetWallSize().Z >= 2.0f)
 			{
-				FHitResult DetectingHeightHit;
-				FVector DetectingHeightStart = DetectingWallHit.Location + FVector(0.0f, 0.0f, 500.0f) + GetActorRotation().Vector() * 10.0f + GetActorRotation().Vector() * i * 20.0f;
-				FVector DetectingHeightEnd = DetectingHeightStart - FVector(0.0f, 0.0f, 500.0f);
+				FHitResult MantleLandingHit;
+				FVector MantleStartPos = DetectingWallHit.Location + GetActorRotation().Vector() * 10.0f + FVector(0.0f, 0.0f, 1000.0f);
+				FVector MantleEndPos = MantleStartPos - FVector(0.0f, 0.0f, 1000.0f);
 
-				if (GetWorld()->LineTraceSingleByChannel(DetectingHeightHit, DetectingHeightStart, DetectingHeightEnd, ECollisionChannel::ECC_GameTraceChannel2, CollisionParams))
+				if (GetWorld()->LineTraceSingleByChannel(MantleLandingHit, MantleStartPos, MantleEndPos, ECollisionChannel::ECC_GameTraceChannel2, CollisionParams))
 				{
-					if (i == 0)
-					{
-						VaultStartPos = DetectingHeightHit.Location;
-					}
-					VaultMiddlePos = DetectingHeightHit.Location;
-					DrawDebugLine(GetWorld(), DetectingHeightStart, DetectingHeightEnd, FColor::Green, false, 3.0f);
+					MantlePos = MantleLandingHit.Location;
+					Mantling();
 				}
-				else
-				{
-					FHitResult LandingHit;
-					FVector LandingStart = DetectingHeightHit.TraceStart + GetActorRotation().Vector() * 50.0f;
-					FVector LnadingEnd = LandingStart - FVector(0.0f, 0.0f, 1000.0f);
-					if (GetWorld()->LineTraceSingleByChannel(LandingHit, LandingStart, LnadingEnd, ECollisionChannel::ECC_Visibility, CollisionParams))
-					{
-						VaultLandingPos = LandingHit.Location;
-						DrawDebugLine(GetWorld(), LandingStart, LnadingEnd, FColor::Blue, false, 3.0f);
-						break;
-					}
-				}
+				DrawDebugLine(GetWorld(), MantleStartPos, MantleEndPos, FColor::Cyan, false, 3.0f);
 			}
-			Vaulting();
+			else
+			{
+				for (int32 i = 0; i <= 5; i++)
+				{
+					FHitResult DetectingHeightHit;
+					FVector DetectingHeightStart = DetectingWallHit.Location + FVector(0.0f, 0.0f, 500.0f) + GetActorRotation().Vector() * 10.0f + GetActorRotation().Vector() * i * 20.0f;
+					FVector DetectingHeightEnd = DetectingHeightStart - FVector(0.0f, 0.0f, 500.0f);
+
+					if (GetWorld()->LineTraceSingleByChannel(DetectingHeightHit, DetectingHeightStart, DetectingHeightEnd, ECollisionChannel::ECC_GameTraceChannel2, CollisionParams))
+					{
+						if (i == 0)
+						{
+							VaultStartPos = DetectingHeightHit.Location;
+						}
+						VaultMiddlePos = DetectingHeightHit.Location;
+						DrawDebugLine(GetWorld(), DetectingHeightStart, DetectingHeightEnd, FColor::Green, false, 3.0f);
+					}
+					else
+					{
+						FHitResult LandingHit;
+						FVector LandingStart = DetectingHeightHit.TraceStart + GetActorRotation().Vector() * 50.0f;
+						FVector LnadingEnd = LandingStart - FVector(0.0f, 0.0f, 1000.0f);
+						if (GetWorld()->LineTraceSingleByChannel(LandingHit, LandingStart, LnadingEnd, ECollisionChannel::ECC_Visibility, CollisionParams))
+						{
+							VaultLandingPos = LandingHit.Location;
+							DrawDebugLine(GetWorld(), LandingStart, LnadingEnd, FColor::Blue, false, 3.0f);
+							break;
+						}
+					}
+				}
+				Vaulting();
+			}
 		}
-		if (AHurdleWall *HurdleWall = Cast<AHurdleWall>(DetectingWallHit.GetActor()))
+		/*if (AHurdleWall *HurdleWall = Cast<AHurdleWall>(DetectingWallHit.GetActor()))
 		{
 			FHitResult HurdleHit;
 			FVector HurdlingStart = DetectingWallHit.Location * GetActorRotation().Vector() * 20.0f + FVector(0.0f, 0.0f, 500.0f);
@@ -261,7 +276,11 @@ void APlayerCharacter::Parkour()
 					Hurdling();
 				}
 			}
-		}
+		}*/
+		/*if (AMantlingWall *MantlingWall = Cast<AMantlingWall>(DetectingWallHit.GetActor()))
+		{
+			
+		}*/
 	}
 }
 
@@ -299,8 +318,8 @@ void APlayerCharacter::Vaulting()
 	}
 	else
 	{
-		OwningAnimInstance->PlayNormalVaulting();
-		GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->NormalVaulting_Anim->GetPlayLength(), false);
+		//OwningAnimInstance->PlayNormalVaulting();
+		//GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->NormalVaulting_Anim->GetPlayLength(), false);
 	}
 }
 
@@ -316,26 +335,9 @@ void APlayerCharacter::Hurdling()
 
 void APlayerCharacter::Mantling()
 {
-	for (int32 i = 0; i < 9; i++)
-	{
-		FHitResult MantlingHit;
-		FVector MantlingStartPos{ GetActorLocation() + FVector(0.0f, 0.0f, 150.0f) * i * 20.0f };
-		FVector MantlingEndPos{ MantlingStartPos * GetActorForwardVector() * 200.0f };
-		FCollisionQueryParams QueryParams;
-		QueryParams.AddIgnoredActor(this);
+	OwningAnimInstance->PlayMantling();
+	SetActorLocation(MantlePos, false, nullptr, ETeleportType::None);
 
-		if (GetWorld()->LineTraceSingleByChannel(MantlingHit, MantlingStartPos, MantlingEndPos, ECollisionChannel::ECC_GameTraceChannel2, QueryParams))
-		{
-			FHitResult LandingHit;
-			FVector LandingStartPos = MantlingHit.Location + FVector(0.0f, 0.0f, 500.0f) + GetActorForwardVector() * 20.0f;
-			FVector LandingEndPos = LandingStartPos - FVector(0.0f, 0.0f, 500.0f);
-			if (GetWorld()->LineTraceSingleByChannel(LandingHit, LandingStartPos, LandingEndPos, ECollisionChannel::ECC_GameTraceChannel2, QueryParams))
-			{
-				GEngine->AddOnScreenDebugMessage(1, 3, FColor::Green, FString("Mantling"));
-			}
-			break;
-		}
-	}
 }
 
 void APlayerCharacter::TraversalEnd()
