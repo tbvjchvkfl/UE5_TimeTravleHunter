@@ -185,6 +185,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
 	float LookingRotationValue;
 
+	UPROPERTY(EditAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
+	bool DoOnceFlag;
+
 	UPROPERTY(VisibleAnywhere, Category = "Character | Status", meta = (AllowPrivateAccess = "true"))
 	FVector VaultStartPos;
 
