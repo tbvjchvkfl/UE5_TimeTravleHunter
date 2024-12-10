@@ -32,6 +32,9 @@ public:
 	bool bIsWalk;
 
 	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
+	bool bIsJog;
+
+	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
 	bool bIsSprint;
 
 	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
@@ -41,14 +44,10 @@ public:
 	bool bIsAimming;
 
 	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
-	bool bIsPistol;
+	bool bIsParkour;
 
 	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
-	bool bIsRifle;
-
-	UPROPERTY(VisibleAnywhere, Category = "Controller | Status")
-	bool bIsShotgun;
-
+	bool bSavedPreviousState;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
