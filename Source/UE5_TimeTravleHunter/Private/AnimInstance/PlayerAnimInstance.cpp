@@ -44,8 +44,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		DeltaTime = DeltaSeconds;
 		SetMovementData();
-		DetermineLocomotionState();
-		DetermineMovementDirection();
+		
 	}
 }
 
@@ -53,8 +52,8 @@ void UPlayerAnimInstance::InitAnimationInstance()
 {
 	ActualGroundSpeed = 0.0f;
 	MovementSpeed = 0.0f;
+	MovementStartAngle = 0.0f;
 	CharacterVelocity = FVector::ZeroVector;
-	PreviousLocation = FVector::ZeroVector;
 	CharacterMovementState = ECharacterMovementState::IDLE;
 	CharacterMovementDirection = ECharacterMovementDirection::FOWARD;
 	DeltaTime = 0.0f;
@@ -71,6 +70,7 @@ void UPlayerAnimInstance::SetMovementData()
 	bIsAccelation = OwnerCharacterMovement->GetCurrentAcceleration().Size() > 0.0f;
 	bIsCrouch = OwnerController->bIsCrouch;
 	bIsWalk = OwnerController->bIsWalk;
+	bIsJog = OwnerController->bIsJog;
 	bIsSprint = OwnerController->bIsSprint;
 	bIsParkour = OwnerController->bIsParkour;
 
@@ -78,38 +78,21 @@ void UPlayerAnimInstance::SetMovementData()
 	FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(OwnerCharacter->GetVelocity());
 	MovementYawDelta = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, BaseAimRotation).Yaw;
 
+	SetMaxAccelAndPlayRate();
 	SetRotationRate(0.0f, 500.0f);
+	DetermineMovementDirection();
 
-	GEngine->AddOnScreenDebugMessage(66, 3, FColor::Green, FString::Printf(TEXT("SecMovementAngle : %f"), OwnerCharacterMovement->MaxAcceleration));
-}
+	GEngine->AddOnScreenDebugMessage(20, 3, FColor::Green, FString::Printf(TEXT("MovementSpeed : %f"), MovementSpeed));
 
-void UPlayerAnimInstance::DetermineLocomotionState()
-{
-	if (bIsWalk && !bIsInAir && bIsAccelation)
-	{
-		CharacterMovementState = ECharacterMovementState::WALK;
-	}
-	else if (!bIsWalk && !bIsInAir && bIsAccelation)
-	{
-		CharacterMovementState = ECharacterMovementState::JOG;
-	}
-	else if (bIsInAir)
-	{
-		CharacterMovementState = ECharacterMovementState::JUMP;
-	}
-	else if (bIsCrouch)
-	{
-		CharacterMovementState = ECharacterMovementState::CROUCH;
-	}
-	else
-	{
-		CharacterMovementState = ECharacterMovementState::IDLE;
-	}
+	GEngine->AddOnScreenDebugMessage(21, 3, FColor::Green, FString::Printf(TEXT("CurrentAcceleration : %f"), OwnerCharacterMovement->GetCurrentAcceleration().Size()));
+
+	GEngine->AddOnScreenDebugMessage(22, 3, FColor::Green, FString::Printf(TEXT("MaxSpeed : %f"), OwnerCharacterMovement->GetMaxSpeed()));
+
+	GEngine->AddOnScreenDebugMessage(23, 3, FColor::Green, FString::Printf(TEXT("MaxAcceration : %f"), OwnerCharacterMovement->GetMaxAcceleration()));
 }
 
 void UPlayerAnimInstance::SetMaxAccelAndPlayRate()
 {
-	OwnerCharacterMovement->MaxAcceleration = GetCurveValue(FName("Movement_Speed"));
 	float ClampValue = FMath::Clamp(GetCurveValue(FName("MoveData_Speed")), 50.0f, 1000.0f);
 	PlayRate = UKismetMathLibrary::SafeDivide(MovementSpeed, ClampValue);
 }
@@ -119,26 +102,20 @@ void UPlayerAnimInstance::SetRotationRate(float MinLocomotionValue, float MaxLoc
 	float ClampedRotValue = UKismetMathLibrary::MapRangeClamped(GetCurveValue(FName("Movement_Rotation")), 0.0f, 1.0f, MinLocomotionValue, MaxLocomotionValue);
 	OwnerCharacterMovement->RotationRate = FRotator(0.0f, ClampedRotValue, 0.0f);
 
-	GEngine->AddOnScreenDebugMessage(33, 3, FColor::Green, FString::Printf(TEXT("Current Rotation Rate : %f, %f, %f"), OwnerCharacterMovement->RotationRate.Pitch, OwnerCharacterMovement->RotationRate.Yaw, OwnerCharacterMovement->RotationRate.Roll));
-
 	OwnerCharacterMovement->bAllowPhysicsRotationDuringAnimRootMotion = false;
 }
 
-bool UPlayerAnimInstance::SetMovementDirection(float MinValue, float MaxValue, float &Direction) const
+bool UPlayerAnimInstance::SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const
 {
 	if (OwnerCharacter)
 	{
-		float MovementAngle = CalculateDirection(OwnerCharacterMovement->GetLastInputVector(), OwnerCharacter->GetActorRotation());
+		float MovementAngle = CalculateDirection(OwnerCharacter->GetVelocity(), OwnerCharacter->GetActorRotation());
 
-		float SecMovementAngle = CalculateDirection(OwnerCharacter->GetLastMovementInputVector(), OwnerCharacter->GetActorRotation());
+		float ClampAngle = FMath::Clamp(MovementAngle, -180.0f, 180.0f);
 
-		GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementAngle));
-
-		GEngine->AddOnScreenDebugMessage(4, 3, FColor::Green, FString::Printf(TEXT("SecMovementAngle : %f"), SecMovementAngle));
-
-		if (UKismetMathLibrary::InRange_FloatFloat(MovementAngle, MinValue, MaxValue, true, true))
+		if (UKismetMathLibrary::InRange_FloatFloat(ClampAngle, MinValue, MaxValue, Mincluding, Maxcluding))
 		{
-			Direction = MovementAngle;
+			Direction = ClampAngle;
 			return true;
 		}
 		Direction = 0.0f;
@@ -149,25 +126,37 @@ bool UPlayerAnimInstance::SetMovementDirection(float MinValue, float MaxValue, f
 
 void UPlayerAnimInstance::DetermineMovementDirection()
 {
-	if (SetMovementDirection(-180.0f, -135.0f, MovementStartAngle))
+	if (MovementSpeed <= 5.0f)
 	{
-		CharacterMovementDirection = ECharacterMovementDirection::TURNLEFT_180;
-	}
-	else if (SetMovementDirection(-135.0f, -45.0f, MovementStartAngle))
-	{
-		CharacterMovementDirection = ECharacterMovementDirection::TURNLEFT_90;
-	}
-	else if (SetMovementDirection(45.0f, 135.0f, MovementStartAngle))
-	{
-		CharacterMovementDirection = ECharacterMovementDirection::TURNRIGHT_90;
-	}
-	else if (SetMovementDirection(135.0f, 180.0f, MovementStartAngle))
-	{
-		CharacterMovementDirection = ECharacterMovementDirection::TURNRIGHT_180;
-	}
-	else
-	{
-		CharacterMovementDirection = ECharacterMovementDirection::FOWARD;
+		if (SetMovementDirection(-180.0f, -135.0f, true, false, MovementStartAngle))
+		{
+			CharacterMovementDirection = ECharacterMovementDirection::TURNLEFT_180;
+			GEngine->AddOnScreenDebugMessage(9, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementStartAngle));
+			return;
+		}
+		else if (SetMovementDirection(-135.0f, -45.0f, true, false, MovementStartAngle))
+		{
+			CharacterMovementDirection = ECharacterMovementDirection::TURNLEFT_90;
+			GEngine->AddOnScreenDebugMessage(99, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementStartAngle));
+			return;
+		}
+		else if (SetMovementDirection(45.0f, 135.0f, false, true, MovementStartAngle))
+		{
+			CharacterMovementDirection = ECharacterMovementDirection::TURNRIGHT_90;
+			GEngine->AddOnScreenDebugMessage(999, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementStartAngle));
+			return;
+		}
+		else if (SetMovementDirection(135.0f, 180.0f, false, true, MovementStartAngle))
+		{
+			CharacterMovementDirection = ECharacterMovementDirection::TURNRIGHT_180;
+			GEngine->AddOnScreenDebugMessage(89, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementStartAngle));
+			return;
+		}
+		else
+		{
+			CharacterMovementDirection = ECharacterMovementDirection::FOWARD;
+			return;
+		}
 	}
 }
 
@@ -179,11 +168,11 @@ void UPlayerAnimInstance::PlayCrouchVaulting()
 	}
 }
 
-void UPlayerAnimInstance::PlayNormalVaulting()
+void UPlayerAnimInstance::PlaySprintJumping()
 {
-	if (NormalVaulting_Anim)
+	if (SprintJumping_Anim)
 	{
-		Montage_Play(NormalVaulting_Anim, 1.0f);
+		Montage_Play(SprintJumping_Anim, 1.0f);
 	}
 }
 
@@ -195,10 +184,46 @@ void UPlayerAnimInstance::PlayHurdling()
 	}
 }
 
+void UPlayerAnimInstance::PlayMantling()
+{
+	if (Mantling_Anim)
+	{
+		Montage_Play(Mantling_Anim, 1.0f);
+	}
+}
+
 void UPlayerAnimInstance::PlayAssasination()
 {
 	if (Assasination_Anim)
 	{
 		Montage_Play(Assasination_Anim, 1.0f);
+	}
+}
+
+void UPlayerAnimInstance::DetermineLocomotionState()
+{
+	if (bIsWalk && !bIsInAir && bIsAccelation && !bIsSprint)
+	{
+		CharacterMovementState = ECharacterMovementState::WALK;
+	}
+	else if (!bIsWalk && !bIsInAir && bIsAccelation && !bIsSprint)
+	{
+		CharacterMovementState = ECharacterMovementState::JOG;
+	}
+	else if (bIsInAir && !bIsSprint)
+	{
+		CharacterMovementState = ECharacterMovementState::JUMP;
+	}
+	else if (bIsCrouch)
+	{
+		CharacterMovementState = ECharacterMovementState::CROUCH;
+	}
+	else if (bIsSprint)
+	{
+		CharacterMovementState = ECharacterMovementState::SPRINT;
+	}
+	else
+	{
+		CharacterMovementState = ECharacterMovementState::IDLE;
 	}
 }
