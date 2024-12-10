@@ -56,6 +56,8 @@ APlayerCharacter::APlayerCharacter() :
 	GetCharacterMovement()->GroundFriction = 8.0f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 800.0f;
 	
+	DoOnceFlag = true;
+
 	ItemInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
 	CharacterMotionWarping = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
@@ -72,9 +74,22 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (GetCharacterMovement()->GetCurrentAcceleration().Size() <= 0.0f && OwningController->bIsSprint)
+	{
+		OwningController->bIsSprint = false;
+		if (OwningController->bIsWalk)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 150.0f;
+		}
+		if (OwningController->bIsJog)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+		}
+	}
 	if (GetCharacterMovement()->IsFalling())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Green, FString::Printf(TEXT("Falling")), true);
+		GEngine->AddOnScreenDebugMessage(10, 3, FColor::Green, FString::Printf(TEXT("Falling")), true);
 	}
 }
 
@@ -145,6 +160,7 @@ void APlayerCharacter::Sprint()
 	if (!OwningController->bIsSprint)
 	{
 		OwningController->bIsSprint = true;
+		DoOnceFlag = true;
 		GetCharacterMovement()->MaxWalkSpeed = 800.0f;
 	}
 	else
@@ -160,6 +176,14 @@ void APlayerCharacter::DoJump()
 	{
 		Parkour();
 	}
+	else if (OwningController->bIsCrouch)
+	{
+		OwningController->bIsCrouch = false;
+	}
+	else if (GetCharacterMovement()->IsFalling())
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3, FColor::Blue, FString("MantleCheckStart"));
+	}
 	else
 	{
 		Jump();
@@ -171,6 +195,7 @@ void APlayerCharacter::DoCrouch()
 	if (!OwningController->bIsCrouch)
 	{
 		OwningController->bIsCrouch = true;
+		OwningController->bIsSprint = false;
 		GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 	}
 	else
@@ -178,9 +203,9 @@ void APlayerCharacter::DoCrouch()
 		OwningController->bIsCrouch = false;
 		if (OwningController->bIsWalk)
 		{
-			GetCharacterMovement()->MaxWalkSpeed = 200.0f;
+			GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 		}
-		else
+		if (OwningController->bIsJog)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = 500.0f;
 		}
@@ -192,11 +217,13 @@ void APlayerCharacter::WalktoJog()
 	if (!OwningController->bIsWalk)
 	{
 		OwningController->bIsWalk = true;
+		OwningController->bIsJog = false;
 		GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 	}
 	else
 	{
 		OwningController->bIsWalk = false;
+		OwningController->bIsJog = true;
 		GetCharacterMovement()->MaxWalkSpeed = 500.0f;
 	}
 }
@@ -318,6 +345,7 @@ void APlayerCharacter::Vaulting()
 	}
 	else
 	{
+		Hurdling();
 		//OwningAnimInstance->PlayNormalVaulting();
 		//GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->NormalVaulting_Anim->GetPlayLength(), false);
 	}
@@ -335,9 +363,11 @@ void APlayerCharacter::Hurdling()
 
 void APlayerCharacter::Mantling()
 {
-	OwningAnimInstance->PlayMantling();
-	SetActorLocation(MantlePos, false, nullptr, ETeleportType::None);
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
 
+	OwningAnimInstance->PlayMantling();
+
+	GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->Mantling_Anim->GetPlayLength(), false);
 }
 
 void APlayerCharacter::TraversalEnd()
