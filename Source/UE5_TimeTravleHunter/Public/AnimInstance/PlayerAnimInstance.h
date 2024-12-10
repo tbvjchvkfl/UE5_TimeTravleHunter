@@ -45,23 +45,32 @@ public:
 	//=					- Variables -					   =
 	//======================================================
 	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
-	UAnimMontage *CrouchVaulting_Anim;
+	UAnimMontage *SprintJumping_Anim;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
-	UAnimMontage *NormalVaulting_Anim;
+	UAnimMontage *CrouchVaulting_Anim;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
 	UAnimMontage *Hurdling_Anim;
 
+	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
+	UAnimMontage *Mantling_Anim;
+
 	UPROPERTY(EditAnywhere, Category = "Animation | Action")
 	UAnimMontage *Assasination_Anim;
 
+	UPROPERTY(EditAnywhere, Category = "Animation | Test")
+	UAnimSequence *TestSeq;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Test")
+	UAnimSequenceBase *TestBase;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	void PlayCrouchVaulting();
-	void PlayNormalVaulting();
+	void PlaySprintJumping();
 	void PlayHurdling();
+	void PlayMantling();
 	void PlayAssasination();
 
 private:
@@ -122,6 +131,9 @@ private:
 	bool bIsWalk;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
+	bool bIsJog;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
 	bool bIsSprint;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
@@ -136,6 +148,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
 	float PlayRate;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -150,7 +163,7 @@ private:
 	void SetMaxAccelAndPlayRate();
 	void SetRotationRate(float MinLocomotionValue, float MaxLocomotionValue);
 
-	bool SetMovementDirection(float MinValue, float MaxValue, float &Direction) const;
+	bool SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const;
 	UFUNCTION(BlueprintCallable)
 	void DetermineMovementDirection();
 };
