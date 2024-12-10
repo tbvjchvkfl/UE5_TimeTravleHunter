@@ -19,13 +19,19 @@
 APlayerCharacterController::APlayerCharacterController() : LookingRotationValue(1.0f)
 {
 	PrimaryActorTick.bCanEverTick = true;
-	PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
+	bIsWalk = false;
+	bIsJog = true;
+	bIsSprint = false;
+	bIsCrouch = false;
+	bIsAimming = false;
+	bIsParkour = false;
 }
 
 void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
 	OwningHUD = Cast<ATTH_HUD>(GetHUD());
+	PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
 }
 
 void APlayerCharacterController::Tick(float DeltaTime)
