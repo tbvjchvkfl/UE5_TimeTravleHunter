@@ -45,13 +45,13 @@ public:
 	//=					- Variables -					   =
 	//======================================================
 	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
-	UAnimMontage *SprintJumping_Anim;
-
-	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
 	UAnimMontage *CrouchVaulting_Anim;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
 	UAnimMontage *Hurdling_Anim;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
+	UAnimMontage *Climbing_Anim;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
 	UAnimMontage *Mantling_Anim;
@@ -68,8 +68,8 @@ public:
 	//=					- Functionary -					   =
 	//======================================================
 	void PlayCrouchVaulting();
-	void PlaySprintJumping();
 	void PlayHurdling();
+	void PlayClimbing();
 	void PlayMantling();
 	void PlayAssasination();
 
@@ -158,12 +158,36 @@ private:
 
 	void InitAnimationInstance();
 	void SetMovementData();
-	void DetermineLocomotionState();
 
 	void SetMaxAccelAndPlayRate();
 	void SetRotationRate(float MinLocomotionValue, float MaxLocomotionValue);
 
 	bool SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const;
-	UFUNCTION(BlueprintCallable)
 	void DetermineMovementDirection();
+
+
+	// ----------- Foot IK -----------
+private:
+	//======================================================
+	//=					- Variables -					   =
+	//======================================================
+
+	float Displacement;
+	
+	float IKInterpSpeed;
+
+	FRotator RRot;
+
+	FRotator LRot;
+
+	float RIK;
+
+	float LIK;
+
+	//======================================================
+	//=					- Functionary -					   =
+	//======================================================
+	void FootIK(float DeltaTime);
+	TTuple<bool, float>CapsuleDistance(FName SocketName, ACharacter *Owner);
+	TTuple<bool, float, FVector>FootLineTrace(FName SocketName, ACharacter *Owner);
 };
