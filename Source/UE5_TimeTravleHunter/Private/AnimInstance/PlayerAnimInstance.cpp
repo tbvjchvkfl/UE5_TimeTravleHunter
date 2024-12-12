@@ -81,14 +81,6 @@ void UPlayerAnimInstance::SetMovementData()
 	SetMaxAccelAndPlayRate();
 	SetRotationRate(0.0f, 500.0f);
 	DetermineMovementDirection();
-
-	GEngine->AddOnScreenDebugMessage(20, 3, FColor::Green, FString::Printf(TEXT("MovementSpeed : %f"), MovementSpeed));
-
-	GEngine->AddOnScreenDebugMessage(21, 3, FColor::Green, FString::Printf(TEXT("CurrentAcceleration : %f"), OwnerCharacterMovement->GetCurrentAcceleration().Size()));
-
-	GEngine->AddOnScreenDebugMessage(22, 3, FColor::Green, FString::Printf(TEXT("MaxSpeed : %f"), OwnerCharacterMovement->GetMaxSpeed()));
-
-	GEngine->AddOnScreenDebugMessage(23, 3, FColor::Green, FString::Printf(TEXT("MaxAcceration : %f"), OwnerCharacterMovement->GetMaxAcceleration()));
 }
 
 void UPlayerAnimInstance::SetMaxAccelAndPlayRate()
@@ -131,25 +123,21 @@ void UPlayerAnimInstance::DetermineMovementDirection()
 		if (SetMovementDirection(-180.0f, -135.0f, true, false, MovementStartAngle))
 		{
 			CharacterMovementDirection = ECharacterMovementDirection::TURNLEFT_180;
-			GEngine->AddOnScreenDebugMessage(9, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementStartAngle));
 			return;
 		}
 		else if (SetMovementDirection(-135.0f, -45.0f, true, false, MovementStartAngle))
 		{
 			CharacterMovementDirection = ECharacterMovementDirection::TURNLEFT_90;
-			GEngine->AddOnScreenDebugMessage(99, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementStartAngle));
 			return;
 		}
 		else if (SetMovementDirection(45.0f, 135.0f, false, true, MovementStartAngle))
 		{
 			CharacterMovementDirection = ECharacterMovementDirection::TURNRIGHT_90;
-			GEngine->AddOnScreenDebugMessage(999, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementStartAngle));
 			return;
 		}
 		else if (SetMovementDirection(135.0f, 180.0f, false, true, MovementStartAngle))
 		{
 			CharacterMovementDirection = ECharacterMovementDirection::TURNRIGHT_180;
-			GEngine->AddOnScreenDebugMessage(89, 3, FColor::Green, FString::Printf(TEXT("MovementAngle : %f"), MovementStartAngle));
 			return;
 		}
 		else
@@ -160,6 +148,23 @@ void UPlayerAnimInstance::DetermineMovementDirection()
 	}
 }
 
+// Tick에서 실행
+void UPlayerAnimInstance::FootIK(float DeltaTime)
+{
+}
+
+// 거리 계산
+TTuple<bool, float> UPlayerAnimInstance::CapsuleDistance(FName SocketName, ACharacter *Owner)
+{
+	return TTuple<bool, float>();
+}
+
+// LineTrace
+TTuple<bool, float, FVector> UPlayerAnimInstance::FootLineTrace(FName SocketName, ACharacter *Owner)
+{
+	return TTuple<bool, float, FVector>();
+}
+
 void UPlayerAnimInstance::PlayCrouchVaulting()
 {
 	if (CrouchVaulting_Anim)
@@ -168,19 +173,19 @@ void UPlayerAnimInstance::PlayCrouchVaulting()
 	}
 }
 
-void UPlayerAnimInstance::PlaySprintJumping()
-{
-	if (SprintJumping_Anim)
-	{
-		Montage_Play(SprintJumping_Anim, 1.0f);
-	}
-}
-
 void UPlayerAnimInstance::PlayHurdling()
 {
 	if (Hurdling_Anim)
 	{
 		Montage_Play(Hurdling_Anim, 1.0f);
+	}
+}
+
+void UPlayerAnimInstance::PlayClimbing()
+{
+	if (Climbing_Anim)
+	{
+		Montage_Play(Climbing_Anim, 1.0f);
 	}
 }
 
@@ -197,33 +202,5 @@ void UPlayerAnimInstance::PlayAssasination()
 	if (Assasination_Anim)
 	{
 		Montage_Play(Assasination_Anim, 1.0f);
-	}
-}
-
-void UPlayerAnimInstance::DetermineLocomotionState()
-{
-	if (bIsWalk && !bIsInAir && bIsAccelation && !bIsSprint)
-	{
-		CharacterMovementState = ECharacterMovementState::WALK;
-	}
-	else if (!bIsWalk && !bIsInAir && bIsAccelation && !bIsSprint)
-	{
-		CharacterMovementState = ECharacterMovementState::JOG;
-	}
-	else if (bIsInAir && !bIsSprint)
-	{
-		CharacterMovementState = ECharacterMovementState::JUMP;
-	}
-	else if (bIsCrouch)
-	{
-		CharacterMovementState = ECharacterMovementState::CROUCH;
-	}
-	else if (bIsSprint)
-	{
-		CharacterMovementState = ECharacterMovementState::SPRINT;
-	}
-	else
-	{
-		CharacterMovementState = ECharacterMovementState::IDLE;
 	}
 }
