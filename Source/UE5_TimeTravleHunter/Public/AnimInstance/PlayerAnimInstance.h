@@ -14,6 +14,7 @@ class APlayerCharacterController;
 class UAnimMontage;
 
 struct FCachedAnimStateData;
+struct FRigElementKey;
 
 UENUM()
 enum class ECharacterMovementState : uint8
@@ -114,9 +115,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
 	float MovementStartAngle;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
-	float DeltaTime;
-
 	// Character Locomotion State
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
 	bool bIsAccelation;
@@ -171,23 +169,28 @@ private:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
+	float CurrentInterpSpeed;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
 	float Displacement;
-	
-	float IKInterpSpeed;
 
-	FRotator RRot;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
+	FRotator L_FootRotation;
 
-	FRotator LRot;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
+	FRotator R_FootRotation;
 
-	float RIK;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
+	float L_FootIK;
 
-	float LIK;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
+	float R_FootIK;
 
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-	void FootIK(float DeltaTime);
-	TTuple<bool, float>CapsuleDistance(FName SocketName, ACharacter *Owner);
-	TTuple<bool, float, FVector>FootLineTrace(FName SocketName, ACharacter *Owner);
+	void FootIK(float DeltaSecond);
+	TTuple<bool, float, FVector> FootTrace(FName SocketName);
+	TTuple<bool, float>CapsuleDistance(FName SocketName);
 };
