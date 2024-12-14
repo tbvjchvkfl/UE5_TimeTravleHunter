@@ -37,6 +37,14 @@ enum class ECharacterMovementDirection : uint8
 	TURNRIGHT_180 UMETA(DisplayName = "TurnRight_180")
 };
 
+USTRUCT()
+struct FST_FootIK
+{
+	GENERATED_USTRUCT_BODY()
+	float Offset;
+	FVector HitLocation;
+};
+
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UPlayerAnimInstance : public UAnimInstance
 {
@@ -147,28 +155,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
 	float PlayRate;
 
-	//======================================================
-	//=					- Functionary -					   =
-	//======================================================
-	virtual void NativeInitializeAnimation() override;
-	virtual void NativeBeginPlay() override;
-	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
-
-	void InitAnimationInstance();
-	void SetMovementData();
-
-	void SetMaxAccelAndPlayRate();
-	void SetRotationRate(float MinLocomotionValue, float MaxLocomotionValue);
-
-	bool SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const;
-	void DetermineMovementDirection();
-
-
-	// ----------- Foot IK -----------
-private:
-	//======================================================
-	//=					- Variables -					   =
-	//======================================================
+	// Foot IK
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
 	float CurrentInterpSpeed;
 
@@ -190,6 +177,19 @@ private:
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
+	virtual void NativeInitializeAnimation() override;
+	virtual void NativeBeginPlay() override;
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+	void InitAnimationInstance();
+	void SetMovementData();
+
+	void SetMaxAccelAndPlayRate();
+	void SetRotationRate(float MinLocomotionValue, float MaxLocomotionValue);
+
+	bool SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const;
+	void DetermineMovementDirection();
+
 	void FootIK(float DeltaSecond);
 	TTuple<bool, float, FVector> FootTrace(FName SocketName);
 	TTuple<bool, float>CapsuleDistance(FName SocketName);
