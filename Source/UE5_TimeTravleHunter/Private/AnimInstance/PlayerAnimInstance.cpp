@@ -42,9 +42,8 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 	if (OwnerCharacter && OwnerController && OwnerCharacterMovement)
 	{
-		DeltaTime = DeltaSeconds;
 		SetMovementData();
-		
+		FootIK(DeltaSeconds);
 	}
 }
 
@@ -56,7 +55,6 @@ void UPlayerAnimInstance::InitAnimationInstance()
 	CharacterVelocity = FVector::ZeroVector;
 	CharacterMovementState = ECharacterMovementState::IDLE;
 	CharacterMovementDirection = ECharacterMovementDirection::FOWARD;
-	DeltaTime = 0.0f;
 	CanWalkStartSkip = false;
 	CanJogStartSkip = false;
 }
@@ -148,21 +146,85 @@ void UPlayerAnimInstance::DetermineMovementDirection()
 	}
 }
 
-// Tick에서 실행
-void UPlayerAnimInstance::FootIK(float DeltaTime)
+void UPlayerAnimInstance::FootIK(float DeltaSecond)
 {
+	if (!bIsInAir)
+	{
+		TTuple<bool, float> Foot_L = CapsuleDistance("ik_foot_l");
+		TTuple<bool, float> Foot_R = CapsuleDistance("ik_foot_r");
+
+		if (Foot_L.Get<0>() || Foot_R.Get<0>())
+		{
+			const float SelectFloat = UKismetMathLibrary::SelectFloat(Foot_L.Get<1>(), Foot_R.Get<1>(), Foot_L.Get<1>() >= Foot_R.Get<1>());
+
+			Displacement = FMath::FInterpTo(Displacement, (SelectFloat - 98.0f) * -1.0f, DeltaSecond, CurrentInterpSpeed);
+
+			TTuple<bool, float, FVector> FootTrace_L = FootTrace("ik_foot_l");
+			TTuple<bool, float, FVector> FootTrace_R = FootTrace("ik_foot_r");
+
+			const float Distance_L = FootTrace_L.Get<1>();
+			const FVector FootLVector = FootTrace_L.Get<2>();
+			const FRotator MakeLRot(UKismetMathLibrary::DegAtan2(FootLVector.X, FootLVector.Z) * -1.0f, 0.0, UKismetMathLibrary::DegAtan2(FootLVector.Y, FootLVector.Z));
+
+			L_FootRotation = FMath::RInterpTo(L_FootRotation, MakeLRot, DeltaSecond, CurrentInterpSpeed);
+			L_FootIK = FMath::FInterpTo(L_FootIK, (Distance_L - 110.0f) / -45.0f, DeltaSecond, CurrentInterpSpeed);
+
+			const float Distance_R = FootTrace_R.Get<1>();
+			const FVector FootRVector = FootTrace_R.Get<2>();
+			const FRotator MakeRRot(UKismetMathLibrary::DegAtan2(FootRVector.X, FootRVector.Z) * -1.0f, 0.0f, UKismetMathLibrary::DegAtan2(FootRVector.Y, FootRVector.Z));
+
+			R_FootRotation = FMath::RInterpTo(R_FootRotation, MakeRRot, DeltaSecond, CurrentInterpSpeed);
+			R_FootIK = FMath::FInterpTo(R_FootIK, (Distance_R - 110.0f) / -45.0f, DeltaSecond, CurrentInterpSpeed);
+		}
+	}
+	else
+	{
+		L_FootRotation = FMath::RInterpTo(L_FootRotation, FRotator::ZeroRotator, DeltaSecond, CurrentInterpSpeed);
+		L_FootIK = FMath::FInterpTo(L_FootIK, 0.0f, DeltaSecond, CurrentInterpSpeed);
+
+		R_FootRotation = FMath::RInterpTo(R_FootRotation, FRotator::ZeroRotator, DeltaSecond, CurrentInterpSpeed);
+		R_FootIK = FMath::FInterpTo(R_FootIK, 0.0f, DeltaSecond, CurrentInterpSpeed);
+	}
 }
 
-// 거리 계산
-TTuple<bool, float> UPlayerAnimInstance::CapsuleDistance(FName SocketName, ACharacter *Owner)
+TTuple<bool, float> UPlayerAnimInstance::CapsuleDistance(FName SocketName)
 {
-	return TTuple<bool, float>();
+	FVector WorldLocation{ OwnerCharacter->GetMesh()->GetComponentLocation() };
+	FVector BreakVector{ WorldLocation + FVector(0.0f, 0.0f, 98.0f) };
+
+	FVector SocketLocation{ OwnerCharacter->GetMesh()->GetSocketLocation(SocketName) };
+	FVector StartPos{ SocketLocation.X, SocketLocation.Y, BreakVector.Z };
+	FVector EndPos{ StartPos - FVector(0.0f, 0.0f, 151.0f) };
+	FHitResult CapsuleHit;
+	FCollisionQueryParams CapColParams;
+	CapColParams.AddIgnoredActor(OwnerCharacter);
+
+
+	if (GetWorld()->LineTraceSingleByChannel(CapsuleHit, StartPos, EndPos, ECollisionChannel::ECC_Visibility, CapColParams))
+	{
+		return MakeTuple(true, CapsuleHit.Distance);
+	}
+
+	return MakeTuple(false, CapsuleHit.Distance);
 }
 
-// LineTrace
-TTuple<bool, float, FVector> UPlayerAnimInstance::FootLineTrace(FName SocketName, ACharacter *Owner)
+TTuple<bool, float, FVector> UPlayerAnimInstance::FootTrace(FName SocketName)
 {
-	return TTuple<bool, float, FVector>();
+	const FVector BoneLoc = OwnerCharacter->GetMesh()->GetSocketLocation(SocketName);
+	const FVector RootLoc = OwnerCharacter->GetMesh()->GetSocketLocation("root");
+
+	FHitResult IKHit;
+	FVector StartPos{ BoneLoc.X, BoneLoc.Y, RootLoc.Z + 105.0f };
+	FVector EndPos{ StartPos - FVector(0.0f, 0.0f, 105.0f) };
+	FCollisionQueryParams IKColParam;
+	IKColParam.AddIgnoredActor(OwnerCharacter);
+
+	if (GetWorld()->LineTraceSingleByChannel(IKHit, StartPos, EndPos, ECollisionChannel::ECC_Visibility, IKColParam))
+	{
+		return MakeTuple(true, IKHit.Distance, IKHit.Normal);
+	}
+
+	return MakeTuple(false, 999.0f, FVector::ZeroVector);
 }
 
 void UPlayerAnimInstance::PlayCrouchVaulting()
