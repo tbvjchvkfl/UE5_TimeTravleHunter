@@ -13,36 +13,46 @@ class UCharacterMovementComponent;
 class APlayerCharacterController;
 class UAnimMontage;
 
-struct FCachedAnimStateData;
-struct FRigElementKey;
-
-UENUM()
-enum class ECharacterMovementState : uint8
-{
-	IDLE UMETA(Displayname = "Idle"),
-	WALK UMETA(Displayname = "Walk"),
-	JOG UMETA(Displayname = "Jog"),
-	CROUCH UMETA(Displayname = "Crouch"),
-	SPRINT UMETA(Displayname = "Sprint"),
-	JUMP UMETA(Displayname = "Jump")
-};
-
-UENUM()
-enum class ECharacterMovementDirection : uint8
-{
-	FOWARD UMETA(DisplayName = "Foward"),
-	TURNLEFT_90 UMETA(DisplayName = "TurnLeft_90"),
-	TURNLEFT_180 UMETA(DisplayName = "TurnLeft_180"),
-	TURNRIGHT_90 UMETA(DisplayName = "TurnRight_90"),
-	TURNRIGHT_180 UMETA(DisplayName = "TurnRight_180")
-};
-
 USTRUCT()
-struct FST_FootIK
+struct FST_MovementAnim
 {
 	GENERATED_USTRUCT_BODY()
-	float Offset;
-	FVector HitLocation;
+
+	UPROPERTY(EditAnywhere, Category = "Walk")
+	UAnimSequenceBase *WalkStartForward;
+
+	UPROPERTY(EditAnywhere, Category = "Walk")
+	UAnimSequenceBase *WalkStartLeft_90;
+
+	UPROPERTY(EditAnywhere, Category = "Walk")
+	UAnimSequenceBase *WalkStartLeft_180;
+
+	UPROPERTY(EditAnywhere, Category = "Walk")
+	UAnimSequenceBase *WalkStartRight_90;
+
+	UPROPERTY(EditAnywhere, Category = "Walk")
+	UAnimSequenceBase *WalkStartRight_180;
+
+	UPROPERTY(EditAnywhere, Category = "Walk")
+	UAnimSequenceBase *WalkEnd;
+
+	UPROPERTY(EditAnywhere, Category = "Jog")
+	UAnimSequenceBase *JogStartForward;
+
+	UPROPERTY(EditAnywhere, Category = "Jog")
+	UAnimSequenceBase *JogStartLeft_90;
+
+	UPROPERTY(EditAnywhere, Category = "Jog")
+	UAnimSequenceBase *JogStartLeft_180;
+
+	UPROPERTY(EditAnywhere, Category = "Jog")
+	UAnimSequenceBase *JogStartRight_90;
+
+	UPROPERTY(EditAnywhere, Category = "Jog")
+	UAnimSequenceBase *JogStartRight_180;
+
+	UPROPERTY(EditAnywhere, Category = "Jog")
+	UAnimSequenceBase *JogEnd;
 };
 
 UCLASS()
@@ -54,25 +64,24 @@ public:
 	//=					- Variables -					   =
 	//======================================================
 	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
+	FST_MovementAnim MovementAnimStruct;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Traversal")
 	UAnimMontage *CrouchVaulting_Anim;
 
-	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
+	UPROPERTY(EditAnywhere, Category = "Animation | Traversal")
 	UAnimMontage *Hurdling_Anim;
 
-	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
+	UPROPERTY(EditAnywhere, Category = "Animation | Traversal")
 	UAnimMontage *Climbing_Anim;
 
-	UPROPERTY(EditAnywhere, Category = "Animation | Locomotion")
+	UPROPERTY(EditAnywhere, Category = "Animation | Traversal")
 	UAnimMontage *Mantling_Anim;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Action")
 	UAnimMontage *Assasination_Anim;
 
-	UPROPERTY(EditAnywhere, Category = "Animation | Test")
-	UAnimSequence *TestSeq;
-
-	UPROPERTY(EditAnywhere, Category = "Animation | Test")
-	UAnimSequenceBase *TestBase;
+	
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -98,9 +107,6 @@ private:
 	APlayerCharacterController *OwnerController;
 
 	// Character Movement Data
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
-	ECharacterMovementState CharacterMovementState;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
 	FVector CharacterVelocity;
 
@@ -115,10 +121,10 @@ private:
 
 	// Character Rotation Data
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
-	ECharacterMovementDirection CharacterMovementDirection;
+	float MovementYawDelta;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
-	float MovementYawDelta;
+	float CurrentLean;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
 	float MovementStartAngle;
@@ -155,12 +161,19 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
 	float PlayRate;
 
+	// Character AnimSequence Data
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Character AnimSequence Data", meta = (AllowPrivateAccess = "true"))
+	UAnimSequenceBase *DesiredMoveStartAnim;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Character AnimSequence Data", meta = (AllowPrivateAccess = "true"))
+	UAnimSequenceBase *DesiredMoveEndAnim;
+
 	// Foot IK
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
 	float CurrentInterpSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
-	float Displacement;
+	float Pelvis;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
 	FRotator L_FootRotation;
@@ -184,13 +197,20 @@ private:
 	void InitAnimationInstance();
 	void SetMovementData();
 
-	void SetMaxAccelAndPlayRate();
+	void SetMaxSpeedAndPlayRate();
 	void SetRotationRate(float MinLocomotionValue, float MaxLocomotionValue);
 
 	bool SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const;
-	void DetermineMovementDirection();
+
+	UFUNCTION(BlueprintCallable)
+	void DetermineMoveStartAnim();
+
+	UFUNCTION(BlueprintCallable)
+	void DetermineMoveEndAnim();
+
+	void DesiredStartMoveAnim(UAnimSequenceBase *DesiredWalkAnim, UAnimSequenceBase* DesiredJogAnim);
 
 	void FootIK(float DeltaSecond);
-	TTuple<bool, float, FVector> FootTrace(FName SocketName);
-	TTuple<bool, float>CapsuleDistance(FName SocketName);
+	float CapsuleDistance(FName SocketName);
+	TTuple<float, FVector> FootTrace(FName SocketName);
 };
