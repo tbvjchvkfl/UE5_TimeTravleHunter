@@ -18,6 +18,7 @@ class UPlayerAnimInstance;
 class AEnemyCharacter;
 
 struct FInputActionValue;
+struct FInputActionInstance;
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API APlayerCharacter : public ACharacter
@@ -35,6 +36,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Character | Interface")
 	TScriptInterface<class ICharacterActionInterface> ActionInterface;
+
+	// AnimInstance Value
+	float MoveElapsedTime;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -129,28 +133,31 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
 
 	// Locomotion
-	void Move(const FInputActionValue &Value);
+	void Move(const FInputActionInstance &Action);
 	void Look(const FInputActionValue &Value);
 	void Sprint();
 	void DoJump();
 	void DoCrouch();
 	void WalktoJog();
+	void SprintCameraMoving();
+	
 
-	// Action
+	// Parkour
 	void Parkour();
 	void Vaulting();
 	void Hurdling();
-	void Mantling();
-	//void VaultMotionWarp();
+	void Climbing();
+	void InAirMantling();
 	void TraversalEnd();
 
+	// Action
 	void Assasination();
 
 	void StartAimming();
 	void StopAimming();
 	void SwitchingWeaponMain();
 	void SwitchingWeaponSub();
-	void SprintCameraMoving();
+	
 
 	void Interaction();
 	void ShowInventory();
