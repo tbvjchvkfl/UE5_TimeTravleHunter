@@ -7,7 +7,6 @@
 #include "Animation/CachedAnimData.h"
 #include "PlayerAnimInstance.generated.h"
 
-
 class APlayerCharacter;
 class UCharacterMovementComponent;
 class APlayerCharacterController;
@@ -111,13 +110,16 @@ private:
 	FVector CharacterVelocity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
+	FVector PreviousLocation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
 	float MovementSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
 	float ActualGroundSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
-	FVector PreviousLocation;
+	float MovementElapsedTime;
 
 	// Character Rotation Data
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
@@ -197,10 +199,14 @@ private:
 	void InitAnimationInstance();
 	void SetMovementData();
 
+	void CalculateGroundSpeed();
 	void SetMaxSpeedAndPlayRate();
 	void SetRotationRate(float MinLocomotionValue, float MaxLocomotionValue);
 
 	bool SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const;
+
+	// State Entry Delegate
+	void OnEntryStateBindingFunction(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
 
 	UFUNCTION(BlueprintCallable)
 	void DetermineMoveStartAnim();
