@@ -21,6 +21,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "InputMappingContext.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 APlayerCharacter::APlayerCharacter() : 
@@ -28,7 +29,8 @@ APlayerCharacter::APlayerCharacter() :
 	CurrentHealth(MaxHealth),  
 	MaxStamina(80.0f),
 	CurrentStamina(MaxStamina),
-	LookingRotationValue(1.0f)
+	LookingRotationValue(1.0f), 
+	MoveElapsedTime(0.0f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -47,16 +49,17 @@ APlayerCharacter::APlayerCharacter() :
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->bUseSeparateBrakingFriction = true;
-	GetCharacterMovement()->BrakingFrictionFactor = 0.0f;
+	GetCharacterMovement()->GravityScale = 1.75f;
+	GetCharacterMovement()->BrakingFrictionFactor = 1.0f;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	GetCharacterMovement()->MaxWalkSpeed = 500.0f;
-	GetCharacterMovement()->MaxAcceleration = 500.0f;
-	GetCharacterMovement()->JumpZVelocity = 500.0f;
-	GetCharacterMovement()->AirControl = 1.0f;
+	GetCharacterMovement()->MaxAcceleration = 1500.0f;
+	GetCharacterMovement()->JumpZVelocity = 700.0f;
+	GetCharacterMovement()->MinAnalogWalkSpeed = 20.0f;
 	GetCharacterMovement()->GroundFriction = 8.0f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 800.0f;
-	
-	DoOnceFlag = true;
+	GetCharacterMovement()->BrakingDecelerationWalking = 2000.0f;
+	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->AirControl = 0.35f;
 
 	ItemInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
@@ -103,8 +106,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			SubSystem->AddMappingContext(DefaultContext, 0);
 		}
 	}
-
-	if (UEnhancedInputComponent *const EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	
+	if (UEnhancedInputComponent *const EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(Moving, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 
@@ -133,10 +136,12 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	}
 }
 
-void APlayerCharacter::Move(const FInputActionValue &Value)
+void APlayerCharacter::Move(const FInputActionInstance &Action)
 {
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	MoveElapsedTime = Action.GetElapsedTime();
 
+	FVector2D MovementVector = Action.GetValue().Get<FVector2D>();
+	
 	const FRotator Rotation = GetControlRotation();
 	const FRotator YawRotation(0, Rotation.Yaw, 0);
 
@@ -160,13 +165,19 @@ void APlayerCharacter::Sprint()
 	if (!OwningController->bIsSprint)
 	{
 		OwningController->bIsSprint = true;
-		DoOnceFlag = true;
 		GetCharacterMovement()->MaxWalkSpeed = 800.0f;
 	}
 	else
 	{
 		OwningController->bIsSprint = false;
-		GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+		if (OwningController->bIsWalk)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 150.0f;
+		}
+		if (OwningController->bIsJog)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+		}
 	}
 }
 
@@ -182,6 +193,7 @@ void APlayerCharacter::DoJump()
 	}
 	else if (GetCharacterMovement()->IsFalling())
 	{
+		InAirMantling();
 		GEngine->AddOnScreenDebugMessage(1, 3, FColor::Blue, FString("MantleCheckStart"));
 	}
 	else
@@ -251,7 +263,7 @@ void APlayerCharacter::Parkour()
 				if (GetWorld()->LineTraceSingleByChannel(MantleLandingHit, MantleStartPos, MantleEndPos, ECollisionChannel::ECC_GameTraceChannel2, CollisionParams))
 				{
 					MantlePos = MantleLandingHit.Location;
-					Mantling();
+					Climbing();
 				}
 				DrawDebugLine(GetWorld(), MantleStartPos, MantleEndPos, FColor::Cyan, false, 3.0f);
 			}
@@ -288,26 +300,6 @@ void APlayerCharacter::Parkour()
 				Vaulting();
 			}
 		}
-		/*if (AHurdleWall *HurdleWall = Cast<AHurdleWall>(DetectingWallHit.GetActor()))
-		{
-			FHitResult HurdleHit;
-			FVector HurdlingStart = DetectingWallHit.Location * GetActorRotation().Vector() * 20.0f + FVector(0.0f, 0.0f, 500.0f);
-			FVector HurdlingEnd = HurdlingStart - FVector(0.0f, 0.0f, 500.0f);
-			if (GetWorld()->LineTraceSingleByChannel(HurdleHit, HurdlingStart, HurdlingEnd, ECollisionChannel::ECC_GameTraceChannel2, CollisionParams))
-			{
-				FHitResult HurdleLandHit;
-				FVector HurdleLandStart = HurdleHit.Location * GetActorRotation().Vector() * 50.0f + FVector(0.0f, 0.0f, 500.0f);
-				FVector HurdleLandEnd = HurdleLandStart - FVector(0.0f, 0.0f, 1000.0f);
-				if (GetWorld()->LineTraceSingleByChannel(HurdleLandHit, HurdleLandStart, HurdleLandEnd, ECollisionChannel::ECC_Visibility, CollisionParams))
-				{
-					Hurdling();
-				}
-			}
-		}*/
-		/*if (AMantlingWall *MantlingWall = Cast<AMantlingWall>(DetectingWallHit.GetActor()))
-		{
-			
-		}*/
 	}
 }
 
@@ -346,28 +338,48 @@ void APlayerCharacter::Vaulting()
 	else
 	{
 		Hurdling();
-		//OwningAnimInstance->PlayNormalVaulting();
-		//GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->NormalVaulting_Anim->GetPlayLength(), false);
 	}
 }
 
 void APlayerCharacter::Hurdling()
 {
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
-	SetActorEnableCollision(false);
 
 	OwningAnimInstance->PlayHurdling();
 
 	GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->Hurdling_Anim->GetPlayLength(), false);
 }
 
-void APlayerCharacter::Mantling()
+void APlayerCharacter::Climbing()
 {
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
 
-	OwningAnimInstance->PlayMantling();
+	OwningAnimInstance->PlayClimbing();
 
-	GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->Mantling_Anim->GetPlayLength(), false);
+	GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->Climbing_Anim->GetPlayLength(), false);
+}
+
+void APlayerCharacter::InAirMantling()
+{
+	FHitResult AirMantleDetectingHit;
+	FCollisionQueryParams CollParams;
+	CollParams.AddIgnoredActor(this);
+	for (int i = 0; i < 5; i++)
+	{
+		FVector AirMantleStartPos = GetActorLocation() + FVector(0.0f, 0.0f, i * 10.0f);
+		FVector AirMantleEndPos = AirMantleStartPos + GetActorRotation().Vector() * 100.0f;
+
+		if (GetWorld()->LineTraceSingleByChannel(AirMantleDetectingHit, AirMantleStartPos, AirMantleEndPos, ECollisionChannel::ECC_GameTraceChannel2, CollParams))
+		{
+			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+
+			OwningAnimInstance->PlayMantling();
+
+			GetWorld()->GetTimerManager().SetTimer(ParkourTimerHandle, this, &APlayerCharacter::TraversalEnd, OwningAnimInstance->Mantling_Anim->GetPlayLength(), false);
+			break;
+		}
+		DrawDebugLine(GetWorld(), AirMantleStartPos, AirMantleEndPos, FColor::Green, false, 3.0f);
+	}
 }
 
 void APlayerCharacter::TraversalEnd()
@@ -396,7 +408,6 @@ void APlayerCharacter::Assasination()
 		CharacterMotionWarping->AddOrUpdateWarpTarget(ActionTarget);
 	}
 }
-
 
 void APlayerCharacter::StartAimming()
 {
@@ -442,6 +453,8 @@ void APlayerCharacter::SprintCameraMoving()
 	}
 }
 
+
+
 void APlayerCharacter::Interaction()
 {
 	FVector StartPos{ GetPawnViewLocation() + FVector(0.0f, 0.0f, 10.0f) };
@@ -470,49 +483,5 @@ void APlayerCharacter::ShowInventory()
 
 void APlayerCharacter::TestFunction()
 {
-	//Assasination();
-	Mantling();
+	Assasination();
 }
-
-//void APlayerCharacter::VaultMotionWarp()
-//{
-//	float Min = GetMesh()->GetComponentLocation().Z - 50.0f;
-//	float Max = GetMesh()->GetComponentLocation().Z + 50.0f;
-//
-//	bool InRange = FMath::IsWithinInclusive(VaultLandingPos.Z, Min, Max);
-//
-//	if (OwningController->bIsParkour && InRange)
-//	{
-//		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
-//		SetActorEnableCollision(false);
-//
-//		FMotionWarpingTarget Target;
-//		Target.Name = FName("Vault_Start");
-//		Target.Location = VaultStartPos;
-//		Target.Rotation = GetActorRotation();
-//
-//		CharacterMotionWarping->AddOrUpdateWarpTarget(Target);
-//
-//		FMotionWarpingTarget MiddleTarget;
-//		MiddleTarget.Name = FName("Vault_Middle");
-//		MiddleTarget.Location = VaultMiddlePos;
-//		MiddleTarget.Rotation = GetActorRotation();
-//
-//		CharacterMotionWarping->AddOrUpdateWarpTarget(MiddleTarget);
-//
-//		FMotionWarpingTarget LandingTarget;
-//		LandingTarget.Name = FName("Vault_End");
-//		LandingTarget.Location = VaultLandingPos;
-//		LandingTarget.Rotation = GetActorRotation();
-//
-//		CharacterMotionWarping->AddOrUpdateWarpTarget(LandingTarget);
-//
-//		OwningAnimInstance->PlayVaulting();
-//
-//		GetWorld()->GetTimerManager().SetTimer(VaultTimerHandle, this, &APlayerCharacter::VaultEnd, OwningAnimInstance->Vaulting_Anim->GetPlayLength(), false);
-//
-//		SetActorEnableCollision(true);
-//		OwningController->bIsParkour = false;
-//		VaultLandingPos = FVector(0.0f, 0.0f, 20000.0f);
-//	}
-//}
