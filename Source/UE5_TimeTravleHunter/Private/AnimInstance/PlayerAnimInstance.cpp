@@ -15,6 +15,8 @@ void UPlayerAnimInstance::NativeInitializeAnimation()
 	Super::NativeInitializeAnimation();
 	
 	InitAnimationInstance();
+	
+	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Start"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryStateBindingFunction));
 }
 
 void UPlayerAnimInstance::NativeBeginPlay()
@@ -55,8 +57,6 @@ void UPlayerAnimInstance::InitAnimationInstance()
 	CharacterVelocity = FVector::ZeroVector;
 	CanWalkStartSkip = false;
 	CanJogStartSkip = false;
-
-	
 }
 
 void UPlayerAnimInstance::SetMovementData()
@@ -72,14 +72,31 @@ void UPlayerAnimInstance::SetMovementData()
 	bIsSprint = OwnerController->bIsSprint;
 	bIsParkour = OwnerController->bIsParkour;
 
+	MovementElapsedTime = OwnerCharacter->MoveElapsedTime;
+
 	MovementYawDelta = UKismetMathLibrary::NormalizedDeltaRotator(UKismetMathLibrary::MakeRotFromX(OwnerCharacter->GetVelocity()), OwnerCharacter->GetBaseAimRotation()).Yaw;
 
+	CalculateGroundSpeed();
 	SetMaxSpeedAndPlayRate();
 	SetRotationRate(0.0f, 500.0f);
 	//DetermineMoveStartAnim();
 	DetermineMoveEndAnim();
 
-	GEngine->AddOnScreenDebugMessage(1, 3, FColor::Green, FString::Printf(TEXT("GetActorRotation Yaw : %f"), OwnerCharacter->GetActorRotation().Yaw));
+	GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("CharacterVelocity : %f, %f, %f"), OwnerCharacter->GetVelocity().X, OwnerCharacter->GetVelocity().Y, OwnerCharacter->GetVelocity().Z));
+
+	GEngine->AddOnScreenDebugMessage(4, 3, FColor::Green, FString::Printf(TEXT("GetLastMovementInputVector : %f, %f, %f"), OwnerCharacter->GetLastMovementInputVector().X, OwnerCharacter->GetLastMovementInputVector().Y, OwnerCharacter->GetLastMovementInputVector().Z));
+}
+
+void UPlayerAnimInstance::CalculateGroundSpeed()
+{
+	float VectorSize = FVector(OwnerCharacter->GetActorLocation() - PreviousLocation).Size2D();
+
+	ActualGroundSpeed = VectorSize / GetWorld()->GetDeltaSeconds();
+
+	PreviousLocation = OwnerCharacter->GetActorLocation();
+
+	GEngine->AddOnScreenDebugMessage(1, 3, FColor::Green, FString::Printf(TEXT("ActualGroundSpeed : %f"), ActualGroundSpeed));
+	GEngine->AddOnScreenDebugMessage(2, 3, FColor::Green, FString::Printf(TEXT("MovementSpeed : %f"), MovementSpeed));
 }
 
 void UPlayerAnimInstance::SetMaxSpeedAndPlayRate()
@@ -93,60 +110,80 @@ void UPlayerAnimInstance::SetRotationRate(float MinLocomotionValue, float MaxLoc
 	float ClampedRotValue = UKismetMathLibrary::MapRangeClamped(GetCurveValue(FName("Movement_Rotation")), 0.0f, 1.0f, MinLocomotionValue, MaxLocomotionValue);
 	OwnerCharacterMovement->RotationRate = FRotator(0.0f, ClampedRotValue, 0.0f);
 
-	OwnerCharacterMovement->bAllowPhysicsRotationDuringAnimRootMotion = false;
+	SetRootMotionMode(ERootMotionMode::RootMotionFromEverything);
+	OwnerCharacterMovement->bAllowPhysicsRotationDuringAnimRootMotion = true;
 }
 
 bool UPlayerAnimInstance::SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const
 {
-	if (OwnerCharacter)
+	float MovementAngle = CalculateDirection(OwnerCharacter->GetVelocity(), OwnerCharacter->GetActorRotation());
+	float ClampAngle = FMath::Clamp(MovementAngle, -180.0f, 180.0f);
+
+	if (UKismetMathLibrary::InRange_FloatFloat(ClampAngle, MinValue, MaxValue, Mincluding, Maxcluding))
 	{
-		float MovementAngle = CalculateDirection(OwnerCharacter->GetVelocity(), OwnerCharacter->GetActorRotation());
-
-		float ClampAngle = FMath::Clamp(MovementAngle, -180.0f, 180.0f);
-
-		if (UKismetMathLibrary::InRange_FloatFloat(ClampAngle, MinValue, MaxValue, Mincluding, Maxcluding))
-		{
-			Direction = ClampAngle;
-			return true;
-		}
-		Direction = 0.0f;
+		Direction = ClampAngle;
+		return true;
 	}
+	Direction = 0.0f;
 	return false;
+}
+
+void UPlayerAnimInstance::OnEntryStateBindingFunction(const FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex)
+{
+	GEngine->AddOnScreenDebugMessage(999, 3, FColor::Blue, FString("Entry Success"));
+	if (SetMovementDirection(-180.0f, -135.0f, true, true, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_180, MovementAnimStruct.JogStartLeft_180);
+		return;
+	}
+	else if (SetMovementDirection(-135.0f, -45.0f, true, true, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_90, MovementAnimStruct.JogStartLeft_90);
+		return;
+	}
+	else if (SetMovementDirection(45.0f, 135.0f, true, true, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_90, MovementAnimStruct.JogStartRight_90);
+		return;
+	}
+	else if (SetMovementDirection(135.0f, 180.0f, true, true, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_180, MovementAnimStruct.JogStartRight_180);
+		return;
+	}
+	else
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartForward, MovementAnimStruct.JogStartForward);
+		return;
+	}
 }
 
 void UPlayerAnimInstance::DetermineMoveStartAnim()
 {
-	if (MovementSpeed < 5.0f)
+	if (SetMovementDirection(-180.0f, -135.0f, true, true, MovementStartAngle))
 	{
-		if (SetMovementDirection(-180.0f, -135.0f, true, false, MovementStartAngle))
-		{
-			DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_180, MovementAnimStruct.JogStartLeft_180);
-			GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("MovementStartAngle : %f"), MovementStartAngle));
-			return;
-		}
-		else if (SetMovementDirection(-135.0f, -45.0f, true, false, MovementStartAngle))
-		{
-			DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_90, MovementAnimStruct.JogStartLeft_90);
-			GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("MovementStartAngle : %f"), MovementStartAngle));
-			return;
-		}
-		else if (SetMovementDirection(45.0f, 135.0f, false, true, MovementStartAngle))
-		{
-			DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_90, MovementAnimStruct.JogStartRight_90);
-			GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("MovementStartAngle : %f"), MovementStartAngle));
-			return;
-		}
-		else if (SetMovementDirection(135.0f, 180.0f, false, true, MovementStartAngle))
-		{
-			DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_180, MovementAnimStruct.JogStartRight_180); 
-			GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("MovementStartAngle : %f"), MovementStartAngle));
-			return;
-		}
-		else
-		{
-			DesiredStartMoveAnim(MovementAnimStruct.WalkStartForward, MovementAnimStruct.JogStartForward);
-			return;
-		}
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_180, MovementAnimStruct.JogStartLeft_180);
+		return;
+	}
+	else if (SetMovementDirection(-135.0f, -45.0f, true, true, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_90, MovementAnimStruct.JogStartLeft_90);
+		return;
+	}
+	else if (SetMovementDirection(45.0f, 135.0f, true, true, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_90, MovementAnimStruct.JogStartRight_90);
+		return;
+	}
+	else if (SetMovementDirection(135.0f, 180.0f, true, true, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_180, MovementAnimStruct.JogStartRight_180);
+		return;
+	}
+	else
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartForward, MovementAnimStruct.JogStartForward);
+		return;
 	}
 }
 
