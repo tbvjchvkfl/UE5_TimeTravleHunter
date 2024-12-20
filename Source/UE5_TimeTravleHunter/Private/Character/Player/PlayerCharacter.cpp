@@ -49,17 +49,17 @@ APlayerCharacter::APlayerCharacter() :
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->bUseSeparateBrakingFriction = true;
-	GetCharacterMovement()->GravityScale = 1.75f;
-	GetCharacterMovement()->BrakingFrictionFactor = 1.0f;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+	GetCharacterMovement()->GravityScale = 1.0f;
+	GetCharacterMovement()->BrakingFrictionFactor = 0.0f;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 400.0f, 0.0f);
 	GetCharacterMovement()->MaxWalkSpeed = 500.0f;
-	GetCharacterMovement()->MaxAcceleration = 1500.0f;
-	GetCharacterMovement()->JumpZVelocity = 700.0f;
-	GetCharacterMovement()->MinAnalogWalkSpeed = 20.0f;
-	GetCharacterMovement()->GroundFriction = 8.0f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.0f;
-	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
-	GetCharacterMovement()->AirControl = 0.35f;
+	GetCharacterMovement()->MaxAcceleration = 500.0f;
+	GetCharacterMovement()->JumpZVelocity = 600.0f;
+	GetCharacterMovement()->MinAnalogWalkSpeed = 0.0f;
+	GetCharacterMovement()->GroundFriction = 4.0f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 1000.0f;
+	GetCharacterMovement()->BrakingDecelerationFalling = 0.0f;
+	GetCharacterMovement()->AirControl = 0.0f;
 
 	ItemInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
 
