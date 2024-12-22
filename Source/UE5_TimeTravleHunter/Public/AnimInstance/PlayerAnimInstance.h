@@ -110,13 +110,10 @@ private:
 	FVector CharacterVelocity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
-	FVector PreviousLocation;
+	FVector PreviousUnitVector;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
 	float MovementSpeed;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
-	float ActualGroundSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Movement Data", meta = (AllowPrivateAccess = "true"))
 	float MovementElapsedTime;
@@ -124,9 +121,6 @@ private:
 	// Character Rotation Data
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
 	float MovementYawDelta;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
-	float CurrentLean;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
 	float MovementStartAngle;
@@ -141,9 +135,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
 	bool bIsCrouch;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category ="CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
-	bool bIsWalk;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
 	bool bIsJog;
 
@@ -152,6 +143,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
 	bool bIsParkour;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
+	bool bIsTurn;
 
 	// Character Locomotion SubState
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
@@ -199,21 +193,16 @@ private:
 	void InitAnimationInstance();
 	void SetMovementData();
 
-	void CalculateGroundSpeed();
 	void SetMaxSpeedAndPlayRate();
 	void SetRotationRate(float MinLocomotionValue, float MaxLocomotionValue);
 
 	bool SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const;
 
 	// State Entry Delegate
-	void OnEntryStateBindingFunction(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
+	void OnEntryMoveStartState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
+	void OnEntryMoveStopState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
 
-	UFUNCTION(BlueprintCallable)
-	void DetermineMoveStartAnim();
-
-	UFUNCTION(BlueprintCallable)
-	void DetermineMoveEndAnim();
-
+	void CheckCurrentDirection();
 	void DesiredStartMoveAnim(UAnimSequenceBase *DesiredWalkAnim, UAnimSequenceBase* DesiredJogAnim);
 
 	void FootIK(float DeltaSecond);
