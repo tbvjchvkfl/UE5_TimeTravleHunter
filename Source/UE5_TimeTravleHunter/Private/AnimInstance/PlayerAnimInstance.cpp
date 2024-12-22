@@ -16,7 +16,10 @@ void UPlayerAnimInstance::NativeInitializeAnimation()
 	
 	InitAnimationInstance();
 	
-	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Start"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryStateBindingFunction));
+	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Start"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStartState));
+
+	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Stop"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStopState));
+
 }
 
 void UPlayerAnimInstance::NativeBeginPlay()
@@ -24,7 +27,8 @@ void UPlayerAnimInstance::NativeBeginPlay()
 	OwnerCharacter = Cast<APlayerCharacter>(TryGetPawnOwner());
 	OwnerController = Cast<APlayerCharacterController>(GetWorld()->GetFirstPlayerController());
 	OwnerCharacterMovement = OwnerCharacter->GetCharacterMovement();
-	PreviousLocation = OwnerCharacter->GetActorLocation();
+
+	PreviousUnitVector = OwnerCharacter->GetActorForwardVector();
 }
 
 void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -51,12 +55,13 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 void UPlayerAnimInstance::InitAnimationInstance()
 {
-	ActualGroundSpeed = 0.0f;
 	MovementSpeed = 0.0f;
 	MovementStartAngle = 0.0f;
 	CharacterVelocity = FVector::ZeroVector;
+	PreviousUnitVector = FVector::ZeroVector;
 	CanWalkStartSkip = false;
 	CanJogStartSkip = false;
+	bIsTurn = false;
 }
 
 void UPlayerAnimInstance::SetMovementData()
@@ -67,36 +72,30 @@ void UPlayerAnimInstance::SetMovementData()
 	bIsInAir = OwnerCharacterMovement->IsFalling();
 	bIsAccelation = OwnerCharacterMovement->GetCurrentAcceleration().Size() > 0.0f;
 	bIsCrouch = OwnerController->bIsCrouch;
-	bIsWalk = OwnerController->bIsWalk;
 	bIsJog = OwnerController->bIsJog;
 	bIsSprint = OwnerController->bIsSprint;
 	bIsParkour = OwnerController->bIsParkour;
-
+	bIsTurn = false;
 	MovementElapsedTime = OwnerCharacter->MoveElapsedTime;
 
+	
+	
+	GEngine->AddOnScreenDebugMessage(8, 3, FColor::Green, FString::Printf(TEXT("CharacterForwardVector : %f, %f, %f"), OwnerCharacter->GetActorForwardVector().X, OwnerCharacter->GetActorForwardVector().Y, OwnerCharacter->GetActorForwardVector().Z));
 	MovementYawDelta = UKismetMathLibrary::NormalizedDeltaRotator(UKismetMathLibrary::MakeRotFromX(OwnerCharacter->GetVelocity()), OwnerCharacter->GetBaseAimRotation()).Yaw;
 
-	CalculateGroundSpeed();
 	SetMaxSpeedAndPlayRate();
-	SetRotationRate(0.0f, 500.0f);
-	//DetermineMoveStartAnim();
-	DetermineMoveEndAnim();
+	CheckCurrentDirection();
+	//SetRotationRate(0.0f, 500.0f);
 
-	GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("CharacterVelocity : %f, %f, %f"), OwnerCharacter->GetVelocity().X, OwnerCharacter->GetVelocity().Y, OwnerCharacter->GetVelocity().Z));
+	GEngine->AddOnScreenDebugMessage(2, 3, FColor::Green, FString::Printf(TEXT("MovementSpeed : %f"), MovementSpeed));
+
+	GEngine->AddOnScreenDebugMessage(1, 3, FColor::Green, FString::Printf(TEXT("MaxWalkSpeed : %f"), OwnerCharacterMovement->MaxWalkSpeed));
+
+	GEngine->AddOnScreenDebugMessage(5, 3, FColor::Green, FString::Printf(TEXT("MovementElapsedTime : %f"), MovementElapsedTime));
 
 	GEngine->AddOnScreenDebugMessage(4, 3, FColor::Green, FString::Printf(TEXT("GetLastMovementInputVector : %f, %f, %f"), OwnerCharacter->GetLastMovementInputVector().X, OwnerCharacter->GetLastMovementInputVector().Y, OwnerCharacter->GetLastMovementInputVector().Z));
-}
 
-void UPlayerAnimInstance::CalculateGroundSpeed()
-{
-	float VectorSize = FVector(OwnerCharacter->GetActorLocation() - PreviousLocation).Size2D();
-
-	ActualGroundSpeed = VectorSize / GetWorld()->GetDeltaSeconds();
-
-	PreviousLocation = OwnerCharacter->GetActorLocation();
-
-	GEngine->AddOnScreenDebugMessage(1, 3, FColor::Green, FString::Printf(TEXT("ActualGroundSpeed : %f"), ActualGroundSpeed));
-	GEngine->AddOnScreenDebugMessage(2, 3, FColor::Green, FString::Printf(TEXT("MovementSpeed : %f"), MovementSpeed));
+	GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("RotationRate : %f, %f, %f"), OwnerCharacterMovement->RotationRate.Pitch, OwnerCharacterMovement->RotationRate.Yaw, OwnerCharacterMovement->RotationRate.Roll));
 }
 
 void UPlayerAnimInstance::SetMaxSpeedAndPlayRate()
@@ -109,18 +108,24 @@ void UPlayerAnimInstance::SetRotationRate(float MinLocomotionValue, float MaxLoc
 {
 	float ClampedRotValue = UKismetMathLibrary::MapRangeClamped(GetCurveValue(FName("Movement_Rotation")), 0.0f, 1.0f, MinLocomotionValue, MaxLocomotionValue);
 	OwnerCharacterMovement->RotationRate = FRotator(0.0f, ClampedRotValue, 0.0f);
-
-	SetRootMotionMode(ERootMotionMode::RootMotionFromEverything);
-	OwnerCharacterMovement->bAllowPhysicsRotationDuringAnimRootMotion = true;
 }
 
 bool UPlayerAnimInstance::SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const
 {
 	float MovementAngle = CalculateDirection(OwnerCharacter->GetVelocity(), OwnerCharacter->GetActorRotation());
+	
 	float ClampAngle = FMath::Clamp(MovementAngle, -180.0f, 180.0f);
+
+	bool FrontCondition = OwnerCharacter->GetLastMovementInputVector().X < 0.0f && ClampAngle == 180.0f;
+	bool BackCondition = OwnerCharacter->GetLastMovementInputVector().X > 0.0f && ClampAngle == -180.0f;
 
 	if (UKismetMathLibrary::InRange_FloatFloat(ClampAngle, MinValue, MaxValue, Mincluding, Maxcluding))
 	{
+		if (FrontCondition || BackCondition)
+		{
+			ClampAngle *= -1.0f;
+		}
+		
 		Direction = ClampAngle;
 		return true;
 	}
@@ -128,25 +133,26 @@ bool UPlayerAnimInstance::SetMovementDirection(float MinValue, float MaxValue, b
 	return false;
 }
 
-void UPlayerAnimInstance::OnEntryStateBindingFunction(const FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex)
+void UPlayerAnimInstance::OnEntryMoveStartState(const FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex)
 {
-	GEngine->AddOnScreenDebugMessage(999, 3, FColor::Blue, FString("Entry Success"));
-	if (SetMovementDirection(-180.0f, -135.0f, true, true, MovementStartAngle))
+	PreviousUnitVector = OwnerCharacter->GetLastMovementInputVector();
+
+	if (SetMovementDirection(-180.0f, -135.0f, true, false, MovementStartAngle))
 	{
 		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_180, MovementAnimStruct.JogStartLeft_180);
 		return;
 	}
-	else if (SetMovementDirection(-135.0f, -45.0f, true, true, MovementStartAngle))
+	else if (SetMovementDirection(-135.0f, -45.0f, true, false, MovementStartAngle))
 	{
 		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_90, MovementAnimStruct.JogStartLeft_90);
 		return;
 	}
-	else if (SetMovementDirection(45.0f, 135.0f, true, true, MovementStartAngle))
+	else if (SetMovementDirection(45.0f, 135.0f, false, true, MovementStartAngle))
 	{
 		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_90, MovementAnimStruct.JogStartRight_90);
 		return;
 	}
-	else if (SetMovementDirection(135.0f, 180.0f, true, true, MovementStartAngle))
+	else if (SetMovementDirection(135.0f, 180.0f, false, true, MovementStartAngle))
 	{
 		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_180, MovementAnimStruct.JogStartRight_180);
 		return;
@@ -158,56 +164,41 @@ void UPlayerAnimInstance::OnEntryStateBindingFunction(const FAnimNode_StateMachi
 	}
 }
 
-void UPlayerAnimInstance::DetermineMoveStartAnim()
+void UPlayerAnimInstance::OnEntryMoveStopState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex)
 {
-	if (SetMovementDirection(-180.0f, -135.0f, true, true, MovementStartAngle))
+	if (bIsJog)
 	{
-		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_180, MovementAnimStruct.JogStartLeft_180);
-		return;
+		DesiredMoveEndAnim = MovementAnimStruct.JogEnd;
 	}
-	else if (SetMovementDirection(-135.0f, -45.0f, true, true, MovementStartAngle))
-	{
-		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_90, MovementAnimStruct.JogStartLeft_90);
-		return;
-	}
-	else if (SetMovementDirection(45.0f, 135.0f, true, true, MovementStartAngle))
-	{
-		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_90, MovementAnimStruct.JogStartRight_90);
-		return;
-	}
-	else if (SetMovementDirection(135.0f, 180.0f, true, true, MovementStartAngle))
-	{
-		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_180, MovementAnimStruct.JogStartRight_180);
-		return;
-	}
-	else
-	{
-		DesiredStartMoveAnim(MovementAnimStruct.WalkStartForward, MovementAnimStruct.JogStartForward);
-		return;
-	}
-}
-
-void UPlayerAnimInstance::DetermineMoveEndAnim()
-{
-	if (bIsWalk && !bIsJog)
+	if (!bIsJog)
 	{
 		DesiredMoveEndAnim = MovementAnimStruct.WalkEnd;
 	}
-	if (bIsJog && !bIsWalk)
+}
+
+void UPlayerAnimInstance::CheckCurrentDirection()
+{
+	if (OwnerCharacter->GetLastMovementInputVector() != FVector::ZeroVector)
 	{
-		DesiredMoveEndAnim = MovementAnimStruct.JogEnd;
+		if (PreviousUnitVector != OwnerCharacter->GetLastMovementInputVector())
+		{
+			bIsTurn = true;
+			PreviousUnitVector = OwnerCharacter->GetLastMovementInputVector();
+			GEngine->AddOnScreenDebugMessage(8, 3, FColor::Green, FString("Turn"));
+			GEngine->AddOnScreenDebugMessage(8, 3, FColor::Green, FString::Printf(TEXT("PreviousVector : %f, %f, %f"), PreviousUnitVector.X, PreviousUnitVector.Y, PreviousUnitVector.Z));
+		}
 	}
 }
 
 void UPlayerAnimInstance::DesiredStartMoveAnim(UAnimSequenceBase *DesiredWalkAnim, UAnimSequenceBase *DesiredJogAnim)
 {
-	if (bIsWalk && !bIsJog)
-	{
-		DesiredMoveStartAnim = DesiredWalkAnim;
-	}
-	if (!bIsWalk && bIsJog)
+	if (bIsJog)
 	{
 		DesiredMoveStartAnim = DesiredJogAnim;
+	}
+	if (!bIsJog)
+	{
+		DesiredMoveStartAnim = DesiredWalkAnim;
 	}
 }
 
