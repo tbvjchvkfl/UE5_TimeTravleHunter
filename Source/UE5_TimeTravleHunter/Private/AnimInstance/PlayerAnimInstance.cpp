@@ -19,7 +19,8 @@ void UPlayerAnimInstance::NativeInitializeAnimation()
 	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Start"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStartState));
 
 	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Stop"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStopState));
-
+	
+	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Pivot_Turn"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryPivotTurnState));
 }
 
 void UPlayerAnimInstance::NativeBeginPlay()
@@ -85,7 +86,7 @@ void UPlayerAnimInstance::SetMovementData()
 
 	SetMaxSpeedAndPlayRate();
 	CheckCurrentDirection();
-	//SetRotationRate(0.0f, 500.0f);
+	SetRotationRate(0.0f, 500.0f);
 
 	GEngine->AddOnScreenDebugMessage(2, 3, FColor::Green, FString::Printf(TEXT("MovementSpeed : %f"), MovementSpeed));
 
@@ -94,6 +95,8 @@ void UPlayerAnimInstance::SetMovementData()
 	GEngine->AddOnScreenDebugMessage(5, 3, FColor::Green, FString::Printf(TEXT("MovementElapsedTime : %f"), MovementElapsedTime));
 
 	GEngine->AddOnScreenDebugMessage(4, 3, FColor::Green, FString::Printf(TEXT("GetLastMovementInputVector : %f, %f, %f"), OwnerCharacter->GetLastMovementInputVector().X, OwnerCharacter->GetLastMovementInputVector().Y, OwnerCharacter->GetLastMovementInputVector().Z));
+
+	GEngine->AddOnScreenDebugMessage(13, 3, FColor::Green, FString::Printf(TEXT("CharacterVelocity : %f, %f, %f"), OwnerCharacter->GetVelocity().X, OwnerCharacter->GetVelocity().Y, OwnerCharacter->GetVelocity().Z));
 
 	GEngine->AddOnScreenDebugMessage(3, 3, FColor::Green, FString::Printf(TEXT("RotationRate : %f, %f, %f"), OwnerCharacterMovement->RotationRate.Pitch, OwnerCharacterMovement->RotationRate.Yaw, OwnerCharacterMovement->RotationRate.Roll));
 }
@@ -140,26 +143,31 @@ void UPlayerAnimInstance::OnEntryMoveStartState(const FAnimNode_StateMachine &Ma
 	if (SetMovementDirection(-180.0f, -135.0f, true, false, MovementStartAngle))
 	{
 		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_180, MovementAnimStruct.JogStartLeft_180);
+		GEngine->AddOnScreenDebugMessage(11, 3, FColor::Green, FString::Printf(TEXT("MovementStartAngle : %f"), MovementStartAngle));
 		return;
 	}
 	else if (SetMovementDirection(-135.0f, -45.0f, true, false, MovementStartAngle))
 	{
 		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_90, MovementAnimStruct.JogStartLeft_90);
+		GEngine->AddOnScreenDebugMessage(11, 3, FColor::Green, FString::Printf(TEXT("MovementStartAngle : %f"), MovementStartAngle));
 		return;
 	}
 	else if (SetMovementDirection(45.0f, 135.0f, false, true, MovementStartAngle))
 	{
 		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_90, MovementAnimStruct.JogStartRight_90);
+		GEngine->AddOnScreenDebugMessage(11, 3, FColor::Green, FString::Printf(TEXT("MovementStartAngle : %f"), MovementStartAngle));
 		return;
 	}
 	else if (SetMovementDirection(135.0f, 180.0f, false, true, MovementStartAngle))
 	{
 		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_180, MovementAnimStruct.JogStartRight_180);
+		GEngine->AddOnScreenDebugMessage(11, 3, FColor::Green, FString::Printf(TEXT("MovementStartAngle : %f"), MovementStartAngle));
 		return;
 	}
 	else
 	{
 		DesiredStartMoveAnim(MovementAnimStruct.WalkStartForward, MovementAnimStruct.JogStartForward);
+		GEngine->AddOnScreenDebugMessage(11, 3, FColor::Green, FString::Printf(TEXT("MovementStartAngle : %f"), MovementStartAngle));
 		return;
 	}
 }
@@ -176,6 +184,33 @@ void UPlayerAnimInstance::OnEntryMoveStopState(const struct FAnimNode_StateMachi
 	}
 }
 
+void UPlayerAnimInstance::OnEntryPivotTurnState(const FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex)
+{
+	PreviousUnitVector = OwnerCharacter->GetLastMovementInputVector();
+
+	if (UKismetMathLibrary::InRange_FloatFloat(PivotTurnAngle, -180, -135, true, false))
+	{
+		DesiredPivotTurnAnim = MovementAnimStruct.PivotTurn_Left180;
+		return;
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(PivotTurnAngle, -135, -45, true, false))
+	{
+		DesiredPivotTurnAnim = MovementAnimStruct.PivotTurn_Left90;
+		return;
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(PivotTurnAngle, 45, 135, false, true))
+	{
+		DesiredPivotTurnAnim = MovementAnimStruct.PivotTurn_Right90;
+		return;
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(PivotTurnAngle, 135, 180, false, true))
+	{
+		DesiredPivotTurnAnim = MovementAnimStruct.PivotTurn_Right180;
+		return;
+	}
+	return;
+}
+
 void UPlayerAnimInstance::CheckCurrentDirection()
 {
 	if (OwnerCharacter->GetLastMovementInputVector() != FVector::ZeroVector)
@@ -184,8 +219,14 @@ void UPlayerAnimInstance::CheckCurrentDirection()
 		{
 			bIsTurn = true;
 			PreviousUnitVector = OwnerCharacter->GetLastMovementInputVector();
-			GEngine->AddOnScreenDebugMessage(8, 3, FColor::Green, FString("Turn"));
-			GEngine->AddOnScreenDebugMessage(8, 3, FColor::Green, FString::Printf(TEXT("PreviousVector : %f, %f, %f"), PreviousUnitVector.X, PreviousUnitVector.Y, PreviousUnitVector.Z));
+
+			float ReDirection = FMath::Clamp(CalculateDirection(OwnerCharacter->GetLastMovementInputVector(), OwnerCharacter->GetActorRotation()), -180, 180);
+			PivotTurnAngle = ReDirection;
+
+			GEngine->AddOnScreenDebugMessage(12, 3, FColor::Green, FString::Printf(TEXT("ReDirection : %f"), ReDirection));
+			GEngine->AddOnScreenDebugMessage(9, 3, FColor::Green, FString("Turn"));
+			
+			GEngine->AddOnScreenDebugMessage(10, 3, FColor::Green, FString::Printf(TEXT("PreviousVector : %f, %f, %f"), PreviousUnitVector.X, PreviousUnitVector.Y, PreviousUnitVector.Z));
 		}
 	}
 }
