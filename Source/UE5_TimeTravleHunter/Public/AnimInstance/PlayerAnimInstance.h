@@ -52,6 +52,18 @@ struct FST_MovementAnim
 
 	UPROPERTY(EditAnywhere, Category = "Jog")
 	UAnimSequenceBase *JogEnd;
+
+	UPROPERTY(EditAnywhere, Category = "Pivot Turn")
+	UAnimSequenceBase *PivotTurn_Left90;
+
+	UPROPERTY(EditAnywhere, Category = "Pivot Turn")
+	UAnimSequenceBase *PivotTurn_Left180;
+
+	UPROPERTY(EditAnywhere, Category = "Pivot Turn")
+	UAnimSequenceBase *PivotTurn_Right90;
+
+	UPROPERTY(EditAnywhere, Category = "Pivot Turn")
+	UAnimSequenceBase *PivotTurn_Right180;
 };
 
 UCLASS()
@@ -125,6 +137,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
 	float MovementStartAngle;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Rotation Data", meta = (AllowPrivateAccess = "true"))
+	float PivotTurnAngle;
+
 	// Character Locomotion State
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion State", meta = (AllowPrivateAccess = "true"))
 	bool bIsAccelation;
@@ -164,6 +179,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Character AnimSequence Data", meta = (AllowPrivateAccess = "true"))
 	UAnimSequenceBase *DesiredMoveEndAnim;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Character AnimSequence Data", meta = (AllowPrivateAccess = "true"))
+	UAnimSequenceBase *DesiredPivotTurnAnim;
+
 	// Foot IK
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Foot IK", meta = (AllowPrivateAccess = "true"))
 	float CurrentInterpSpeed;
@@ -201,6 +219,7 @@ private:
 	// State Entry Delegate
 	void OnEntryMoveStartState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
 	void OnEntryMoveStopState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
+	void OnEntryPivotTurnState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
 
 	void CheckCurrentDirection();
 	void DesiredStartMoveAnim(UAnimSequenceBase *DesiredWalkAnim, UAnimSequenceBase* DesiredJogAnim);
