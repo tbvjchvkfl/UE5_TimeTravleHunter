@@ -18,6 +18,8 @@ void UPlayerAnimInstance::NativeInitializeAnimation()
 	
 	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Start"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStartState));
 
+	AddNativeStateEntryBinding(TEXT("KatanaState"), TEXT("Move_Start"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStartState));
+
 	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Stop"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStopState));
 	
 	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Pivot_Turn"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryPivotTurnState));
@@ -83,6 +85,17 @@ void UPlayerAnimInstance::SetMovementData()
 	bIsSpear = OwnerController->bIsSpearState;
 	bIsBow = OwnerController->bIsBowState;
 
+	if (bIsKatana || bIsSpear || bIsBow)
+	{
+		SetRootMotionMode(ERootMotionMode::RootMotionFromEverything);
+		OwnerCharacterMovement->bAllowPhysicsRotationDuringAnimRootMotion = true;
+	}
+	if (!bIsKatana && !bIsSpear && !bIsBow)
+	{
+		SetRootMotionMode(ERootMotionMode::RootMotionFromMontagesOnly);
+		OwnerCharacterMovement->bAllowPhysicsRotationDuringAnimRootMotion = false;
+	}
+
 	MovementYawDelta = UKismetMathLibrary::NormalizedDeltaRotator(UKismetMathLibrary::MakeRotFromX(OwnerCharacter->GetVelocity()), OwnerCharacter->GetBaseAimRotation()).Yaw;
 
 	SetMaxSpeedAndPlayRate();
@@ -110,6 +123,7 @@ void UPlayerAnimInstance::SetRotationRate(float MinLocomotionValue, float MaxLoc
 {
 	float ClampedRotValue = UKismetMathLibrary::MapRangeClamped(GetCurveValue(FName("Movement_Rotation")), 0.0f, 4.0f, MinLocomotionValue, MaxLocomotionValue);
 	OwnerCharacterMovement->RotationRate = FRotator(0.0f, ClampedRotValue, 0.0f);
+	GEngine->AddOnScreenDebugMessage(0, 3, FColor::Green, FString::Printf(TEXT("RotationRate : %f"), OwnerCharacterMovement->RotationRate.Yaw));
 }
 
 bool UPlayerAnimInstance::SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const
