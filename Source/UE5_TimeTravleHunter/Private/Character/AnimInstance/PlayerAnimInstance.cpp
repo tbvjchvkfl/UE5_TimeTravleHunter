@@ -18,7 +18,7 @@ void UPlayerAnimInstance::NativeInitializeAnimation()
 	
 	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Start"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStartState));
 
-	AddNativeStateEntryBinding(TEXT("KatanaState"), TEXT("Move_Start"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStartState));
+	AddNativeStateEntryBinding(TEXT("KatanaState"), TEXT("Move_Start"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryWeaponStartState));
 
 	AddNativeStateEntryBinding(TEXT("LocomotionState"), TEXT("Move_Stop"), FOnGraphStateChanged::CreateUObject(this, &UPlayerAnimInstance::OnEntryMoveStopState));
 	
@@ -65,6 +65,7 @@ void UPlayerAnimInstance::InitAnimationInstance()
 	CanWalkStartSkip = false;
 	CanJogStartSkip = false;
 	bIsTurn = false;
+	ComboIndex = 0;
 }
 
 void UPlayerAnimInstance::SetMovementData()
@@ -106,7 +107,6 @@ void UPlayerAnimInstance::SetMovementData()
 void UPlayerAnimInstance::SetMaxSpeedAndPlayRate()
 {
 	OwnerCharacterMovement->MaxWalkSpeed = GetCurveValue(FName("Movement_Speed"));
-
 	if (bIsJog)
 	{
 		float ClampValue = FMath::Clamp(GetCurveValue(FName("MoveData_Speed")), 450.0f, 1000.0f);
@@ -123,7 +123,6 @@ void UPlayerAnimInstance::SetRotationRate(float MinLocomotionValue, float MaxLoc
 {
 	float ClampedRotValue = UKismetMathLibrary::MapRangeClamped(GetCurveValue(FName("Movement_Rotation")), 0.0f, 4.0f, MinLocomotionValue, MaxLocomotionValue);
 	OwnerCharacterMovement->RotationRate = FRotator(0.0f, ClampedRotValue, 0.0f);
-	GEngine->AddOnScreenDebugMessage(0, 3, FColor::Green, FString::Printf(TEXT("RotationRate : %f"), OwnerCharacterMovement->RotationRate.Yaw));
 }
 
 bool UPlayerAnimInstance::SetMovementDirection(float MinValue, float MaxValue, bool Mincluding, bool Maxcluding, float &Direction) const
@@ -210,6 +209,35 @@ void UPlayerAnimInstance::OnEntryPivotTurnState(const FAnimNode_StateMachine &Ma
 	else if (SetMovementDirection(135.0f, 180.0f, false, true, MovementStartAngle))
 	{
 		DesiredPivotTurnAnim = MovementAnimStruct.PivotTurn_Right180;
+		return;
+	}
+}
+
+void UPlayerAnimInstance::OnEntryWeaponStartState(const FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex)
+{
+	if (SetMovementDirection(-180.0f, -135.0f, true, false, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_180, MovementAnimStruct.JogStartLeft_180);
+		return;
+	}
+	else if (SetMovementDirection(-135.0f, -45.0f, true, false, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartLeft_90, MovementAnimStruct.JogStartLeft_90);
+		return;
+	}
+	else if (SetMovementDirection(45.0f, 135.0f, false, true, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_90, MovementAnimStruct.JogStartRight_90);
+		return;
+	}
+	else if (SetMovementDirection(135.0f, 180.0f, false, true, MovementStartAngle))
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartRight_180, MovementAnimStruct.JogStartRight_180);
+		return;
+	}
+	else
+	{
+		DesiredStartMoveAnim(MovementAnimStruct.WalkStartForward, MovementAnimStruct.JogStartForward);
 		return;
 	}
 }
@@ -365,5 +393,89 @@ void UPlayerAnimInstance::PlayAssasination()
 	if (Assasination_Anim)
 	{
 		Montage_Play(Assasination_Anim, 1.0f);
+	}
+}
+
+void UPlayerAnimInstance::PlayComboAttack()
+{
+	if (!ComboAnimArray.IsEmpty())
+	{
+		switch (ComboIndex)
+		{
+			case 0:
+			{
+				if (!Montage_IsPlaying(ComboAnimArray[0]))
+				{
+					Montage_Play(ComboAnimArray[0], 1.0f);
+					ComboIndex++;
+				}
+			}
+			break;
+			case 1:
+			{
+				if (!Montage_IsPlaying(ComboAnimArray[1]))
+				{
+					if (Montage_IsPlaying(ComboAnimArray[0]))
+					{
+						Montage_Stop(0.2f, ComboAnimArray[0]);
+					}
+					Montage_Play(ComboAnimArray[1], 1.0f);
+					ComboIndex++;
+				}
+			}
+			break;
+			case 2:
+			{
+				if (!Montage_IsPlaying(ComboAnimArray[2]))
+				{
+					if (Montage_IsPlaying(ComboAnimArray[1]))
+					{
+						Montage_Stop(0.2f, ComboAnimArray[1]);
+					}
+					Montage_Play(ComboAnimArray[2], 1.0f);
+					ComboIndex = 0;
+				}
+			}
+			break;
+			default:
+			{
+				break;
+			}
+		}
+	}
+}
+
+void UPlayerAnimInstance::ResetComboAttack()
+{
+	if (ComboIndex == 0 || ComboIndex == 1)
+	{
+		if (!Montage_IsPlaying(ComboAnimArray[0]) && !Montage_IsPlaying(ComboAnimArray[1]))
+		{
+			ComboIndex = 0;
+		}
+	}
+}
+
+void UPlayerAnimInstance::SpecialAttackHold()
+{
+	if (Hold_Anim)
+	{
+		Montage_Play(Hold_Anim, 0.5f);
+	}
+}
+
+void UPlayerAnimInstance::PlaySpecialAttack(float ButtonElapsedTime)
+{
+	if (ButtonElapsedTime < 1.0f)
+	{
+		Montage_Play(SpecialAnimArray[0], 1.0f);
+	}
+	if (ButtonElapsedTime >= 1.0f && ButtonElapsedTime < 3.0f)
+	{
+		Montage_Play(SpecialAnimArray[1], 1.0f);
+	}
+	if (ButtonElapsedTime >= 3.0f)
+	{
+		Montage_Play(SpecialAnimArray[2], 1.0f);
 	}
 }
