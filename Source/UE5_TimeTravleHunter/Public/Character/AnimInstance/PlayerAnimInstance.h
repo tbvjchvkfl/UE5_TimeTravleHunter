@@ -92,7 +92,14 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Animation | Action")
 	UAnimMontage *Assasination_Anim;
 
-	
+	UPROPERTY(EditAnywhere, Category = "Animation | Action")
+	UAnimMontage *Hold_Anim;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
+	TArray<UAnimMontage *> SpecialAnimArray;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
+	TArray<UAnimMontage *> ComboAnimArray;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -101,6 +108,12 @@ public:
 	void PlayClimbing();
 	void PlayMantling();
 	void PlayAssasination();
+
+	void PlayComboAttack();
+	void ResetComboAttack();
+	void SpecialAttackHold();
+	void PlaySpecialAttack(float ButtonElapsedTime);
+
 
 private:
 	//======================================================
@@ -172,6 +185,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
 	float PlayRate;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
+	int32 ComboIndex;
+
 	// Character AnimSequence Data
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Character AnimSequence Data", meta = (AllowPrivateAccess = "true"))
 	UAnimSequenceBase *DesiredMoveStartAnim;
@@ -230,6 +246,7 @@ private:
 	void OnEntryMoveStartState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
 	void OnEntryMoveStopState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
 	void OnEntryPivotTurnState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
+	void OnEntryWeaponStartState(const struct FAnimNode_StateMachine &Machine, int32 PrevStateIndex, int32 NextStateIndex);
 
 	void CheckCurrentDirection();
 	void DesiredStartMoveAnim(UAnimSequenceBase *DesiredWalkAnim, UAnimSequenceBase* DesiredJogAnim);
