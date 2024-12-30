@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class UStaticMeshComponent;
 class UInputMappingContext;
 class UInputAction;
 class UInventoryComponent;
@@ -16,7 +17,7 @@ class APlayerCharacterController;
 class UMotionWarpingComponent;
 class UPlayerAnimInstance;
 class AEnemyCharacter;
-
+class AWeaponBase;
 struct FInputActionValue;
 struct FInputActionInstance;
 
@@ -65,12 +66,41 @@ protected:
 	//=					- Variables -					   =
 	//======================================================
 
-	// Component
+	// Basic Data
 	UPROPERTY(EditAnywhere, Category = "Character | Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent *MainCamera;
 
 	UPROPERTY(EditAnywhere, Category = "Character | Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent *CameraBoom;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent *MainWeaponMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent *SubWeaponMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent *KatanaMesh_Unarmed;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent *KatanaCoverMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent *BowMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent *SpearMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent *AssasinKnife;
+
+	UPROPERTY(EditAnywhere, Category = "Character | Weapon", meta = (AllowPrivateAccess = "true"))
+	AWeaponBase *MainWeapon;
+
+	UPROPERTY(EditAnywhere, Category = "Character | Weapon", meta = (AllowPrivateAccess = "true"))
+	AWeaponBase *SubWeapon;
+
+	
 
 	// Input
 	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
@@ -108,6 +138,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction *Inventory;
+
+	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction *NormalAttack;
+
+	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction *HoldingAction;
+
+	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction *SpecialAttacking;
 
 	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction *Test;
@@ -158,6 +197,9 @@ protected:
 	void SwitchingWeaponMain();
 	void SwitchingWeaponSub();
 	
+	void ComboAttack();
+	void HoldAction();
+	void SpecialAttack(const FInputActionInstance& Action);
 
 	void Interaction();
 	void ShowInventory();
