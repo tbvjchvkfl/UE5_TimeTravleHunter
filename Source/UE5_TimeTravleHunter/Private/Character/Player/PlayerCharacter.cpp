@@ -3,8 +3,8 @@
 
 // GameFramework
 #include "Character/Player/PlayerCharacter.h"
-#include "Controller/PlayerCharacterController.h"
-#include "AnimInstance/PlayerAnimInstance.h"
+#include "Character/Controller/PlayerCharacterController.h"
+#include "Character/AnimInstance/PlayerAnimInstance.h"
 #include "Interface/InteractionInterface.h"
 #include "Interface/CharacterActionInterface.h"
 #include "Component/InventoryComponent.h"
@@ -16,6 +16,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "MotionWarpingComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "EnhancedInputSubsystems.h"
@@ -43,6 +44,23 @@ APlayerCharacter::APlayerCharacter() :
 	MainCamera->SetupAttachment(CameraBoom);
 	MainCamera->bUsePawnControlRotation = false;
 
+	MainWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MainWeapon"));
+	MainWeaponMesh->SetupAttachment(GetMesh(), "WeaponSocket");
+
+	SubWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SubWeapon"));
+	SubWeaponMesh->SetupAttachment(GetMesh(), "SubWeaponSocket");
+
+	KatanaMesh_Unarmed = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("KatanaMesh"));
+	KatanaMesh_Unarmed->SetupAttachment(GetMesh(), "KatanaSocket_Unarmed");
+	KatanaCoverMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("KatanaCoverMesh"));
+	KatanaCoverMesh->SetupAttachment(GetMesh(), "KatanaSocket_Cover");
+	BowMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BowMesh"));
+	BowMesh->SetupAttachment(GetMesh(), "SubWeaponBowSocket");
+	SpearMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SpearMesh"));
+	SpearMesh->SetupAttachment(GetMesh(), "SubWeaponSpearSocket");
+	AssasinKnife = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AssasinKnife"));
+	AssasinKnife->SetupAttachment(GetMesh(), "AssasinKnifeSocket");
+
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = false;
@@ -51,12 +69,12 @@ APlayerCharacter::APlayerCharacter() :
 	GetCharacterMovement()->bUseSeparateBrakingFriction = true;
 	GetCharacterMovement()->GravityScale = 1.0f;
 	GetCharacterMovement()->BrakingFrictionFactor = 0.0f;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 400.0f, 0.0f);
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	GetCharacterMovement()->MaxWalkSpeed = 500.0f;
 	GetCharacterMovement()->MaxAcceleration = 500.0f;
 	GetCharacterMovement()->JumpZVelocity = 600.0f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 0.0f;
-	GetCharacterMovement()->GroundFriction = 4.0f;
+	GetCharacterMovement()->GroundFriction = 15.0f; // 이상하면 10.0f으로 할 것
 	GetCharacterMovement()->BrakingDecelerationWalking = 1000.0f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 0.0f;
 	GetCharacterMovement()->AirControl = 0.0f;
@@ -81,7 +99,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	if (GetCharacterMovement()->GetCurrentAcceleration().Size() <= 0.0f && OwningController->bIsSprint)
 	{
 		OwningController->bIsSprint = false;
-		if (OwningController->bIsWalk)
+		if (!OwningController->bIsJog)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 		}
@@ -132,6 +150,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(SwitchingMainWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchingWeaponMain);
 		EnhancedInputComponent->BindAction(SwitchingSubWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchingWeaponSub);
 
+		EnhancedInputComponent->BindAction(NormalAttack, ETriggerEvent::Triggered, this, &APlayerCharacter::ComboAttack);
+		EnhancedInputComponent->BindAction(HoldingAction, ETriggerEvent::Triggered, this, &APlayerCharacter::HoldAction);
+		EnhancedInputComponent->BindAction(SpecialAttacking, ETriggerEvent::Triggered, this, &APlayerCharacter::SpecialAttack);
+
 		EnhancedInputComponent->BindAction(Test, ETriggerEvent::Triggered, this, &APlayerCharacter::TestFunction);
 	}
 }
@@ -170,7 +192,7 @@ void APlayerCharacter::Sprint()
 	else
 	{
 		OwningController->bIsSprint = false;
-		if (OwningController->bIsWalk)
+		if (!OwningController->bIsJog)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 		}
@@ -213,7 +235,7 @@ void APlayerCharacter::DoCrouch()
 	else
 	{
 		OwningController->bIsCrouch = false;
-		if (OwningController->bIsWalk)
+		if (!OwningController->bIsJog)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 		}
@@ -226,15 +248,13 @@ void APlayerCharacter::DoCrouch()
 
 void APlayerCharacter::WalktoJog()
 {
-	if (!OwningController->bIsWalk)
+	if (OwningController->bIsJog)
 	{
-		OwningController->bIsWalk = true;
 		OwningController->bIsJog = false;
 		GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 	}
 	else
 	{
-		OwningController->bIsWalk = false;
 		OwningController->bIsJog = true;
 		GetCharacterMovement()->MaxWalkSpeed = 500.0f;
 	}
@@ -428,21 +448,40 @@ void APlayerCharacter::StopAimming()
 		OwningController->bIsAimming = false;
 		bUseControllerRotationYaw = false;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
-		if (!OwningController->bIsWalk)
+		if (OwningController->bIsJog)
 		{
 			GetCharacterMovement()->MaxWalkSpeed = 500.0f;
+		}
+		else
+		{
+			GetCharacterMovement()->MaxWalkSpeed = 150.0f;
 		}
 	}
 }
 
 void APlayerCharacter::SwitchingWeaponMain()
 {
-
+	OwningController->bIsKatanaState = true;
 }
 
 void APlayerCharacter::SwitchingWeaponSub()
 {
+	OwningController->bIsSpearState = true;
+}
 
+void APlayerCharacter::ComboAttack()
+{
+	OwningAnimInstance->PlayComboAttack();
+}
+
+void APlayerCharacter::HoldAction()
+{
+	OwningAnimInstance->SpecialAttackHold();
+}
+
+void APlayerCharacter::SpecialAttack(const FInputActionInstance &Action)
+{
+	OwningAnimInstance->PlaySpecialAttack(Action.GetElapsedTime());
 }
 
 void APlayerCharacter::SprintCameraMoving()
@@ -452,8 +491,6 @@ void APlayerCharacter::SprintCameraMoving()
 
 	}
 }
-
-
 
 void APlayerCharacter::Interaction()
 {
