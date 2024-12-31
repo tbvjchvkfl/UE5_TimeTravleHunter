@@ -17,6 +17,7 @@ void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	InitializeInventory();
+	InitilaizeEquipInventory();
 }
 
 void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
@@ -44,6 +45,18 @@ void UInventoryComponent::InitializeInventory()
 			{
 				Column++;
 			}
+		}
+	}
+}
+
+void UInventoryComponent::InitilaizeEquipInventory()
+{
+	EquipInventory.Empty();
+	if (EquipInventory.IsEmpty())
+	{
+		for (int32 i = 0; i < EquipInventorySize; i++)
+		{
+			EquipInventory.Add(nullptr);
 		}
 	}
 }
@@ -107,7 +120,7 @@ void UInventoryComponent::CheckItem(class APickUpItem *Item)
 		break;
 		case EItemType::Weapon:
 		{
-			AddItem(Item);
+			AddWeapon(Item);
 		}
 		break;
 		case EItemType::Consumable:
@@ -163,6 +176,18 @@ void UInventoryComponent::AddItem(APickUpItem *Items)
 	{
 		AddtoInventory(ItemPos, Items, true);
 		return;
+	}
+}
+
+void UInventoryComponent::AddWeapon(APickUpItem* Item)
+{
+	for (auto InventoryElem : EquipInventory)
+	{
+		if (!InventoryElem)
+		{
+			InventoryElem = Item->WeaponItemInfo;
+			return;
+		}
 	}
 }
 
