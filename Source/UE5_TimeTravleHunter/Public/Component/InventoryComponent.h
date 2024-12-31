@@ -9,6 +9,7 @@
 DECLARE_MULTICAST_DELEGATE(FOnInventoryUpdate);
 
 class APickUpItem;
+class AWeaponBase;
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -24,9 +25,6 @@ public:
 	FOnInventoryUpdate OnInventoryUpdate;
 
 	FHitResult Hit;
-
-	UPROPERTY(EditAnywhere, Category = "DropItem")
-	TSubclassOf<APickUpItem> DroppingItem;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -34,7 +32,9 @@ public:
 	
 	FORCEINLINE TMap<FVector2D, APickUpItem *> GetItemInventory() { return ItemInventory; };
 	FORCEINLINE int32 GetCoinInventory() { return CoinInventory; };
+	FORCEINLINE TArray<AWeaponBase *> GetWeaponInventory() { return EquipInventory; };
 	FORCEINLINE int32 GetItemInventorySize() { return InventorySize; };
+	FORCEINLINE int32 GetWeaponInventorySize() { return EquipInventorySize; };
 	FORCEINLINE int32 GetInventoryWidth() { return InventoryWidth; };
 	void CheckItem(APickUpItem *Item);
 	void AddtoInventory(FVector2D ItemPosition, APickUpItem *Item, bool ModifyState);
@@ -59,12 +59,20 @@ protected:
 	UPROPERTY()
 	int32 CoinInventory;
 
+	UPROPERTY(VisibleAnywhere, Category = "Inventory | Weapon")
+	TArray<AWeaponBase *> EquipInventory;
+
+	UPROPERTY(EditAnywhere, Category = "Inventory | Weapon")
+	int32 EquipInventorySize;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void InitializeInventory();
+	void InitilaizeEquipInventory();
 	void AddItem(APickUpItem *Item);
+	void AddWeapon(APickUpItem *Item);
 	bool bIsRoomAvailable(TArray<FVector2D> Shape, FVector2D &ItemPosition) const;
 };
