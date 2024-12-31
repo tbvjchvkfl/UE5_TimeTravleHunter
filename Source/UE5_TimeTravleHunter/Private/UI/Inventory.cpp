@@ -4,6 +4,7 @@
 // GameFramework
 #include "UI/Inventory.h"
 #include "UI/InventoryGrid.h"
+#include "UI/EquipWeaponWidget.h"
 #include "Character/Player/PlayerCharacter.h"
 #include "Object/PickUpItem.h"
 #include "Component/InventoryComponent.h"
@@ -24,6 +25,8 @@ void UInventory::NativeConstruct()
 		GridWidget->OnRemoveItem.AddUObject(this, &UInventory::RemoveItem);
 		GridWidget->OnAddItem.AddUObject(this, &UInventory::AddItem);
 		GridWidget->InventoryGridInitialize();
+
+		EquipmentWidget->InitializeEquipmenWidget();
 	}
 }
 
