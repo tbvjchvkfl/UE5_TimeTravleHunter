@@ -1,15 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+// GameFramework
 #include "UI/EquipWeaponWidget.h"
+#include "UI/EquipmentSlot.h"
+#include "UI/WeaponItemWidget.h"
 #include "Component/InventoryComponent.h"
 #include "Character/Player/PlayerCharacter.h"
+
+// Engine
+#include "Components/WrapBox.h"
+#include "Components/WrapBoxSlot.h"
 
 void UEquipWeaponWidget::InitializeEquipmenWidget()
 {
 	RefreshInventory();
-
-	EquipWeaponArray.Empty();
 	InventoryComponent->OnInventoryUpdate.AddUObject(this, &UEquipWeaponWidget::RefreshInventory);
 }
 
@@ -19,11 +24,37 @@ void UEquipWeaponWidget::RefreshInventory()
 	if (Player)
 	{
 		InventoryComponent = Player->GetItemInventory();
-		EquipWeaponArray = InventoryComponent->GetWeaponInventory();
+		EquipWeaponInventory = InventoryComponent->GetWeaponInventory();
 		EquipInventorySize = InventoryComponent->GetWeaponInventorySize();
 	}
+	FillEmptySlot();
+	for (auto EquipWeaponElem : EquipWeaponInventory)
+	{
+		if (EquipWeaponElem)
+		{
+			WeaponItem = CreateWidget<UWeaponItemWidget>(GetOwningPlayer(), WeaponItemWidget);
+			if (WeaponItem)
+			{
+				WeaponItem->InitializeWeaponItem(EquipWeaponElem);
+				EquipWeaponInventory.Add(EquipWeaponElem);
+				WeaponItemInventory.Add(WeaponItem);
+				WrapPanel->AddChildToWrapBox(WeaponItem);
+			}
+		}
+	}
+}
 
-	EquipWeaponArray.Empty();
+void UEquipWeaponWidget::FillEmptySlot()
+{
+	WrapPanel->ClearChildren();
+	for (int32 i = 0; i < EquipInventorySize; i++)
+	{
+		EquipmentSlot = CreateWidget<UEquipmentSlot>(GetOwningPlayer(), EquipmentSlotWidget);
+		if (EquipmentSlot)
+		{
+			WrapPanel->AddChildToWrapBox(EquipmentSlot);
+		}
+	}
 }
 
 FEventReply UEquipWeaponWidget::OnMouseButtonDown(FGeometry MyGeometry, const FPointerEvent &MouseEvent)
