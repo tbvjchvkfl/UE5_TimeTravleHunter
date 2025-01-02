@@ -10,6 +10,7 @@
 
 class UStaticMeshComponent;
 class USphereComponent;
+class AWeaponBase;
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API APickUpItem : public AActor, public IInteractionInterface
@@ -21,67 +22,82 @@ public:
 	//=					- Variables -					   =
 	//======================================================
 
-
+	
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	APickUpItem();
-	FORCEINLINE EItemType GetItemType() { return ItemType; };
-	FORCEINLINE int32 GetCurrentQuantity() { return CurrentQuantity; };
-	FORCEINLINE int32 GetMaxQuantity() { return MaxQuantity; };
-	FORCEINLINE FIntPoint GetItemSize() { return ItemSize; };
-	FORCEINLINE FString GetItemName() { return ItemName; };
+	FORCEINLINE EItemType GetItemType() const { return ItemType; };
+	FORCEINLINE int32 GetCurrentQuantity() const { return CurrentQuantity; };
+	FORCEINLINE int32 GetMaxQuantity() const { return MaxQuantity; };
+	FORCEINLINE FIntPoint GetItemSize() const { return ItemSize; };
+	FORCEINLINE int32 GetItemNumber() const { return ItemNumber; };
+	FORCEINLINE UTexture2D* GetItemTexture() const { return ItemTexture; };
+	FORCEINLINE float GetItemRotation() const { return ItemRotation; };
 
-	TArray<FVector2D> GetShape(float Rotation)const;
+	FORCEINLINE int32 SetCurrentQuantity(int32 NewQuantity) { return CurrentQuantity = FMath::Clamp(NewQuantity, 0, MaxQuantity); };
+
+	FORCEINLINE float SetItemRotation(float NewRotateValue) { return ItemRotation = FMath::Clamp(NewRotateValue, 0.0f, 90.0f); };
+
+	TArray<FVector2D> GetShape(float Rotation) const;
+	FIntPoint GetMaxSize(float Rotation, bool DefaultOverride);
 protected:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-
 	// Item Component
-	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | Component")
 	UStaticMeshComponent *ItemMesh;
 
-	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | Component", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | Component")
 	USphereComponent *CollisionSphere;
 
 	// Item Data
-	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | ItemData", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | ItemData")
 	UDataTable *ItemDataTable;
 
-	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | ItemData", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditInstanceOnly, Category = "ItemBaseInfo | ItemData")
 	FName DesiredItemID;
 
-	// Item Property
-	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | ItemProperty")
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
+	int32 ItemNumber;
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
 	FIntPoint ItemSize;
 
-	UPROPERTY(EditAnywhere, Category = "ItemBaseInfo | ItemProperty")
+	UPROPERTY(EditInstanceOnly, Category = "ItemBaseInfo | Consumable")
 	int32 CurrentQuantity;
-	
-	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
 	int32 MaxQuantity;
 
-	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
-	UTexture2D *ItemTexture;
-
-	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
-	FString ItemName;
-
-	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
-	FString ItemDescription;
-
-	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
 	EItemType ItemType;
 
-	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemProperty")
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
+	FString ItemName;
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
+	FString ItemDescription;
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
+	UTexture2D *ItemTexture;
+
+	// Item Property
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Item Property")
 	TArray<FVector2D> ItemShape;
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Item Property")
+	float ItemRotation;
+
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
+	void InitializeItemData();
 	virtual void PickUpInteraction(class APlayerCharacter *Player) override;
 	void DesiredItemShape();
 
