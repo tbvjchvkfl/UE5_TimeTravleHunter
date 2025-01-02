@@ -2,13 +2,14 @@
 
 // GameFramework
 #include "Object/PickUpItem.h"
+#include "Character/Armor/WeaponBase.h"
 #include "Character/Player/PlayerCharacter.h"
 #include "Component/InventoryComponent.h"
-
 
 // Engine
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Engine/DataTable.h"
 
 APickUpItem::APickUpItem()
 {
@@ -20,26 +21,14 @@ APickUpItem::APickUpItem()
 	CollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionSphere"));
 	CollisionSphere->SetupAttachment(ItemMesh);
 	CollisionSphere->InitSphereRadius(200.0f);
-
-	if (ItemDataTable && !DesiredItemID.IsNone())
-	{
-		const auto ItemTable = ItemDataTable->FindRow<FItemData>(DesiredItemID, DesiredItemID.ToString());
-		if (ItemTable)
-		{
-			MaxQuantity = ItemTable->ItemStackData.MaxQuantity;
-			ItemSize = ItemTable->ItemSize;
-			ItemName = ItemTable->ItemTextData.ItemName;
-			ItemDescription = ItemTable->ItemTextData.ItemDescription;
-			ItemType = ItemTable->ItemType;
-			ItemTexture = ItemTable->ItemAssetData.ItemIcon;
-			ItemMesh->SetStaticMesh(ItemTable->ItemAssetData.ItemMesh);
-		}
-	}
+	
+	CurrentQuantity = 1;
 }
 
 void APickUpItem::BeginPlay()
 {
 	Super::BeginPlay();
+	InitializeItemData();
 	DesiredItemShape();
 	CollisionSphere->OnComponentBeginOverlap.AddDynamic(this, &APickUpItem::OnOverlapBegin);
 }
@@ -77,7 +66,7 @@ TArray<FVector2D> APickUpItem::GetShape(float Rotation) const
 			{
 				SmallestX = RotShape.X;
 			}
-			if (SmallestY > 0)
+			if (SmallestY > RotShape.Y)
 			{
 				SmallestY = RotShape.Y;
 			}
@@ -92,13 +81,72 @@ TArray<FVector2D> APickUpItem::GetShape(float Rotation) const
 	return ItemShape;
 }
 
+FIntPoint APickUpItem::GetMaxSize(float Rotation, bool DefaultOverride)
+{
+	FIntPoint ReturnValue = FIntPoint(0, 0);
+	float Max_X = 0.0f;
+	float Max_Y = 0.0f;
+
+	if (DefaultOverride)
+	{
+		for (int32 i = 0; i < ItemShape.Num(); i++)
+		{
+			if (Max_X < ItemShape[i].X)
+			{
+				Max_X = ItemShape[i].X;
+			}
+			if (Max_Y < ItemShape[i].Y)
+			{
+				Max_Y = ItemShape[i].Y;
+			}
+		}
+	}
+	else
+	{
+		for (int32 i = 0; i < GetShape(Rotation).Num(); i++)
+		{
+			if (Max_X < GetShape(Rotation)[i].X)
+			{
+				Max_X = GetShape(Rotation)[i].X;
+			}
+			if (Max_Y < GetShape(Rotation)[i].Y)
+			{
+				Max_Y = GetShape(Rotation)[i].Y;
+			}
+		}
+	}
+	ReturnValue.X = static_cast<int32>(Max_X + 1);
+	ReturnValue.Y = static_cast<int32>(Max_Y + 1);
+	return ReturnValue;
+}
+
+void APickUpItem::InitializeItemData()
+{
+	if (ItemDataTable && !DesiredItemID.IsNone())
+	{
+		const auto ItemTable = ItemDataTable->FindRow<FItemData>(DesiredItemID, DesiredItemID.ToString());
+		if (ItemTable)
+		{
+			ItemNumber = ItemTable->ItemNumber;
+			ItemSize = ItemTable->ItemSize;
+			MaxQuantity = ItemTable->ItemStackData.MaxQuantity;
+			ItemType = ItemTable->ItemType;
+			ItemName = ItemTable->ItemTextData.ItemName;
+			ItemDescription = ItemTable->ItemTextData.ItemDescription;
+			ItemTexture = ItemTable->ItemAssetData.ItemIcon;
+			ItemMesh->SetStaticMesh(ItemTable->ItemAssetData.ItemMesh);
+			GEngine->AddOnScreenDebugMessage(0, 3, FColor::Green, FString("DataLoad"));
+		}
+	}
+}
+
 void APickUpItem::PickUpInteraction(APlayerCharacter *Player)
 {
 	if (!IsPendingKillPending())
 	{
 		if (auto ItemInventory = Player->GetItemInventory())
 		{
-			ItemInventory->AddInventory(this);
+			ItemInventory->CheckItem(this);
 			Destroy();
 		}
 	}
@@ -111,4 +159,3 @@ void APickUpItem::OnOverlapBegin(UPrimitiveComponent *OverlappedComponent, AActo
 		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Blue, FString::Printf(TEXT("Press E Button")), true);
 	}
 }
-
