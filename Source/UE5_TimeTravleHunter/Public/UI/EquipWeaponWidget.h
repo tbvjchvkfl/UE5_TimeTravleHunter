@@ -8,13 +8,14 @@
 
 class APlayerCharacter;
 class UInventoryComponent;
-class AWeaponBase;
+class APickUpItem;
 class UImage;
 class UWrapBox;
 class UEquipmentSlot;
 class UWeaponItemWidget;
+class UCurrentWeaponWidget;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnAddEquip, AWeaponBase*);
+DECLARE_MULTICAST_DELEGATE(FOnAddEquip);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UEquipWeaponWidget : public UUserWidget
@@ -28,7 +29,13 @@ public:
 
 	// Widget
 	UPROPERTY(meta = (BindWidget))
-	UWrapBox *WrapPanel;
+	UWrapBox *SlotWrapPanel;
+
+	UPROPERTY(meta = (BindWidget))
+	UWrapBox *WeaponWrapPanel;
+
+	UPROPERTY(meta = (BindWidget))
+	UCurrentWeaponWidget *CurrentWeaponWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Widget")
 	TSubclassOf<UEquipmentSlot> EquipmentSlotWidget;
@@ -38,7 +45,7 @@ public:
 
 	// Property
 	UPROPERTY()
-	TArray<AWeaponBase *> EquipWeaponInventory;
+	TArray<APickUpItem *> EquipWeaponInventory;
 
 	UPROPERTY()
 	TArray<UWeaponItemWidget *> WeaponItemInventory;
@@ -58,12 +65,16 @@ public:
 	UPROPERTY()
 	UWeaponItemWidget *WeaponItem;
 
+	
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	void InitializeEquipmenWidget();
+	void InitEssentialData();
 	void RefreshInventory();
 	void FillEmptySlot();
+	
 	FEventReply OnMouseButtonDown(FGeometry MyGeometry, const FPointerEvent &MouseEvent);
 	void OnMouseEnter(FGeometry MyGeometry, const FPointerEvent &MouseEvent);
 	void OnMouseLeave(const FPointerEvent &MouseEvent);

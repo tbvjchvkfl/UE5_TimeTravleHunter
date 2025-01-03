@@ -9,7 +9,8 @@
 class USizeBox;
 class UImage;
 class UCanvasPanel;
-class AWeaponBase;
+class APickUpItem;
+class UCurrentWeaponWidget;
 
 
 UCLASS()
@@ -27,10 +28,23 @@ public:
 	UImage *WeaponImage;
 
 	UPROPERTY(meta = (BindWidget))
+	UImage *HoverImage;
+
+	UPROPERTY(meta = (BindWidget))
 	UCanvasPanel *WeaponCavas;
+
+	UPROPERTY()
+	APickUpItem *WeaponInfo;
+
+	UPROPERTY()
+	UCurrentWeaponWidget *CurrentWeaponItem;
 
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-	void InitializeWeaponItem(AWeaponBase *WeaponItem);
+	void InitializeWeaponItem(UCurrentWeaponWidget* CurWeaponWidget, APickUpItem *WeaponItem);
+	virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
+	virtual void NativeOnMouseLeave(const FPointerEvent &InMouseEvent);
+	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
+	
 };
