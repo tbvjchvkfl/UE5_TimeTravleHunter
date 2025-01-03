@@ -5,6 +5,7 @@
 #include "UI/EquipWeaponWidget.h"
 #include "UI/EquipmentSlot.h"
 #include "UI/WeaponItemWidget.h"
+#include "UI/CurrentWeaponWidget.h"
 #include "Component/InventoryComponent.h"
 #include "Character/Player/PlayerCharacter.h"
 
@@ -14,11 +15,12 @@
 
 void UEquipWeaponWidget::InitializeEquipmenWidget()
 {
+	CurrentWeaponWidget->InitializeCurrentWeaponImage();
 	RefreshInventory();
 	InventoryComponent->OnInventoryUpdate.AddUObject(this, &UEquipWeaponWidget::RefreshInventory);
 }
 
-void UEquipWeaponWidget::RefreshInventory()
+void UEquipWeaponWidget::InitEssentialData()
 {
 	Player = Cast<APlayerCharacter>(GetOwningPlayerPawn());
 	if (Player)
@@ -27,7 +29,13 @@ void UEquipWeaponWidget::RefreshInventory()
 		EquipWeaponInventory = InventoryComponent->GetWeaponInventory();
 		EquipInventorySize = InventoryComponent->GetWeaponInventorySize();
 	}
+}
+
+void UEquipWeaponWidget::RefreshInventory()
+{
+	InitEssentialData();
 	FillEmptySlot();
+	WeaponWrapPanel->ClearChildren();
 	for (auto EquipWeaponElem : EquipWeaponInventory)
 	{
 		if (EquipWeaponElem)
@@ -35,10 +43,9 @@ void UEquipWeaponWidget::RefreshInventory()
 			WeaponItem = CreateWidget<UWeaponItemWidget>(GetOwningPlayer(), WeaponItemWidget);
 			if (WeaponItem)
 			{
-				WeaponItem->InitializeWeaponItem(EquipWeaponElem);
-				EquipWeaponInventory.Add(EquipWeaponElem);
+				WeaponItem->InitializeWeaponItem(CurrentWeaponWidget, EquipWeaponElem);
 				WeaponItemInventory.Add(WeaponItem);
-				WrapPanel->AddChildToWrapBox(WeaponItem);
+				WeaponWrapPanel->AddChildToWrapBox(WeaponItem);
 			}
 		}
 	}
@@ -46,13 +53,13 @@ void UEquipWeaponWidget::RefreshInventory()
 
 void UEquipWeaponWidget::FillEmptySlot()
 {
-	WrapPanel->ClearChildren();
+	SlotWrapPanel->ClearChildren();
 	for (int32 i = 0; i < EquipInventorySize; i++)
 	{
 		EquipmentSlot = CreateWidget<UEquipmentSlot>(GetOwningPlayer(), EquipmentSlotWidget);
 		if (EquipmentSlot)
 		{
-			WrapPanel->AddChildToWrapBox(EquipmentSlot);
+			SlotWrapPanel->AddChildToWrapBox(EquipmentSlot);
 		}
 	}
 }
