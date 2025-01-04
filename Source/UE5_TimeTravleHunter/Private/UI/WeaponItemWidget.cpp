@@ -3,21 +3,24 @@
 // GameFramework
 #include "UI/WeaponItemWidget.h"
 #include "UI/CurrentWeaponWidget.h"
+#include "UI/EquipWeaponWidget.h"
 #include "Object/PickUpItem.h"
 #include "Character/Armor/WeaponBase.h"
 
 // Engine
 #include "Components/Image.h"
 
-void UWeaponItemWidget::InitializeWeaponItem(UCurrentWeaponWidget *CurWeaponWidget, APickUpItem *WeaponItem)
+void UWeaponItemWidget::InitializeWeaponItem(UEquipWeaponWidget *EquipWidget, UCurrentWeaponWidget *CurWeaponWidget, APickUpItem *WeaponItem)
 {
-	if (CurWeaponWidget && WeaponItem)
+
+	if (EquipWidget && CurWeaponWidget && WeaponItem)
 	{
+		EquipWeaponWidget = EquipWidget;
 		CurrentWeaponItem = CurWeaponWidget;
 		WeaponInfo = WeaponItem;
+		WeaponImage->SetBrushFromTexture(WeaponItem->GetItemTexture());
+		HoverImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
 	}
-	WeaponImage->SetBrushFromTexture(WeaponItem->GetItemTexture());
-	HoverImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
 }
 
 void UWeaponItemWidget::NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent)
@@ -32,10 +35,14 @@ void UWeaponItemWidget::NativeOnMouseLeave(const FPointerEvent &InMouseEvent)
 
 FReply UWeaponItemWidget::NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent)
 {
-	// 여기서 브로드캐스트랑 배열에서 인덱스 삭제 그리고 커렌트 웨폰위젯으로 데이터 전송
-
-
-
-	CurrentWeaponItem->OnEquipWeapon.Broadcast(WeaponInfo);
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+	{
+		if (CurrentWeaponItem->CurEuipItem)
+		{
+			OnAddItemWidget.Broadcast(CurrentWeaponItem->CurEuipItem, this);
+		}
+		CurrentWeaponItem->OnEquipWeapon.Broadcast(WeaponInfo);
+		OnRemoveItemWidget.Broadcast(this);
+	}
 	return FReply::Handled();
 }

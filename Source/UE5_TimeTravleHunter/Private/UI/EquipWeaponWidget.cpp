@@ -28,6 +28,7 @@ void UEquipWeaponWidget::InitEssentialData()
 		InventoryComponent = Player->GetItemInventory();
 		EquipWeaponInventory = InventoryComponent->GetWeaponInventory();
 		EquipInventorySize = InventoryComponent->GetWeaponInventorySize();
+		WeaponItemInventory.SetNum(EquipInventorySize);
 	}
 }
 
@@ -36,19 +37,22 @@ void UEquipWeaponWidget::RefreshInventory()
 	InitEssentialData();
 	FillEmptySlot();
 	WeaponWrapPanel->ClearChildren();
-	for (auto EquipWeaponElem : EquipWeaponInventory)
+	for (int32 i = 0; i < EquipWeaponInventory.Num(); i++)
 	{
-		if (EquipWeaponElem)
+		if (EquipWeaponInventory[i])
 		{
 			WeaponItem = CreateWidget<UWeaponItemWidget>(GetOwningPlayer(), WeaponItemWidget);
 			if (WeaponItem)
 			{
-				WeaponItem->InitializeWeaponItem(CurrentWeaponWidget, EquipWeaponElem);
-				WeaponItemInventory.Add(WeaponItem);
+				WeaponItem->InitializeWeaponItem(this, CurrentWeaponWidget, EquipWeaponInventory[i]);
+				WeaponItem->OnAddItemWidget.AddUObject(this, &UEquipWeaponWidget::AddEquipItem);
+				WeaponItem->OnRemoveItemWidget.AddUObject(this, &UEquipWeaponWidget::RemoveEquipItem);
+				WeaponItemInventory[i] = WeaponItem;
 				WeaponWrapPanel->AddChildToWrapBox(WeaponItem);
 			}
 		}
 	}
+	GEngine->AddOnScreenDebugMessage(4, 10, FColor::Green, FString::Printf(TEXT("EquipWeaponInventory Size : %d"), EquipWeaponInventory.Num()));
 }
 
 void UEquipWeaponWidget::FillEmptySlot()
@@ -60,6 +64,41 @@ void UEquipWeaponWidget::FillEmptySlot()
 		if (EquipmentSlot)
 		{
 			SlotWrapPanel->AddChildToWrapBox(EquipmentSlot);
+		}
+	}
+}
+
+void UEquipWeaponWidget::AddEquipItem(APickUpItem *Item, UWeaponItemWidget *WidgetItem)
+{
+	for (int32 i = 0; i < WeaponItemInventory.Num(); i++)
+	{
+		if (!InventoryComponent->GetRoomCheckingInventory()[i])
+		{
+			WeaponWrapPanel->AddChildToWrapBox(WidgetItem);
+			WeaponItemInventory[i] = WidgetItem;
+			EquipWeaponInventory[i] = Item;
+			OnAddEquipItem.Broadcast(i, Item);
+			return;
+		}
+	}
+	
+}
+
+void UEquipWeaponWidget::RemoveEquipItem(UWeaponItemWidget *WidgetItem)
+{
+	for (int32 i = 0; i < WeaponItemInventory.Num(); i++)
+	{
+		if (WeaponItemInventory[i] == WidgetItem)
+		{
+			if (InventoryComponent->GetRoomCheckingInventory()[i])
+			{
+				WeaponWrapPanel->RemoveChild(WeaponItemInventory[i]);
+				WeaponItemInventory[i] = nullptr;
+				EquipWeaponInventory[i] = nullptr;
+
+				OnRemoveWeaponItem.Broadcast(i);
+			}
+			return;
 		}
 	}
 }
