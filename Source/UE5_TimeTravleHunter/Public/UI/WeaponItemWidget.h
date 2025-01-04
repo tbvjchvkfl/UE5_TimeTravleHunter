@@ -11,7 +11,10 @@ class UImage;
 class UCanvasPanel;
 class APickUpItem;
 class UCurrentWeaponWidget;
+class UEquipWeaponWidget;
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAddItemWidget, APickUpItem *, UWeaponItemWidget *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemoveItemWidget, UWeaponItemWidget *);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UWeaponItemWidget : public UUserWidget
@@ -21,6 +24,9 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	FOnAddItemWidget OnAddItemWidget;
+	FOnRemoveItemWidget OnRemoveItemWidget;
+
 	UPROPERTY(meta = (BindWidget))
 	USizeBox *WeaponSizeBox;
 
@@ -39,10 +45,13 @@ public:
 	UPROPERTY()
 	UCurrentWeaponWidget *CurrentWeaponItem;
 
+	UPROPERTY()
+	UEquipWeaponWidget *EquipWeaponWidget;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-	void InitializeWeaponItem(UCurrentWeaponWidget* CurWeaponWidget, APickUpItem *WeaponItem);
+	void InitializeWeaponItem(UEquipWeaponWidget* EquipWidget, UCurrentWeaponWidget* CurWeaponWidget, APickUpItem *WeaponItem);
 	virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
 	virtual void NativeOnMouseLeave(const FPointerEvent &InMouseEvent);
 	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);

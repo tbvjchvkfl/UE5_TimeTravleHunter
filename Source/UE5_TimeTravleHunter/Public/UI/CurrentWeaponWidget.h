@@ -10,6 +10,7 @@ class UImage;
 class USizeBox;
 class UEquipWeaponWidget;
 class APickUpItem;
+class APlayerCharacter;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEquipWeapon, APickUpItem *);
 
@@ -35,10 +36,17 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	USizeBox *ImageSizeBox;
 
+	UPROPERTY()
+	APickUpItem *CurEuipItem;
+
+	UPROPERTY()
+	APlayerCharacter *Player;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	void InitializeCurrentWeaponImage();
+	void AddWeapon();
 	void EquipWeapon(APickUpItem* WeaponItem);
 	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
 	virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);

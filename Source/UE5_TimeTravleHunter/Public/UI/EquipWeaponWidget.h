@@ -15,7 +15,9 @@ class UEquipmentSlot;
 class UWeaponItemWidget;
 class UCurrentWeaponWidget;
 
-DECLARE_MULTICAST_DELEGATE(FOnAddEquip);
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAddWeaponItem, int32, APickUpItem *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemoveWeaponItem, int32);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UEquipWeaponWidget : public UUserWidget
@@ -25,7 +27,8 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-	FOnAddEquip OnAddEquip;
+	FOnAddWeaponItem OnAddEquipItem;
+	FOnRemoveWeaponItem OnRemoveWeaponItem;
 
 	// Widget
 	UPROPERTY(meta = (BindWidget))
@@ -65,8 +68,6 @@ public:
 	UPROPERTY()
 	UWeaponItemWidget *WeaponItem;
 
-	
-
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -74,7 +75,9 @@ public:
 	void InitEssentialData();
 	void RefreshInventory();
 	void FillEmptySlot();
-	
+	void AddEquipItem(APickUpItem* Item, UWeaponItemWidget* WidgetItem);
+	void RemoveEquipItem(UWeaponItemWidget *WidgetItem);
+
 	FEventReply OnMouseButtonDown(FGeometry MyGeometry, const FPointerEvent &MouseEvent);
 	void OnMouseEnter(FGeometry MyGeometry, const FPointerEvent &MouseEvent);
 	void OnMouseLeave(const FPointerEvent &MouseEvent);
