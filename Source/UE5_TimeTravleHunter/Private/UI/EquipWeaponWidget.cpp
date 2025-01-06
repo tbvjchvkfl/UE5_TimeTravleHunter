@@ -12,6 +12,7 @@
 // Engine
 #include "Components/WrapBox.h"
 #include "Components/WrapBoxSlot.h"
+#include "Components/PanelSlot.h"
 
 void UEquipWeaponWidget::InitializeEquipmenWidget()
 {
@@ -52,7 +53,6 @@ void UEquipWeaponWidget::RefreshInventory()
 			}
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(4, 10, FColor::Green, FString::Printf(TEXT("EquipWeaponInventory Size : %d"), EquipWeaponInventory.Num()));
 }
 
 void UEquipWeaponWidget::FillEmptySlot()
@@ -70,18 +70,17 @@ void UEquipWeaponWidget::FillEmptySlot()
 
 void UEquipWeaponWidget::AddEquipItem(APickUpItem *Item, UWeaponItemWidget *WidgetItem)
 {
-	for (int32 i = 0; i < WeaponItemInventory.Num(); i++)
+	for (int32 i = 0; i < EquipWeaponInventory.Num(); i++)
 	{
 		if (!InventoryComponent->GetRoomCheckingInventory()[i])
 		{
-			WeaponWrapPanel->AddChildToWrapBox(WidgetItem);
-			WeaponItemInventory[i] = WidgetItem;
-			EquipWeaponInventory[i] = Item;
 			OnAddEquipItem.Broadcast(i, Item);
-			return;
+
+			WeaponItemInventory[i] = WidgetItem;
+			EquipWeaponInventory.Add(Item);
+			WeaponWrapPanel->AddChildToWrapBox(WidgetItem);
 		}
 	}
-	
 }
 
 void UEquipWeaponWidget::RemoveEquipItem(UWeaponItemWidget *WidgetItem)
@@ -93,8 +92,8 @@ void UEquipWeaponWidget::RemoveEquipItem(UWeaponItemWidget *WidgetItem)
 			if (InventoryComponent->GetRoomCheckingInventory()[i])
 			{
 				WeaponWrapPanel->RemoveChild(WeaponItemInventory[i]);
-				WeaponItemInventory[i] = nullptr;
-				EquipWeaponInventory[i] = nullptr;
+				WeaponItemInventory.RemoveAt(i);
+				EquipWeaponInventory.RemoveAt(i);
 
 				OnRemoveWeaponItem.Broadcast(i);
 			}
