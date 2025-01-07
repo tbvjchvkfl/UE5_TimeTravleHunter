@@ -11,6 +11,7 @@ UInventoryComponent::UInventoryComponent()
 	CoinInventory = 0;
 	InventorySize = 35;
 	InventoryWidth = 10;
+	EquipInventorySize = 12;
 }
 
 void UInventoryComponent::BeginPlay()
@@ -52,11 +53,13 @@ void UInventoryComponent::InitializeInventory()
 void UInventoryComponent::InitilaizeEquipInventory()
 {
 	EquipInventory.Empty();
-	if (EquipInventory.IsEmpty())
+	RoomCheckingInventory.Empty();
+	if (RoomCheckingInventory.IsEmpty())
 	{
 		for (int32 i = 0; i < EquipInventorySize; i++)
 		{
 			EquipInventory.Add(nullptr);
+			RoomCheckingInventory.Add(false);
 		}
 	}
 }
@@ -106,6 +109,28 @@ void UInventoryComponent::DropItem(APickUpItem *Item)
 		{
 			DropItem = Item;
 		}
+	}
+}
+
+void UInventoryComponent::AddWeaponInventory(int32 InventoryIndex, APickUpItem *Item)
+{
+	for (int32 i = 0; i < RoomCheckingInventory.Num(); i++)
+	{
+		if (!RoomCheckingInventory[InventoryIndex])
+		{
+			EquipInventory[i] = Item;
+			RoomCheckingInventory[InventoryIndex] = true;
+			return;
+		}
+	}
+}
+
+void UInventoryComponent::RemoveWeaponInventory(int32 InventoryIndex)
+{
+	if (RoomCheckingInventory[InventoryIndex])
+	{
+		EquipInventory[InventoryIndex] = nullptr;
+		RoomCheckingInventory[InventoryIndex] = false;
 	}
 }
 
@@ -181,11 +206,12 @@ void UInventoryComponent::AddItem(APickUpItem *Items)
 
 void UInventoryComponent::AddWeapon(APickUpItem* Item)
 {
-	for (auto InventoryElem : EquipInventory)
+	for (int32 i = 0; i < RoomCheckingInventory.Num(); i++)
 	{
-		if (!InventoryElem)
+		if (!RoomCheckingInventory[i])
 		{
-			InventoryElem = Item->WeaponItemInfo;
+			EquipInventory[i] = Item;
+			RoomCheckingInventory[i] = true;
 			return;
 		}
 	}
