@@ -47,9 +47,12 @@ void UEquipWeaponWidget::RefreshInventory()
 			{
 				WeaponItem->InitializeWeaponItem(this, CurrentWeaponWidget, EquipWeaponInventory[i]);
 				WeaponItem->OnAddItemWidget.AddUObject(this, &UEquipWeaponWidget::AddEquipItem);
-				WeaponItem->OnRemoveItemWidget.AddUObject(this, &UEquipWeaponWidget::RemoveEquipItem);
+
 				WeaponItemInventory[i] = WeaponItem;
-				WeaponWrapPanel->AddChildToWrapBox(WeaponItem);
+				if (WeaponItemInventory[i]->GetVisibility() != ESlateVisibility::Collapsed)
+				{
+					WeaponWrapPanel->AddChildToWrapBox(WeaponItem);
+				}
 			}
 		}
 	}
@@ -68,51 +71,14 @@ void UEquipWeaponWidget::FillEmptySlot()
 	}
 }
 
-void UEquipWeaponWidget::AddEquipItem(APickUpItem *Item, UWeaponItemWidget *WidgetItem)
+void UEquipWeaponWidget::AddEquipItem(UWeaponItemWidget *Widget)
 {
-	for (int32 i = 0; i < EquipWeaponInventory.Num(); i++)
-	{
-		if (!InventoryComponent->GetRoomCheckingInventory()[i])
-		{
-			OnAddEquipItem.Broadcast(i, Item);
-
-			WeaponItemInventory[i] = WidgetItem;
-			EquipWeaponInventory.Add(Item);
-			WeaponWrapPanel->AddChildToWrapBox(WidgetItem);
-		}
-	}
-}
-
-void UEquipWeaponWidget::RemoveEquipItem(UWeaponItemWidget *WidgetItem)
-{
+	GEngine->AddOnScreenDebugMessage(40, 10, FColor::Green, FString("Visibility On"));
 	for (int32 i = 0; i < WeaponItemInventory.Num(); i++)
 	{
-		if (WeaponItemInventory[i] == WidgetItem)
+		if (WeaponItemInventory[i] == Widget)
 		{
-			if (InventoryComponent->GetRoomCheckingInventory()[i])
-			{
-				WeaponWrapPanel->RemoveChild(WeaponItemInventory[i]);
-				WeaponItemInventory.RemoveAt(i);
-				EquipWeaponInventory.RemoveAt(i);
-
-				OnRemoveWeaponItem.Broadcast(i);
-			}
-			return;
+			WeaponItemInventory[i]->SetVisibility(ESlateVisibility::Visible);
 		}
 	}
-}
-
-FEventReply UEquipWeaponWidget::OnMouseButtonDown(FGeometry MyGeometry, const FPointerEvent &MouseEvent)
-{
-	return FEventReply();
-}
-
-void UEquipWeaponWidget::OnMouseEnter(FGeometry MyGeometry, const FPointerEvent &MouseEvent)
-{
-	GEngine->AddOnScreenDebugMessage(0, 3, FColor::Green, FString("MouseEnter"));
-}
-
-void UEquipWeaponWidget::OnMouseLeave(const FPointerEvent &MouseEvent)
-{
-	GEngine->AddOnScreenDebugMessage(1, 3, FColor::Green, FString("MouseLeave"));
 }

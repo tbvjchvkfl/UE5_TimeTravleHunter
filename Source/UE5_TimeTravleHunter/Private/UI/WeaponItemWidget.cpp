@@ -12,7 +12,6 @@
 
 void UWeaponItemWidget::InitializeWeaponItem(UEquipWeaponWidget *EquipWidget, UCurrentWeaponWidget *CurWeaponWidget, APickUpItem *WeaponItem)
 {
-
 	if (EquipWidget && CurWeaponWidget && WeaponItem)
 	{
 		EquipWeaponWidget = EquipWidget;
@@ -39,10 +38,10 @@ FReply UWeaponItemWidget::NativeOnMouseButtonDown(const FGeometry &InGeometry, c
 	{
 		if (CurrentWeaponItem->CurEuipItem)
 		{
-			OnAddItemWidget.Broadcast(CurrentWeaponItem->CurEuipItem, this);
+			OnAddItemWidget.Broadcast(CurrentWeaponItem->PrevWidget);
 		}
-		CurrentWeaponItem->OnEquipWeapon.Broadcast(WeaponInfo);
-		OnRemoveItemWidget.Broadcast(this);
+		CurrentWeaponItem->OnEquipWeapon.Broadcast(WeaponInfo, this);
+		SetVisibility(ESlateVisibility::Collapsed);
 	}
 	return FReply::Handled();
 }

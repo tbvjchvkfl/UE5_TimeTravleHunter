@@ -26,7 +26,7 @@ void UCurrentWeaponWidget::AddWeapon()
 
 }
 
-void UCurrentWeaponWidget::EquipWeapon(APickUpItem *WeaponItem)
+void UCurrentWeaponWidget::EquipWeapon(APickUpItem *WeaponItem, UWeaponItemWidget *Widget)
 {
 	if (WeaponItem)
 	{
@@ -34,6 +34,7 @@ void UCurrentWeaponWidget::EquipWeapon(APickUpItem *WeaponItem)
 		EquipWeaponImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
 		EquipWeaponImage->SetBrushFromTexture(WeaponItem->GetItemTexture());
 		CurEuipItem = WeaponItem;
+		PrevWidget = Widget;
 		// 여기서 Player가 가지고 있는 Weapon에 정보 전달!!!
 	}
 }
