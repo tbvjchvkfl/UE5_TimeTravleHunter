@@ -13,8 +13,7 @@ class APickUpItem;
 class UCurrentWeaponWidget;
 class UEquipWeaponWidget;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAddItemWidget, APickUpItem *, UWeaponItemWidget *);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemoveItemWidget, UWeaponItemWidget *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnAddItemWidget, UWeaponItemWidget* );
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UWeaponItemWidget : public UUserWidget
@@ -25,7 +24,6 @@ public:
 	//=					- Variables -					   =
 	//======================================================
 	FOnAddItemWidget OnAddItemWidget;
-	FOnRemoveItemWidget OnRemoveItemWidget;
 
 	UPROPERTY(meta = (BindWidget))
 	USizeBox *WeaponSizeBox;

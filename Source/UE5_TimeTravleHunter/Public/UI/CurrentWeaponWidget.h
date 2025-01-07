@@ -9,10 +9,12 @@
 class UImage;
 class USizeBox;
 class UEquipWeaponWidget;
+class UWeaponItemWidget;
 class APickUpItem;
 class APlayerCharacter;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnEquipWeapon, APickUpItem *);
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEquipWeapon, APickUpItem *, UWeaponItemWidget *);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UCurrentWeaponWidget : public UUserWidget
@@ -42,12 +44,14 @@ public:
 	UPROPERTY()
 	APlayerCharacter *Player;
 
+	UPROPERTY()
+	UWeaponItemWidget *PrevWidget;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	void InitializeCurrentWeaponImage();
 	void AddWeapon();
-	void EquipWeapon(APickUpItem* WeaponItem);
+	void EquipWeapon(APickUpItem* WeaponItem, UWeaponItemWidget* Widget);
 	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
 	virtual void NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
 	virtual void NativeOnMouseLeave(const FPointerEvent &InMouseEvent);

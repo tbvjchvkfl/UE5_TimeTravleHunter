@@ -54,6 +54,9 @@ public:
 	TArray<UWeaponItemWidget *> WeaponItemInventory;
 
 	UPROPERTY()
+	TArray<bool> WeaponItemState;
+
+	UPROPERTY()
 	int32 EquipInventorySize;
 
 	UPROPERTY()
@@ -75,10 +78,5 @@ public:
 	void InitEssentialData();
 	void RefreshInventory();
 	void FillEmptySlot();
-	void AddEquipItem(APickUpItem* Item, UWeaponItemWidget* WidgetItem);
-	void RemoveEquipItem(UWeaponItemWidget *WidgetItem);
-
-	FEventReply OnMouseButtonDown(FGeometry MyGeometry, const FPointerEvent &MouseEvent);
-	void OnMouseEnter(FGeometry MyGeometry, const FPointerEvent &MouseEvent);
-	void OnMouseLeave(const FPointerEvent &MouseEvent);
+	void AddEquipItem(UWeaponItemWidget *Widget);
 };
