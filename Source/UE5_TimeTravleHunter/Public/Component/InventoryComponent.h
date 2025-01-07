@@ -30,37 +30,49 @@ public:
 	//======================================================
 	UInventoryComponent();
 	
-	FORCEINLINE TMap<FVector2D, APickUpItem *> GetItemInventory() { return ItemInventory; };
 	FORCEINLINE int32 GetCoinInventory() { return CoinInventory; };
-	FORCEINLINE TArray<AWeaponBase *> GetWeaponInventory() { return EquipInventory; };
+
+	FORCEINLINE TMap<FVector2D, APickUpItem *> GetItemInventory() { return ItemInventory; };
 	FORCEINLINE int32 GetItemInventorySize() { return InventorySize; };
-	FORCEINLINE int32 GetWeaponInventorySize() { return EquipInventorySize; };
 	FORCEINLINE int32 GetInventoryWidth() { return InventoryWidth; };
+
+	FORCEINLINE TArray<bool> GetRoomCheckingInventory() { return RoomCheckingInventory; };
+	FORCEINLINE TArray<APickUpItem *> GetWeaponInventory() { return EquipInventory; };
+	FORCEINLINE int32 GetWeaponInventorySize() { return EquipInventorySize; };
+
 	void CheckItem(APickUpItem *Item);
 	void AddtoInventory(FVector2D ItemPosition, APickUpItem *Item, bool ModifyState);
 	void RemoveFromInventory(FVector2D ItemPosition, bool ModifyState);
 	void DropItem(APickUpItem* Item);
+
+	void AddWeaponInventory(int32 InventoryIndex, APickUpItem *Item);
+	void RemoveWeaponInventory(int32 InventoryIndex);
 protected:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-	UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+
+
+	UPROPERTY(EditAnywhere, Category = "Inventory | Consumable")
 	int32 InventorySize;
 
-	UPROPERTY(EditAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "Inventory | Consumable")
 	int32 InventoryWidth;
 
-	UPROPERTY(VisibleAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, Category = "Inventory | Consumable")
 	TMap<FVector2D, APickUpItem *> ItemInventory;
 
-	UPROPERTY(VisibleAnywhere, Category = "Inventory | Property", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, Category = "Inventory | Consumable")
 	TMap<FVector2D, bool> InventoryState;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, Category = "Inventory | Coin")
 	int32 CoinInventory;
 
 	UPROPERTY(VisibleAnywhere, Category = "Inventory | Weapon")
-	TArray<AWeaponBase *> EquipInventory;
+	TArray<APickUpItem *> EquipInventory;
+
+	UPROPERTY(VisibleAnywhere, Category = "Inventory | Weapon")
+	TArray<bool> RoomCheckingInventory;
 
 	UPROPERTY(EditAnywhere, Category = "Inventory | Weapon")
 	int32 EquipInventorySize;
