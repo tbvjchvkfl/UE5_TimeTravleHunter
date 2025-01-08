@@ -58,7 +58,7 @@ void UInventoryComponent::InitilaizeEquipInventory()
 	{
 		for (int32 i = 0; i < EquipInventorySize; i++)
 		{
-			EquipInventory.Add(nullptr);
+			//EquipInventory.Add(nullptr);
 			RoomCheckingInventory.Add(false);
 		}
 	}
@@ -112,14 +112,14 @@ void UInventoryComponent::DropItem(APickUpItem *Item)
 	}
 }
 
-void UInventoryComponent::AddWeaponInventory(int32 InventoryIndex, APickUpItem *Item)
+void UInventoryComponent::AddWeaponInventory(APickUpItem *Item)
 {
+	EquipInventory.Add(Item);
 	for (int32 i = 0; i < RoomCheckingInventory.Num(); i++)
 	{
-		if (!RoomCheckingInventory[InventoryIndex])
+		if (!RoomCheckingInventory[i])
 		{
-			EquipInventory[i] = Item;
-			RoomCheckingInventory[InventoryIndex] = true;
+			RoomCheckingInventory[i] = true;
 			return;
 		}
 	}
@@ -127,9 +127,9 @@ void UInventoryComponent::AddWeaponInventory(int32 InventoryIndex, APickUpItem *
 
 void UInventoryComponent::RemoveWeaponInventory(int32 InventoryIndex)
 {
+	EquipInventory.RemoveAt(InventoryIndex);
 	if (RoomCheckingInventory[InventoryIndex])
 	{
-		EquipInventory[InventoryIndex] = nullptr;
 		RoomCheckingInventory[InventoryIndex] = false;
 	}
 }
@@ -206,11 +206,11 @@ void UInventoryComponent::AddItem(APickUpItem *Items)
 
 void UInventoryComponent::AddWeapon(APickUpItem* Item)
 {
+	EquipInventory.Add(Item);
 	for (int32 i = 0; i < RoomCheckingInventory.Num(); i++)
 	{
 		if (!RoomCheckingInventory[i])
 		{
-			EquipInventory[i] = Item;
 			RoomCheckingInventory[i] = true;
 			return;
 		}
