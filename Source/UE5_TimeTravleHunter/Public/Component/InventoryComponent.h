@@ -45,7 +45,7 @@ public:
 	void RemoveFromInventory(FVector2D ItemPosition, bool ModifyState);
 	void DropItem(APickUpItem* Item);
 
-	void AddWeaponInventory(int32 InventoryIndex, APickUpItem *Item);
+	void AddWeaponInventory(APickUpItem *Item);
 	void RemoveWeaponInventory(int32 InventoryIndex);
 protected:
 	//======================================================
