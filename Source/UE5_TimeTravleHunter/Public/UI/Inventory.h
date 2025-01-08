@@ -10,7 +10,9 @@ class UInventoryComponent;
 class APlayerCharacter;
 class UInventoryGrid;
 class UEquipWeaponWidget;
+class UCurrentWeaponWidget;
 class APickUpItem;
+class UImage;
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UInventory : public UUserWidget
@@ -32,6 +34,8 @@ public:
 	void DropItem(FVector2D Pos);
 	void RemoveItem(FVector2D Pos);
 	void AddItem(FVector2D Pos, APickUpItem* Item);
+	void RemoveWeaponItem(int32 Index);
+	void AddWeaponItem(APickUpItem *Item);
 protected:
 	//======================================================
 	//=					- Variables -					   =

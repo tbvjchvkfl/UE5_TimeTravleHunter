@@ -16,7 +16,7 @@ class UWeaponItemWidget;
 class UCurrentWeaponWidget;
 
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAddWeaponItem, int32, APickUpItem *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnAddWeaponItem, APickUpItem *);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemoveWeaponItem, int32);
 
 UCLASS()
@@ -27,10 +27,9 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-	FOnAddWeaponItem OnAddEquipItem;
+	FOnAddWeaponItem OnAddWeaponItem;
 	FOnRemoveWeaponItem OnRemoveWeaponItem;
 
-	// Widget
 	UPROPERTY(meta = (BindWidget))
 	UWrapBox *SlotWrapPanel;
 
@@ -79,4 +78,5 @@ public:
 	void RefreshInventory();
 	void FillEmptySlot();
 	void AddEquipItem(UWeaponItemWidget *Widget);
+	void RemoveEquipItem(UWeaponItemWidget *Widget);
 };
