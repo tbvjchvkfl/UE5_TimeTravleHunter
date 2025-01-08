@@ -14,6 +14,7 @@
 #include "Components/WrapBoxSlot.h"
 #include "Components/PanelSlot.h"
 
+
 void UEquipWeaponWidget::InitializeEquipmenWidget()
 {
 	CurrentWeaponWidget->InitializeCurrentWeaponImage();
@@ -29,7 +30,7 @@ void UEquipWeaponWidget::InitEssentialData()
 		InventoryComponent = Player->GetItemInventory();
 		EquipWeaponInventory = InventoryComponent->GetWeaponInventory();
 		EquipInventorySize = InventoryComponent->GetWeaponInventorySize();
-		WeaponItemInventory.SetNum(EquipInventorySize);
+		WeaponItemInventory.SetNum(EquipWeaponInventory.Num());
 	}
 }
 
@@ -42,18 +43,19 @@ void UEquipWeaponWidget::RefreshInventory()
 	{
 		if (EquipWeaponInventory[i])
 		{
-			WeaponItem = CreateWidget<UWeaponItemWidget>(GetOwningPlayer(), WeaponItemWidget);
-			if (WeaponItem)
+			if (!WeaponItemInventory[i])
 			{
-				WeaponItem->InitializeWeaponItem(this, CurrentWeaponWidget, EquipWeaponInventory[i]);
-				WeaponItem->OnAddItemWidget.AddUObject(this, &UEquipWeaponWidget::AddEquipItem);
-
-				WeaponItemInventory[i] = WeaponItem;
-				if (WeaponItemInventory[i]->GetVisibility() != ESlateVisibility::Collapsed)
+				WeaponItem = CreateWidget<UWeaponItemWidget>(GetOwningPlayer(), WeaponItemWidget);
+				if (WeaponItem)
 				{
-					WeaponWrapPanel->AddChildToWrapBox(WeaponItem);
+					WeaponItem->InitializeWeaponItem(this, CurrentWeaponWidget, EquipWeaponInventory[i]);
+					WeaponItem->OnAddItemWidget.AddUObject(this, &UEquipWeaponWidget::AddEquipItem);
+					WeaponItem->OnRemoveItemWidget.AddUObject(this, &UEquipWeaponWidget::RemoveEquipItem);
+
+					WeaponItemInventory[i] = WeaponItem;
 				}
 			}
+			WeaponWrapPanel->AddChildToWrapBox(WeaponItemInventory[i]);
 		}
 	}
 }
@@ -73,12 +75,20 @@ void UEquipWeaponWidget::FillEmptySlot()
 
 void UEquipWeaponWidget::AddEquipItem(UWeaponItemWidget *Widget)
 {
-	GEngine->AddOnScreenDebugMessage(40, 10, FColor::Green, FString("Visibility On"));
+	WeaponItemInventory.Add(Widget);
+	WeaponWrapPanel->AddChildToWrapBox(Widget);
+	OnAddWeaponItem.Broadcast(Widget->WeaponInfo);
+}
+
+void UEquipWeaponWidget::RemoveEquipItem(UWeaponItemWidget *Widget)
+{
 	for (int32 i = 0; i < WeaponItemInventory.Num(); i++)
 	{
 		if (WeaponItemInventory[i] == Widget)
 		{
-			WeaponItemInventory[i]->SetVisibility(ESlateVisibility::Visible);
+			WeaponItemInventory.RemoveAt(i);
+			WeaponWrapPanel->RemoveChildAt(i);
+			OnRemoveWeaponItem.Broadcast(i);
 		}
 	}
 }

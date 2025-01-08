@@ -36,12 +36,12 @@ FReply UWeaponItemWidget::NativeOnMouseButtonDown(const FGeometry &InGeometry, c
 {
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
-		if (CurrentWeaponItem->CurEuipItem)
+		if (CurrentWeaponItem->PrevWidget)
 		{
 			OnAddItemWidget.Broadcast(CurrentWeaponItem->PrevWidget);
 		}
-		CurrentWeaponItem->OnEquipWeapon.Broadcast(WeaponInfo, this);
-		SetVisibility(ESlateVisibility::Collapsed);
+		CurrentWeaponItem->OnEquipWeapon.Broadcast(this);
+		OnRemoveItemWidget.Broadcast(this);
 	}
 	return FReply::Handled();
 }

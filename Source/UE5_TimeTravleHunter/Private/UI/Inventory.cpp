@@ -5,13 +5,14 @@
 #include "UI/Inventory.h"
 #include "UI/InventoryGrid.h"
 #include "UI/EquipWeaponWidget.h"
+#include "UI/CurrentWeaponWidget.h"
 #include "Character/Player/PlayerCharacter.h"
 #include "Object/PickUpItem.h"
 #include "Component/InventoryComponent.h"
 
 // Engine
 #include "Blueprint/DragDropOperation.h"
-
+#include "Components/WrapBox.h"
 
 void UInventory::NativeConstruct()
 {
@@ -27,6 +28,8 @@ void UInventory::NativeConstruct()
 		GridWidget->InventoryGridInitialize();
 
 		EquipmentWidget->InitializeEquipmenWidget();
+		EquipmentWidget->OnAddWeaponItem.AddUObject(this, &UInventory::AddWeaponItem);
+		EquipmentWidget->OnRemoveWeaponItem.AddUObject(this, &UInventory::RemoveWeaponItem);
 	}
 }
 
@@ -46,4 +49,14 @@ void UInventory::AddItem(FVector2D Pos, APickUpItem *Item)
 {
 	InventoryComponent->GetItemInventory().Add(Pos, Item);
 	InventoryComponent->AddtoInventory(Pos, Item, false);
+}
+
+void UInventory::RemoveWeaponItem(int32 Index)
+{
+	InventoryComponent->RemoveWeaponInventory(Index);
+}
+
+void UInventory::AddWeaponItem(APickUpItem *Item)
+{
+	InventoryComponent->AddWeaponInventory(Item);
 }
