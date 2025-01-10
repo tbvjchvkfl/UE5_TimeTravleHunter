@@ -53,6 +53,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		SetMovementData();
 		FootIK(DeltaSeconds);
+		ResetBasicAttack();
 	}
 }
 
@@ -65,7 +66,7 @@ void UPlayerAnimInstance::InitAnimationInstance()
 	CanWalkStartSkip = false;
 	CanJogStartSkip = false;
 	bIsTurn = false;
-	ComboIndex = 0;
+	BasicAttackIndex = 0;
 }
 
 void UPlayerAnimInstance::SetMovementData()
@@ -396,44 +397,55 @@ void UPlayerAnimInstance::PlayAssasination()
 	}
 }
 
-void UPlayerAnimInstance::PlayComboAttack()
+void UPlayerAnimInstance::PlayEquipKatana()
 {
-	if (!ComboAnimArray.IsEmpty())
+	if (EquipKatana)
 	{
-		switch (ComboIndex)
+		Montage_Play(EquipKatana, 1.2f);
+	}
+}
+
+void UPlayerAnimInstance::PlayBasicAttack()
+{
+	if (!BasicAnimArray.IsEmpty())
+	{
+		switch (BasicAttackIndex)
 		{
 			case 0:
 			{
-				if (!Montage_IsPlaying(ComboAnimArray[0]))
+				if (!Montage_IsPlaying(BasicAnimArray[0]))
 				{
-					Montage_Play(ComboAnimArray[0], 1.0f);
-					ComboIndex++;
+					Montage_Play(BasicAnimArray[0], 1.0f);
 				}
+				PlayComboAttack();
+				BasicAttackIndex++;
 			}
 			break;
 			case 1:
 			{
-				if (!Montage_IsPlaying(ComboAnimArray[1]))
+				if (!Montage_IsPlaying(BasicAnimArray[1]))
 				{
-					if (Montage_IsPlaying(ComboAnimArray[0]))
+					if (Montage_GetPosition(BasicAnimArray[0]) > 0.6f)
 					{
-						Montage_Stop(0.2f, ComboAnimArray[0]);
+						Montage_Stop(0.2f, BasicAnimArray[0]);
+						Montage_Play(BasicAnimArray[1], 1.0f);
 					}
-					Montage_Play(ComboAnimArray[1], 1.0f);
-					ComboIndex++;
+					PlayComboAttack();
+					BasicAttackIndex++;
 				}
 			}
 			break;
 			case 2:
 			{
-				if (!Montage_IsPlaying(ComboAnimArray[2]))
+				if (!Montage_IsPlaying(BasicAnimArray[2]))
 				{
-					if (Montage_IsPlaying(ComboAnimArray[1]))
+					if (Montage_GetPosition(BasicAnimArray[1]) > 0.6f)
 					{
-						Montage_Stop(0.2f, ComboAnimArray[1]);
+						Montage_Stop(0.2f, BasicAnimArray[1]);
+						Montage_Play(BasicAnimArray[2], 1.0f);
 					}
-					Montage_Play(ComboAnimArray[2], 1.0f);
-					ComboIndex = 0;
+					PlayComboAttack();
+					BasicAttackIndex = 0;
 				}
 			}
 			break;
@@ -445,13 +457,45 @@ void UPlayerAnimInstance::PlayComboAttack()
 	}
 }
 
-void UPlayerAnimInstance::ResetComboAttack()
+void UPlayerAnimInstance::PlayComboAttack()
 {
-	if (ComboIndex == 0 || ComboIndex == 1)
+	if (BasicAttackIndex == 0)
 	{
-		if (!Montage_IsPlaying(ComboAnimArray[0]) && !Montage_IsPlaying(ComboAnimArray[1]))
+		if (Montage_IsPlaying(BasicAnimArray[0]) && OwnerController-> bIsSpecialAttack)
 		{
-			ComboIndex = 0;
+			Montage_Stop(0.2f, BasicAnimArray[0]);
+			Montage_Stop(0.2f, SpecialAnimArray[0]);
+			Montage_Play(CombineAttackStruct.CombineKatanaAttack_0, 1.0f);
+		}
+	}
+	if (BasicAttackIndex == 1)
+	{
+		if (Montage_IsPlaying(BasicAnimArray[1]) && OwnerController->bIsSpecialAttack)
+		{
+			Montage_Stop(0.2f, BasicAnimArray[1]);
+			Montage_Stop(0.2f, SpecialAnimArray[0]);
+			Montage_Play(CombineAttackStruct.CombineKatanaAttack_1, 1.0f);
+		}
+	}
+	if (BasicAttackIndex == 2)
+	{
+		if (Montage_IsPlaying(BasicAnimArray[2]) && OwnerController->bIsSpecialAttack)
+		{
+			Montage_Stop(0.2f, BasicAnimArray[2]);
+			Montage_Stop(0.2f, SpecialAnimArray[0]);
+			Montage_Play(CombineAttackStruct.CombineKatanaAttack_2, 1.0f);
+		}
+	}
+	BasicAttackIndex = 0;
+}
+
+void UPlayerAnimInstance::ResetBasicAttack()
+{
+	if (BasicAttackIndex == 0 || BasicAttackIndex == 1)
+	{
+		if (!Montage_IsPlaying(BasicAnimArray[0]) && !Montage_IsPlaying(BasicAnimArray[1]))
+		{
+			BasicAttackIndex = 0;
 		}
 	}
 }
@@ -466,15 +510,16 @@ void UPlayerAnimInstance::SpecialAttackHold()
 
 void UPlayerAnimInstance::PlaySpecialAttack(float ButtonElapsedTime)
 {
+	OwnerController->bIsSpecialAttack = true;
 	if (ButtonElapsedTime < 1.0f)
 	{
 		Montage_Play(SpecialAnimArray[0], 1.0f);
 	}
-	if (ButtonElapsedTime >= 1.0f && ButtonElapsedTime < 3.0f)
+	if (ButtonElapsedTime >= 1.0f && ButtonElapsedTime < 2.0f)
 	{
 		Montage_Play(SpecialAnimArray[1], 1.0f);
 	}
-	if (ButtonElapsedTime >= 3.0f)
+	if (ButtonElapsedTime >= 2.0f)
 	{
 		Montage_Play(SpecialAnimArray[2], 1.0f);
 	}
