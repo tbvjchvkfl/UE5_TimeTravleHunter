@@ -66,6 +66,25 @@ struct FST_MovementAnim
 	UAnimSequenceBase *PivotTurn_Right180;
 };
 
+USTRUCT()
+struct FCombineAttackStruct
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Combine Attack")
+	UAnimMontage *CombineKatanaAttack_0;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Combine Attack")
+	UAnimMontage *CombineKatanaAttack_1;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Combine Attack")
+	UAnimMontage *CombineKatanaAttack_2;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Combine Attack")
+	UAnimMontage *CombineKatanaAttack_3;
+
+};
+
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UPlayerAnimInstance : public UAnimInstance
 {
@@ -93,13 +112,20 @@ public:
 	UAnimMontage *Assasination_Anim;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Action")
+	UAnimMontage *EquipKatana;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Action")
 	UAnimMontage *Hold_Anim;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
 	TArray<UAnimMontage *> SpecialAnimArray;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
-	TArray<UAnimMontage *> ComboAnimArray;
+	TArray<UAnimMontage *> BasicAnimArray;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
+	FCombineAttackStruct CombineAttackStruct;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -109,8 +135,10 @@ public:
 	void PlayMantling();
 	void PlayAssasination();
 
+	void PlayEquipKatana();
+	void PlayBasicAttack();
 	void PlayComboAttack();
-	void ResetComboAttack();
+	void ResetBasicAttack();
 	void SpecialAttackHold();
 	void PlaySpecialAttack(float ButtonElapsedTime);
 
@@ -186,7 +214,7 @@ private:
 	float PlayRate;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterState|Locomotion SubState", meta = (AllowPrivateAccess = "true"))
-	int32 ComboIndex;
+	int32 BasicAttackIndex;
 
 	// Character AnimSequence Data
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CharacterState|Character AnimSequence Data", meta = (AllowPrivateAccess = "true"))
