@@ -53,7 +53,15 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		SetMovementData();
 		FootIK(DeltaSeconds);
-		ResetBasicAttack();
+		if (OwnerController->bIsBasicAttack)
+		{
+			GEngine->AddOnScreenDebugMessage(0, 10, FColor::Green, FString("bIsBasicAttack : True"));
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(0, 10, FColor::Green, FString("bIsBasicAttack : False"));
+		}
+		GEngine->AddOnScreenDebugMessage(1, 10, FColor::Green, FString::Printf(TEXT("BasicAttackIndex : %d"), BasicAttackIndex));
 	}
 }
 
@@ -407,96 +415,101 @@ void UPlayerAnimInstance::PlayEquipKatana()
 
 void UPlayerAnimInstance::PlayBasicAttack()
 {
-	if (!BasicAnimArray.IsEmpty())
+	if (!BasicKatanaAnimArray.IsEmpty())
 	{
+		OwnerController->bIsBasicAttack = true;
 		switch (BasicAttackIndex)
 		{
 			case 0:
 			{
-				if (!Montage_IsPlaying(BasicAnimArray[0]))
-				{
-					Montage_Play(BasicAnimArray[0], 1.0f);
-				}
-				PlayComboAttack();
-				BasicAttackIndex++;
+				PlayFirstAttack();
+				ResetBasicAttack(0);
 			}
 			break;
 			case 1:
 			{
-				if (!Montage_IsPlaying(BasicAnimArray[1]))
-				{
-					if (Montage_GetPosition(BasicAnimArray[0]) > 0.6f)
-					{
-						Montage_Stop(0.2f, BasicAnimArray[0]);
-						Montage_Play(BasicAnimArray[1], 1.0f);
-					}
-					PlayComboAttack();
-					BasicAttackIndex++;
-				}
+				PlayMiddleAttack();
+				ResetBasicAttack(1);
 			}
 			break;
 			case 2:
 			{
-				if (!Montage_IsPlaying(BasicAnimArray[2]))
-				{
-					if (Montage_GetPosition(BasicAnimArray[1]) > 0.6f)
-					{
-						Montage_Stop(0.2f, BasicAnimArray[1]);
-						Montage_Play(BasicAnimArray[2], 1.0f);
-					}
-					PlayComboAttack();
-					BasicAttackIndex = 0;
-				}
+				PlayLastAttack();
+				ResetBasicAttack(2);
 			}
 			break;
-			default:
-			{
-				break;
-			}
 		}
 	}
 }
 
-void UPlayerAnimInstance::PlayComboAttack()
+void UPlayerAnimInstance::PlayFirstAttack()
 {
 	if (BasicAttackIndex == 0)
 	{
-		if (Montage_IsPlaying(BasicAnimArray[0]) && OwnerController-> bIsSpecialAttack)
+		if (OwnerController->bIsSpecialAttack && Montage_IsPlaying(SpecialKatanaAnimArray[0]))
 		{
-			Montage_Stop(0.2f, BasicAnimArray[0]);
-			Montage_Stop(0.2f, SpecialAnimArray[0]);
-			Montage_Play(CombineAttackStruct.CombineKatanaAttack_0, 1.0f);
-		}
-	}
-	if (BasicAttackIndex == 1)
-	{
-		if (Montage_IsPlaying(BasicAnimArray[1]) && OwnerController->bIsSpecialAttack)
-		{
-			Montage_Stop(0.2f, BasicAnimArray[1]);
-			Montage_Stop(0.2f, SpecialAnimArray[0]);
-			Montage_Play(CombineAttackStruct.CombineKatanaAttack_1, 1.0f);
-		}
-	}
-	if (BasicAttackIndex == 2)
-	{
-		if (Montage_IsPlaying(BasicAnimArray[2]) && OwnerController->bIsSpecialAttack)
-		{
-			Montage_Stop(0.2f, BasicAnimArray[2]);
-			Montage_Stop(0.2f, SpecialAnimArray[0]);
-			Montage_Play(CombineAttackStruct.CombineKatanaAttack_2, 1.0f);
-		}
-	}
-	BasicAttackIndex = 0;
-}
-
-void UPlayerAnimInstance::ResetBasicAttack()
-{
-	if (BasicAttackIndex == 0 || BasicAttackIndex == 1)
-	{
-		if (!Montage_IsPlaying(BasicAnimArray[0]) && !Montage_IsPlaying(BasicAnimArray[1]))
-		{
+			Montage_Stop(0.2f, SpecialKatanaAnimArray[0]);
+			Montage_Play(CombineAttackStruct.CombineSpecialKatanaAttack_3, 1.0f);
 			BasicAttackIndex = 0;
 		}
+		if (OwnerController->bIsSpecialAttack && Montage_IsPlaying(SpecialKatanaAnimArray[1]))
+		{
+			Montage_Stop(0.2f, SpecialKatanaAnimArray[1]);
+			Montage_Play(CombineAttackStruct.CombineSpecialKatanaAttack_4, 1.0f);
+			BasicAttackIndex = 0;
+		}
+		if (!Montage_IsPlaying(BasicKatanaAnimArray[0]) && !OwnerController->bIsSpecialAttack)
+		{
+			Montage_Play(BasicKatanaAnimArray[0], 1.0f);
+			BasicAttackIndex++;
+		}
+	}
+}
+
+void UPlayerAnimInstance::PlayMiddleAttack()
+{
+	if (BasicAttackIndex == 1)
+	{
+		if (Montage_GetPosition(BasicKatanaAnimArray[0]) > 0.6f)
+		{
+			Montage_Stop(0.2f, BasicKatanaAnimArray[0]);
+			Montage_Play(BasicKatanaAnimArray[1], 1.0f);
+			BasicAttackIndex++;
+		}
+	}
+}
+
+void UPlayerAnimInstance::PlayLastAttack()
+{
+	if (BasicAttackIndex == 2)
+	{
+		if (Montage_GetPosition(BasicKatanaAnimArray[1]) > 0.6f)
+		{
+			Montage_Stop(0.2f, BasicKatanaAnimArray[1]);
+			Montage_Play(BasicKatanaAnimArray[2], 1.0f);
+			BasicAttackIndex = 0;
+		}
+	}
+}
+
+void UPlayerAnimInstance::ResetBasicAttack(int32 AnimIndex)
+{
+	if (Montage_IsPlaying(BasicKatanaAnimArray[AnimIndex]))
+	{
+		GetWorld()->GetTimerManager().SetTimer(BasicAttackTimer, [this]()
+			{
+				OwnerController->bIsBasicAttack = false;
+				OwnerController->bIsSpecialAttack = false;
+				if (BasicAttackIndex == 1 || BasicAttackIndex == 2)
+				{
+					if (!Montage_IsPlaying(BasicKatanaAnimArray[0]) && !Montage_IsPlaying(BasicKatanaAnimArray[1]))
+					{
+						BasicAttackIndex = 0;
+					}
+				}
+				GetWorld()->GetTimerManager().ClearTimer(BasicAttackTimer);
+			}, 
+			BasicKatanaAnimArray[AnimIndex]->GetPlayLength(), false);
 	}
 }
 
@@ -513,14 +526,59 @@ void UPlayerAnimInstance::PlaySpecialAttack(float ButtonElapsedTime)
 	OwnerController->bIsSpecialAttack = true;
 	if (ButtonElapsedTime < 1.0f)
 	{
-		Montage_Play(SpecialAnimArray[0], 1.0f);
+		if (OwnerController->bIsBasicAttack && BasicAttackIndex == 1)
+		{
+			if (Montage_IsPlaying(BasicKatanaAnimArray[0]))
+			{
+				Montage_Stop(0.2f, BasicKatanaAnimArray[0]);
+				Montage_Stop(0.2f, SpecialKatanaAnimArray[0]);
+				Montage_Play(CombineAttackStruct.CombineSpecialKatanaAttack_0, 1.0f);
+			}
+		}
+		else if (OwnerController->bIsBasicAttack && BasicAttackIndex == 2)
+		{
+			if (Montage_IsPlaying(BasicKatanaAnimArray[1]))
+			{
+				Montage_Stop(0.2f, BasicKatanaAnimArray[1]);
+				Montage_Stop(0.2f, SpecialKatanaAnimArray[0]);
+				Montage_Play(CombineAttackStruct.CombineSpecialKatanaAttack_1, 1.0f);
+			}
+		}
+		else if (OwnerController->bIsBasicAttack && BasicAttackIndex == 0)
+		{
+			if (Montage_IsPlaying(BasicKatanaAnimArray[2]))
+			{
+				Montage_Stop(0.2f, BasicKatanaAnimArray[2]);
+				Montage_Stop(0.2f, SpecialKatanaAnimArray[0]);
+				Montage_Play(CombineAttackStruct.CombineSpecialKatanaAttack_2, 1.0f);
+			}
+		}
+		else
+		{
+			Montage_Play(SpecialKatanaAnimArray[0], 1.0f);
+		}
+		ResetSpecialAttack(0);
 	}
 	if (ButtonElapsedTime >= 1.0f && ButtonElapsedTime < 2.0f)
 	{
-		Montage_Play(SpecialAnimArray[1], 1.0f);
+		Montage_Play(SpecialKatanaAnimArray[1], 1.0f);
+		ResetSpecialAttack(1);
 	}
 	if (ButtonElapsedTime >= 2.0f)
 	{
-		Montage_Play(SpecialAnimArray[2], 1.0f);
+		Montage_Play(SpecialKatanaAnimArray[2], 1.0f);
+		ResetSpecialAttack(2);
 	}
+}
+
+void UPlayerAnimInstance::ResetSpecialAttack(int32 AnimIndex)
+{
+	GetWorld()->GetTimerManager().SetTimer(BasicAttackTimer, [this]()
+		{
+			OwnerController->bIsBasicAttack = false;
+			OwnerController->bIsSpecialAttack = false;
+			BasicAttackIndex = 0;
+			GetWorld()->GetTimerManager().ClearTimer(BasicAttackTimer);
+		},
+		SpecialKatanaAnimArray[AnimIndex]->GetPlayLength(), false);
 }
