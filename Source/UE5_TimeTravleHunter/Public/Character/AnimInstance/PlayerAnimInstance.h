@@ -72,17 +72,19 @@ struct FCombineAttackStruct
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Combine Attack")
-	UAnimMontage *CombineKatanaAttack_0;
+	UAnimMontage *CombineSpecialKatanaAttack_0;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Combine Attack")
-	UAnimMontage *CombineKatanaAttack_1;
+	UAnimMontage *CombineSpecialKatanaAttack_1;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Combine Attack")
-	UAnimMontage *CombineKatanaAttack_2;
+	UAnimMontage *CombineSpecialKatanaAttack_2;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Combine Attack")
-	UAnimMontage *CombineKatanaAttack_3;
+	UAnimMontage *CombineSpecialKatanaAttack_3;
 
+	UPROPERTY(EditAnywhere, Category = "Animation | Combine Attack")
+	UAnimMontage *CombineSpecialKatanaAttack_4;
 };
 
 UCLASS()
@@ -118,14 +120,25 @@ public:
 	UAnimMontage *Hold_Anim;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
-	TArray<UAnimMontage *> SpecialAnimArray;
+	TArray<UAnimMontage *> BasicKatanaAnimArray;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
-	TArray<UAnimMontage *> BasicAnimArray;
+	TArray<UAnimMontage *> SpecialKatanaAnimArray;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
+	TArray<UAnimMontage *> BasicSpearAnimArray;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
+	TArray<UAnimMontage *> SpecialSpearAnimArray;
+
+	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
+	TArray<UAnimMontage *> BasicBowAnimArray;
 
 	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
 	FCombineAttackStruct CombineAttackStruct;
 
+	UPROPERTY()
+	FTimerHandle BasicAttackTimer;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -137,10 +150,13 @@ public:
 
 	void PlayEquipKatana();
 	void PlayBasicAttack();
-	void PlayComboAttack();
-	void ResetBasicAttack();
+	void PlayFirstAttack();
+	void PlayMiddleAttack();
+	void PlayLastAttack();
+	void ResetBasicAttack(int32 AnimIndex);
 	void SpecialAttackHold();
 	void PlaySpecialAttack(float ButtonElapsedTime);
+	void ResetSpecialAttack(int32 AnimIndex);
 
 
 private:
@@ -282,4 +298,6 @@ private:
 	void FootIK(float DeltaSecond);
 	float CapsuleDistance(FName SocketName);
 	TTuple<float, FVector> FootTrace(FName SocketName);
+
+	
 };
