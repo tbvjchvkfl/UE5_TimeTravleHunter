@@ -82,6 +82,95 @@ Contents
   </code>
 </pre>
 
+> - ### FootIK ###
+> - 라인트레이스를 이용하여 PlayerCharacter의 골반에서 바닥까지의 거리와 발에서 바닥까지의 거리를 구해주었고, 블루프린트의 Transform Bone노드와 LegIK노드를 사용하여 골반과 발의 위치를 조정해주었습니다.
+> - FMath::FInterpTo함수를 사용하여 골반과 발의 위치가 부드럽게 변경될 수 있도록 보간해주었습니다.
+> - 경사로에 서있을 때, 발이 땅에 묻히는 현상을 해결하기 위해 UKismetMathLibrary::DegAtan2함수를 사용하여 회전해야하는 각도를 계산해주었고, RInterpTo함수를 사용하여 보간해주었습니다.
+<pre>
+  <code>
+    void UPlayerAnimInstance::FootIK(float DeltaSecond)
+    {
+    	if (!bIsInAir)
+    	{
+    		float Foot_L = CapsuleDistance("ik_foot_l");
+    		float Foot_R = CapsuleDistance("ik_foot_r");
+    
+    		if (Foot_L != 0.0f || Foot_R != 0.0f)
+    		{
+    			const float PelvisTargetDisitance = Foot_L >= Foot_R ? Foot_L : Foot_R;
+    
+    			Pelvis = FMath::FInterpTo(Pelvis, (PelvisTargetDisitance - 100.0f) * -1.0f, DeltaSecond, CurrentInterpSpeed);
+    
+    			TTuple<float, FVector> FootTrace_L = FootTrace("ik_foot_l");
+    			TTuple<float, FVector> FootTrace_R = FootTrace("ik_foot_r");
+    
+    			const float Distance_L = FootTrace_L.Get<0>();
+    			const FVector FootLVector = FootTrace_L.Get<1>();
+    			const FRotator MakeLRot(UKismetMathLibrary::DegAtan2(FootLVector.X, FootLVector.Z) * -1.0f, 0.0, UKismetMathLibrary::DegAtan2(FootLVector.Y, FootLVector.Z));
+    
+    			L_FootIK = FMath::FInterpTo(L_FootIK, (Distance_L - 110.0f) / -45.0f, DeltaSecond, CurrentInterpSpeed);
+    			L_FootRotation = FMath::RInterpTo(L_FootRotation, MakeLRot, DeltaSecond, CurrentInterpSpeed);
+    
+    			const float Distance_R = FootTrace_R.Get<0>();
+    			const FVector FootRVector = FootTrace_R.Get<1>();
+    			const FRotator MakeRRot(UKismetMathLibrary::DegAtan2(FootRVector.X, FootRVector.Z) * -1.0f, 0.0f, UKismetMathLibrary::DegAtan2(FootRVector.Y, FootRVector.Z));
+    
+    			R_FootIK = FMath::FInterpTo(R_FootIK, (Distance_R - 110.0f) / -45.0f, DeltaSecond, CurrentInterpSpeed);
+    			R_FootRotation = FMath::RInterpTo(R_FootRotation, MakeRRot, DeltaSecond, CurrentInterpSpeed);
+    		}
+    	}
+    	else
+    	{
+    		L_FootIK = FMath::FInterpTo(L_FootIK, 0.0f, DeltaSecond, CurrentInterpSpeed);
+    		L_FootRotation = FMath::RInterpTo(L_FootRotation, FRotator::ZeroRotator, DeltaSecond, CurrentInterpSpeed);
+    
+    		R_FootIK = FMath::FInterpTo(R_FootIK, 0.0f, DeltaSecond, CurrentInterpSpeed);
+    		R_FootRotation = FMath::RInterpTo(R_FootRotation, FRotator::ZeroRotator, DeltaSecond, CurrentInterpSpeed);
+    	}
+    }
+    
+    float UPlayerAnimInstance::CapsuleDistance(FName SocketName)
+    {
+    	FVector MeshLocation = OwnerCharacter->GetMesh()->GetComponentLocation();
+    	FVector PelvisLocation = MeshLocation + FVector(0.0f, 0.0f, 98.0f);
+    
+    	FVector SocketLocation = OwnerCharacter->GetMesh()->GetSocketLocation(SocketName);
+    	FVector StartPos = FVector(SocketLocation.X, SocketLocation.Y, PelvisLocation.Z);
+    	FVector EndPos = FVector(StartPos - FVector(0.0f, 0.0f, 151.0f));
+    
+    	FHitResult PelvisHit;
+    	FCollisionQueryParams PelvisCollisionParams;
+    	PelvisCollisionParams.AddIgnoredActor(OwnerCharacter);
+    
+    
+    	if (GetWorld()->LineTraceSingleByChannel(PelvisHit, StartPos, EndPos, ECollisionChannel::ECC_Visibility, PelvisCollisionParams))
+    	{
+    		return PelvisHit.Distance;
+    	}
+    
+    	return 0.0f;
+    }
+    
+    TTuple<float, FVector> UPlayerAnimInstance::FootTrace(FName SocketName)
+    {
+    	const FVector FootLocation = OwnerCharacter->GetMesh()->GetSocketLocation(SocketName);
+    	const FVector RootBoneLocation = OwnerCharacter->GetMesh()->GetSocketLocation("root");
+    
+    	FHitResult IKHit;
+    	FVector StartPos = FVector(FootLocation.X, FootLocation.Y, RootBoneLocation.Z + 105.0f);
+    	FVector EndPos = StartPos - FVector(0.0f, 0.0f, 105.0f);
+    	FCollisionQueryParams IKColParam;
+    	IKColParam.AddIgnoredActor(OwnerCharacter);
+    
+    	if (GetWorld()->LineTraceSingleByChannel(IKHit, StartPos, EndPos, ECollisionChannel::ECC_Visibility, IKColParam))
+    	{
+    		return MakeTuple(IKHit.Distance, IKHit.Normal);
+    	}
+    
+    	return MakeTuple(999.0f, FVector::ZeroVector);
+    }
+  </code>
+</pre>
 
 > - ### Traversal System ###
 > - 라인 트레이스를 이용하여 파쿠르가 가능한 벽이라면 벽의 높이를 체크한 후 Vaulting과 Climbing으로 나누어 몽타주가 실행되게 해주었습니다.
@@ -315,6 +404,5 @@ Contents
   </code>
 </pre>
 
-> - ### FootIK ###
-> - 
+
 
