@@ -9,12 +9,19 @@
 class UButton;
 class UScrollBox;
 class UTextBlock;
-class APlayerCharacter;
-class UInventoryComponent;
-class UEquipmentSlot;
-class UEquipmentContents;
 class UCanvasPanel;
 class UBorder;
+class APlayerCharacter;
+class UInventoryComponent;
+class UWeaponComponent;
+class UEquipmentSlot;
+class UEquipmentContents;
+class APickUpItem;
+
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnEquipWeapon, UEquipmentSlot *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnAddWeaponItem, APickUpItem *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemoveWeaponItem, int32);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UEquipment : public UUserWidget
@@ -24,6 +31,10 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	FOnEquipWeapon OnEquipWeapon;
+	FOnAddWeaponItem OnAddWeaponItem;
+	FOnRemoveWeaponItem OnRemoveWeaponItem;
+
 	UPROPERTY(meta = (BindWidget))
 	UCanvasPanel *MainWeaponCanvas;
 
@@ -58,22 +69,40 @@ public:
 	UTextBlock *WeaponDescription;
 
 	UPROPERTY(EditAnywhere, Category = "Equipment | Widget")
-	TSubclassOf<UEquipmentSlot> EquipmentSlotWidget;
-
-	UPROPERTY(EditAnywhere, Category = "Equipment | Widget")
 	TSubclassOf<UEquipmentContents> EquipmentContentsWidget;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
+	FORCEINLINE UEquipmentSlot *GetMainWeaponSlot()const { return MainWeaponSlot; };
+	FORCEINLINE UEquipmentSlot *GetSubWeaponSlot()const { return SubWeaponSlot; };
+	FORCEINLINE UEquipmentSlot *GetRangedWeaponSlot()const { return RangedWeaponSlot; };
+	FORCEINLINE bool GetbIsButtonActiveMain()const { return bIsActiveMainWeapon_BTN; };
+	FORCEINLINE bool GetbIsButtonActiveSub()const { return bIsActiveSubWeapon_BTN; };
+	FORCEINLINE bool GetbIsButtonActiveRanged()const { return bIsActiveRangedWeapon_BTN; };
+
 	void InitializeEquipment();
+
 private:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
 	APlayerCharacter *Player;
 	UInventoryComponent *InventoryComponent;
-	UEquipmentSlot *EquipmentSlot;
+	UWeaponComponent *WeaponComponent;
 	UEquipmentContents *EquipmentContents;
+	UEquipmentSlot *MainWeaponSlot;
+	UEquipmentSlot *SubWeaponSlot;
+	UEquipmentSlot *RangedWeaponSlot;
+
+	UPROPERTY(EditAnywhere, Category = "Equipment | Property", meta = (AllowPrivateAccess = "true"))
+	FVector2D ItemListSize;
+
+	UPROPERTY(EditAnywhere, Category = "Equipment | Property", meta = (AllowPrivateAccess = "true"))
+	FVector2D ItemListPos;
+
+	bool bIsActiveMainWeapon_BTN;
+	bool bIsActiveSubWeapon_BTN;
+	bool bIsActiveRangedWeapon_BTN;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -83,4 +112,15 @@ private:
 	void OnSubWeaponClicked();
 	UFUNCTION()
 	void OnRangedWeaponClicked();
+
+	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
+
+	void ButtonInteraction(UCanvasPanel* InCanvas, UBorder *InBorder);
+	void RemoveItemListWIdget(UCanvasPanel *InCanvas);
+	bool CanCheckCreateWidget(UCanvasPanel *InCanvas);
+	void EquipWeaponItem(UEquipmentSlot *SlotWidget);
+	void SetButtonStyle(UEquipmentSlot *SlotWidget, UButton *ToButton);
+	void EquipMainWeapon();
+	void EquipSubWeapon();
+	void EquipRangedWeapon();
 };
