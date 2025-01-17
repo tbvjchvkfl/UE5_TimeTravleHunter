@@ -68,6 +68,9 @@ FReply UEquipment::NativeOnMouseButtonDown(const FGeometry &InGeometry, const FP
 	RemoveItemListWIdget(MainWeaponCanvas);
 	RemoveItemListWIdget(SubWeaponCanvas);
 	RemoveItemListWIdget(RangedWeaponCanvas);
+	bIsActiveMainWeapon_BTN = false;
+	bIsActiveSubWeapon_BTN = false;
+	bIsActiveRangedWeapon_BTN = false;
 	return FReply::Handled();
 }
 
@@ -81,11 +84,16 @@ void UEquipment::ButtonInteraction(UCanvasPanel *InCanvas, UBorder *InBorder)
 			if (EquipmentContents)
 			{
 				EquipmentContents->InitializeEquipmentContents(this);
-				auto SlotPanel = InCanvas->AddChildToCanvas(EquipmentContents);
-				if (auto ButtonSlot = Cast<UCanvasPanelSlot>(InBorder->Slot))
+				EquipmentContents->OnAddWeaponWidget.AddUObject(this, &UEquipment::AddWeaponItem);
+				EquipmentContents->OnRemoveWeaponWidget.AddUObject(this, &UEquipment::RemoveWeaponItem);
+
+				if (auto SlotPanel = InCanvas->AddChildToCanvas(EquipmentContents))
 				{
-					SlotPanel->SetSize(FVector2D(ItemListSize.X, ItemListSize.Y));
-					SlotPanel->SetPosition(FVector2D(ButtonSlot->GetPosition().X + ItemListPos.X, ButtonSlot->GetPosition().Y + ItemListPos.Y));
+					if (auto ButtonSlot = Cast<UCanvasPanelSlot>(InBorder->Slot))
+					{
+						SlotPanel->SetSize(FVector2D(ItemListSize.X, ItemListSize.Y));
+						SlotPanel->SetPosition(FVector2D(ButtonSlot->GetPosition().X + ItemListPos.X, ButtonSlot->GetPosition().Y + ItemListPos.Y));
+					}
 				}
 			}
 		}
@@ -122,19 +130,19 @@ bool UEquipment::CanCheckCreateWidget(UCanvasPanel *InCanvas)
 
 void UEquipment::EquipWeaponItem(UEquipmentSlot *SlotWidget)
 {
-	if (bIsActiveMainWeapon_BTN)
+	if (bIsActiveMainWeapon_BTN && SlotWidget)
 	{
 		MainWeaponSlot = SlotWidget;
 		SetButtonStyle(MainWeaponSlot, MainWeaponButton);
 		EquipMainWeapon();
 	}
-	if (bIsActiveSubWeapon_BTN)
+	if (bIsActiveSubWeapon_BTN && SlotWidget)
 	{
 		SubWeaponSlot = SlotWidget;
 		SetButtonStyle(SubWeaponSlot, SubWeaponButton);
 		EquipSubWeapon();
 	}
-	if (bIsActiveRangedWeapon_BTN)
+	if (bIsActiveRangedWeapon_BTN && SlotWidget)
 	{
 		RangedWeaponSlot = SlotWidget;
 		SetButtonStyle(RangedWeaponSlot, RangedWeaponButton);
@@ -236,4 +244,21 @@ void UEquipment::EquipRangedWeapon()
 			break;
 		}
 	}
+}
+
+void UEquipment::AddWeaponItem(UEquipmentSlot *SlotWidget)
+{
+	if (SlotWidget->GetWeaponItem())
+	{
+		OnAddWeaponItem.Broadcast(SlotWidget->GetWeaponItem());
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(93, 3, FColor::Green, FString("Item Is Null!!"));
+	}
+}
+
+void UEquipment::RemoveWeaponItem(UEquipmentSlot *SlotWidget, int32 ItemIndex)
+{
+	OnRemoveWeaponItem.Broadcast(ItemIndex);
 }

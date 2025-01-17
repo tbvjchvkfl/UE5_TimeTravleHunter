@@ -12,12 +12,44 @@
 
 void UEquipmentContents::InitializeEquipmentContents(UEquipment* EquipmentWidget)
 {
+	if (EquipmentWidget)
+	{
+		EquipWidget = EquipmentWidget;
+		MainWeaponSlot = EquipmentWidget->GetMainWeaponSlot();
+		SubWeaponSlot = EquipmentWidget->GetSubWeaponSlot();
+		RangedWeaponSlot = EquipmentWidget->GetRangedWeaponSlot();
+		bIsMainButtonState = EquipmentWidget->GetbIsButtonActiveMain();
+		bIsSubButtonState = EquipmentWidget->GetbIsButtonActiveSub();
+		bIsRangedButtonState = EquipmentWidget->GetbIsButtonActiveRanged();
+	}
 	RefreshEquipmentSlot();
-	EquipWidget = EquipmentWidget;
-	InventoryComponent->OnInventoryUpdate.AddUObject(this, &UEquipmentContents::RefreshEquipmentSlot);
 	OnEquipWeaponWidget.AddUObject(this, &UEquipmentContents::EquipWeaponWidget);
-	OnRemoveWeaponWidget.AddUObject(this, &UEquipmentContents::RemoveWeaponWidget);
-	OnAddWeaponWidget.AddUObject(this, &UEquipmentContents::AddWeaponWidget);
+}
+
+void UEquipmentContents::NativeTick(const FGeometry &MyGeometry, float InDeltaTime)
+{
+	for (int32 i = 0; i < WidgetList.Num(); i++)
+	{
+		if (WidgetList[i]->GetWeaponItem())
+		{
+			GEngine->AddOnScreenDebugMessage(i + 20, 3, FColor::Blue, FString::Printf(TEXT("Index %d : True"), i));
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(i + 20, 3, FColor::Blue, FString::Printf(TEXT("Index %d : False"), i));
+		}
+	}
+	for (int32 i = 0; i < ItemList.Num(); i++)
+	{
+		if (ItemList[i])
+		{
+			GEngine->AddOnScreenDebugMessage(i + 40, 3, FColor::Blue, FString::Printf(TEXT("Index %d : Item"), i));
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(i + 40, 3, FColor::Blue, FString::Printf(TEXT("Index %d : Null"), i));
+		}
+	}
 }
 
 void UEquipmentContents::InitEssentialData()
@@ -26,8 +58,13 @@ void UEquipmentContents::InitEssentialData()
 	if (Player)
 	{
 		InventoryComponent = Player->GetItemInventory();
-		ItemList = InventoryComponent->GetWeaponInventory();
-		ListSize = InventoryComponent->GetWeaponInventorySize();
+		if (InventoryComponent)
+		{
+			ItemList = InventoryComponent->GetWeaponInventory();
+			ListSize = InventoryComponent->GetWeaponInventorySize();
+
+			InventoryComponent->OnInventoryUpdate.AddUObject(this, &UEquipmentContents::RefreshEquipmentSlot);
+		}
 	}
 }
 
@@ -41,7 +78,7 @@ void UEquipmentContents::RefreshEquipmentSlot()
 		{
 			if (WidgetList[i] && !WidgetList[i]->GetWeaponItem())
 			{
-				WidgetList[i]->GetItemInfo(ItemList[i]);
+				WidgetList[i]->SetItemInfo(ItemList[i]);
 			}
 		}
 	}
@@ -60,6 +97,9 @@ void UEquipmentContents::FillEmptySlot()
 			if (EquipmentSlot)
 			{
 				EquipmentSlot->InitializeEquipmentSlot(this);
+				EquipmentSlot->OnAddWidget.AddUObject(this, &UEquipmentContents::AddWeaponWidget);
+				EquipmentSlot->OnRemoveWidget.AddUObject(this, &UEquipmentContents::RemoveWeaponWidget);
+
 				WidgetList.Add(EquipmentSlot);
 				ContentsBox->AddChild(EquipmentSlot);
 			}
@@ -74,13 +114,14 @@ void UEquipmentContents::EquipWeaponWidget(UEquipmentSlot *SlotWidget)
 
 void UEquipmentContents::RemoveWeaponWidget(UEquipmentSlot *SlotWidget)
 {
-	for (int32 i = 0; i < WidgetList.Num(); i++)
+	for (int32 i = 0; i < ItemList.Num(); i++)
 	{
-		if (WidgetList[i] == SlotWidget)
+		if (ItemList[i] == SlotWidget->GetWeaponItem())
 		{
-			EquipWidget->OnRemoveWeaponItem.Broadcast(i);
-			WidgetList.RemoveAt(i);
+			ItemList.RemoveAt(i);
 			ContentsBox->RemoveChildAt(i);
+			OnRemoveWeaponWidget.Broadcast(SlotWidget, i);
+			GEngine->AddOnScreenDebugMessage(82, 3, FColor::Green, FString("Remove!!!"));
 			return;
 		}
 	}
@@ -88,14 +129,8 @@ void UEquipmentContents::RemoveWeaponWidget(UEquipmentSlot *SlotWidget)
 
 void UEquipmentContents::AddWeaponWidget(UEquipmentSlot *SlotWidget)
 {
-	for (int32 i = 0; i < WidgetList.Num(); i++)
-	{
-		if (!WidgetList[i]->GetWeaponItem())
-		{
-			WidgetList[i] = SlotWidget;
-			ContentsBox->AddChild(SlotWidget);
-			EquipWidget->OnAddWeaponItem.Broadcast(SlotWidget->GetWeaponItem());
-			return;
-		}
-	}
+	OnAddWeaponWidget.Broadcast(SlotWidget);
+	ItemList.Add(SlotWidget->GetWeaponItem());
+
+	GEngine->AddOnScreenDebugMessage(83, 3, FColor::Green, FString("Add!!!"));
 }

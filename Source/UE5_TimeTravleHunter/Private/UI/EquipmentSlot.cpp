@@ -12,28 +12,35 @@
 
 void UEquipmentSlot::InitializeEquipmentSlot(UEquipmentContents *EquipContentsWidget)
 {
-	EquipContents = EquipContentsWidget;
-	if (EquipContents)
+	if (EquipContentsWidget)
 	{
-		EquipmentWidget = EquipContents->GetEquipment();
-		if (EquipmentWidget)
+		EquipContents = EquipContentsWidget;
+		if (EquipContents)
 		{
-			MainWeaponSlotState = EquipmentWidget->GetbIsButtonActiveMain() && EquipmentWidget->GetMainWeaponSlot();
-			SubWeaponSlotState = EquipmentWidget->GetbIsButtonActiveSub() && EquipmentWidget->GetSubWeaponSlot();
-			RangedWeaponSlotState = EquipmentWidget->GetbIsButtonActiveRanged() && EquipmentWidget->GetRangedWeaponSlot();
+			MainWeaponSlotState = EquipContents->GetWeaponButtonStateMain() && EquipContents->GetEquipSlotMain();
+			SubWeaponSlotState = EquipContents->GetWeaponButtonStateSub() && EquipContents->GetEquipSlotSub();
+			RangedWeaponSlotState = EquipContents->GetWeaponButtonStateRanged() && EquipContents->GetEquipSlotRanged();
 		}
+		WeaponImage->SetRenderOpacity(0.0f);
+		HoverImage->SetRenderOpacity(0.0f);
 	}
-	WeaponImage->SetRenderOpacity(0.0f);
-	HoverImage->SetRenderOpacity(0.0f);
 }
 
-void UEquipmentSlot::GetItemInfo(APickUpItem *Item)
+void UEquipmentSlot::SetItemInfo(APickUpItem *Item)
 {
-	WeaponItem = Item;
-	if (WeaponItem)
+	if (Item)
 	{
-		WeaponImage->SetRenderOpacity(1.0f);
-		WeaponImage->SetBrushFromTexture(Item->GetItemTexture());
+		WeaponItem = Item;
+		
+		if (WeaponItem)
+		{
+			WeaponImage->SetRenderOpacity(1.0f);
+			WeaponImage->SetBrushFromTexture(Item->GetItemTexture());
+		}
+		else
+		{
+			WeaponImage->SetRenderOpacity(0.0f);
+		}
 	}
 }
 
@@ -67,18 +74,18 @@ FReply UEquipmentSlot::NativeOnMouseButtonDown(const FGeometry &InGeometry, cons
 		{
 			if (MainWeaponSlotState)
 			{
-				EquipContents->OnAddWeaponWidget.Broadcast(EquipmentWidget->GetMainWeaponSlot());
+				OnAddWidget.Broadcast(EquipContents->GetEquipSlotMain());
 			}
 			if (SubWeaponSlotState)
 			{
-				EquipContents->OnAddWeaponWidget.Broadcast(EquipmentWidget->GetSubWeaponSlot());
+				OnAddWidget.Broadcast(EquipContents->GetEquipSlotSub());
 			}
 			if (RangedWeaponSlotState)
 			{
-				EquipContents->OnAddWeaponWidget.Broadcast(EquipmentWidget->GetRangedWeaponSlot());
+				OnAddWidget.Broadcast(EquipContents->GetEquipSlotRanged());
 			}
 			EquipContents->OnEquipWeaponWidget.Broadcast(this);
-			EquipContents->OnRemoveWeaponWidget.Broadcast(this);
+			OnRemoveWidget.Broadcast(this);
 			return FReply::Handled();
 		}
 	}
