@@ -11,6 +11,8 @@ class UEquipmentContents;
 class APickUpItem;
 class AWeaponBase;
 class UImage;
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemoveWidget, UEquipmentSlot *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnAddWidget, UEquipmentSlot *);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UEquipmentSlot : public UUserWidget
@@ -20,6 +22,9 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	FOnRemoveWidget OnRemoveWidget;
+	FOnAddWidget OnAddWidget;
+
 	UPROPERTY(meta = (BindWidget))
 	UImage *WeaponImage;
 
@@ -32,16 +37,14 @@ public:
 	FORCEINLINE APickUpItem *GetWeaponItem() const { return WeaponItem; };
 
 	void InitializeEquipmentSlot(UEquipmentContents *EquipContentsWidget);
-	void GetItemInfo(APickUpItem* Item);
-	
+	void SetItemInfo(APickUpItem* Item);
+
 private:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-	TArray<AWeaponBase *> EquipWeaponInventory;
 	APickUpItem *WeaponItem;
 	UEquipmentContents *EquipContents;
-	UEquipment *EquipmentWidget;
 
 	bool MainWeaponSlotState;
 	bool SubWeaponSlotState;

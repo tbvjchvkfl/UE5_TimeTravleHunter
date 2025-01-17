@@ -81,7 +81,6 @@ public:
 	FORCEINLINE bool GetbIsButtonActiveRanged()const { return bIsActiveRangedWeapon_BTN; };
 
 	void InitializeEquipment();
-
 private:
 	//======================================================
 	//=					- Variables -					   =
@@ -123,4 +122,6 @@ private:
 	void EquipMainWeapon();
 	void EquipSubWeapon();
 	void EquipRangedWeapon();
+	void AddWeaponItem(UEquipmentSlot* SlotWidget);
+	void RemoveWeaponItem(UEquipmentSlot *SlotWidget, int32 ItemIndex);
 };
