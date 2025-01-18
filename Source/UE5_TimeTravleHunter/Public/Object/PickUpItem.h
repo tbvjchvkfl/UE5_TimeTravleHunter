@@ -21,19 +21,22 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-
 	
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	APickUpItem();
 	FORCEINLINE EItemType GetItemType() const { return ItemType; };
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; };
 	FORCEINLINE int32 GetCurrentQuantity() const { return CurrentQuantity; };
 	FORCEINLINE int32 GetMaxQuantity() const { return MaxQuantity; };
 	FORCEINLINE FIntPoint GetItemSize() const { return ItemSize; };
 	FORCEINLINE int32 GetItemNumber() const { return ItemNumber; };
 	FORCEINLINE UTexture2D* GetItemTexture() const { return ItemTexture; };
 	FORCEINLINE float GetItemRotation() const { return ItemRotation; };
+	
+
 
 	FORCEINLINE int32 SetCurrentQuantity(int32 NewQuantity) { return CurrentQuantity = FMath::Clamp(NewQuantity, 0, MaxQuantity); };
 
@@ -73,6 +76,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
 	EItemType ItemType;
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
+	EWeaponType WeaponType;
 
 	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
 	FString ItemName;
