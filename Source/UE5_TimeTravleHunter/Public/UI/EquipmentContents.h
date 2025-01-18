@@ -48,6 +48,7 @@ public:
 	FORCEINLINE bool GetWeaponButtonStateRanged()const { return bIsRangedButtonState; };
 
 	void InitializeEquipmentContents(UEquipment *EquipmentWidget);
+
 	virtual void NativeTick(const FGeometry &MyGeometry, float InDeltaTime);
 private:
 	//======================================================

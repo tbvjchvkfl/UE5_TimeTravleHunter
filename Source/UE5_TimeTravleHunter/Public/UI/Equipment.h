@@ -53,6 +53,15 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UBorder *RangedWeaponBorder;
 
+	/*UPROPERTY(meta = (BindWidget))
+	UEquipmentContents *MainEquipmentContents;
+
+	UPROPERTY(meta = (BindWidget))
+	UEquipmentContents *SubEquipmentContents;
+
+	UPROPERTY(meta = (BindWidget))
+	UEquipmentContents *RangedEquipmentContents;*/
+
 	UPROPERTY(meta = (BindWidget))
 	UButton *MainWeaponButton;
 
@@ -87,9 +96,6 @@ private:
 	//======================================================
 	UPROPERTY()
 	APlayerCharacter *Player;
-
-	UPROPERTY()
-	UInventoryComponent *InventoryComponent;
 
 	UPROPERTY()
 	UWeaponComponent *WeaponComponent;
@@ -131,7 +137,6 @@ private:
 	void OnRangedWeaponClicked();
 
 	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
-	virtual void NativeTick(const FGeometry &MyGeometry, float InDeltaTime);
 	void ButtonInteraction(UCanvasPanel* InCanvas, UBorder *InBorder);
 	void RemoveItemListWIdget(UCanvasPanel *InCanvas);
 	bool CanCheckCreateWidget(UCanvasPanel *InCanvas);

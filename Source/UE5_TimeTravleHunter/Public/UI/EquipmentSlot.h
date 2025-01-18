@@ -34,20 +34,29 @@ public:
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
-	FORCEINLINE APickUpItem *GetWeaponItem() const { return WeaponItem; };
+	FORCEINLINE APickUpItem *GetWeaponItem() const { return ItemInfo; };
 
-	void InitializeEquipmentSlot(UEquipmentContents *EquipContentsWidget);
+	void InitializeEquipmentSlot(UEquipmentContents *EquipContentsWidget, APickUpItem* WeaponItem);
 	void SetItemInfo(APickUpItem* Item);
 
+	virtual void NativeTick(const FGeometry &MyGeometry, float InDeltaTime);
 private:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
-	APickUpItem *WeaponItem;
+	UPROPERTY()
+	APickUpItem *ItemInfo;
+
+	UPROPERTY()
 	UEquipmentContents *EquipContents;
 
+	UPROPERTY()
 	bool MainWeaponSlotState;
+
+	UPROPERTY()
 	bool SubWeaponSlotState;
+
+	UPROPERTY()
 	bool RangedWeaponSlotState;
 	//======================================================
 	//=					- Functionary -					   =
