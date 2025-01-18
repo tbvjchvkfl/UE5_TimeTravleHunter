@@ -131,11 +131,11 @@ void APickUpItem::InitializeItemData()
 			ItemSize = ItemTable->ItemSize;
 			MaxQuantity = ItemTable->ItemStackData.MaxQuantity;
 			ItemType = ItemTable->ItemType;
+			WeaponType = ItemTable->WeaponType;
 			ItemName = ItemTable->ItemTextData.ItemName;
 			ItemDescription = ItemTable->ItemTextData.ItemDescription;
 			ItemTexture = ItemTable->ItemAssetData.ItemIcon;
 			ItemMesh->SetStaticMesh(ItemTable->ItemAssetData.ItemMesh);
-			GEngine->AddOnScreenDebugMessage(0, 3, FColor::Green, FString("DataLoad"));
 		}
 	}
 }
@@ -147,7 +147,10 @@ void APickUpItem::PickUpInteraction(APlayerCharacter *Player)
 		if (auto ItemInventory = Player->GetItemInventory())
 		{
 			ItemInventory->CheckItem(this);
-			Destroy();
+			// Destroy가 아니라 Hidden으로 바꿀 것.
+			SetActorHiddenInGame(true);
+			SetActorEnableCollision(false);
+			//Destroy();
 		}
 	}
 }
