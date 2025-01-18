@@ -10,11 +10,12 @@
 // Engine
 #include "Components/Image.h"
 
-void UEquipmentSlot::InitializeEquipmentSlot(UEquipmentContents *EquipContentsWidget)
+void UEquipmentSlot::InitializeEquipmentSlot(UEquipmentContents *EquipContentsWidget, APickUpItem *WeaponItem)
 {
 	if (EquipContentsWidget)
 	{
 		EquipContents = EquipContentsWidget;
+		ItemInfo = WeaponItem;
 		if (EquipContents)
 		{
 			MainWeaponSlotState = EquipContents->GetWeaponButtonStateMain() && EquipContents->GetEquipSlotMain();
@@ -23,6 +24,8 @@ void UEquipmentSlot::InitializeEquipmentSlot(UEquipmentContents *EquipContentsWi
 		}
 		WeaponImage->SetRenderOpacity(0.0f);
 		HoverImage->SetRenderOpacity(0.0f);
+
+		SetItemInfo(ItemInfo);
 	}
 }
 
@@ -30,23 +33,28 @@ void UEquipmentSlot::SetItemInfo(APickUpItem *Item)
 {
 	if (Item)
 	{
-		WeaponItem = Item;
-		
-		if (WeaponItem)
-		{
-			WeaponImage->SetRenderOpacity(1.0f);
-			WeaponImage->SetBrushFromTexture(Item->GetItemTexture());
-		}
-		else
-		{
-			WeaponImage->SetRenderOpacity(0.0f);
-		}
+		WeaponImage->SetRenderOpacity(1.0f);
+		WeaponImage->SetBrushFromTexture(Item->GetItemTexture());
+	}
+	else
+	{
+		WeaponImage->SetRenderOpacity(0.0f);
+	}
+}
+
+void UEquipmentSlot::NativeTick(const FGeometry &MyGeometry, float InDeltaTime)
+{
+	if (EquipContents)
+	{
+		MainWeaponSlotState = EquipContents->GetWeaponButtonStateMain() && EquipContents->GetEquipSlotMain();
+		SubWeaponSlotState = EquipContents->GetWeaponButtonStateSub() && EquipContents->GetEquipSlotSub();
+		RangedWeaponSlotState = EquipContents->GetWeaponButtonStateRanged() && EquipContents->GetEquipSlotRanged();
 	}
 }
 
 void UEquipmentSlot::NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent)
 {
-	if (WeaponItem)
+	if (ItemInfo)
 	{
 		HoverImage->SetRenderOpacity(1.0f);
 		HoverImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.4f));
@@ -59,7 +67,7 @@ void UEquipmentSlot::NativeOnMouseEnter(const FGeometry &InGeometry, const FPoin
 
 void UEquipmentSlot::NativeOnMouseLeave(const FPointerEvent &InMouseEvent)
 {
-	if (WeaponItem)
+	if (ItemInfo)
 	{
 		HoverImage->SetRenderOpacity(0.0f);
 		HoverImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
@@ -70,7 +78,7 @@ FReply UEquipmentSlot::NativeOnMouseButtonDown(const FGeometry &InGeometry, cons
 {
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
-		if (WeaponItem && EquipContents)
+		if (ItemInfo && EquipContents)
 		{
 			if (MainWeaponSlotState)
 			{

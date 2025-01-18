@@ -28,27 +28,14 @@ void UEquipmentContents::InitializeEquipmentContents(UEquipment* EquipmentWidget
 
 void UEquipmentContents::NativeTick(const FGeometry &MyGeometry, float InDeltaTime)
 {
-	for (int32 i = 0; i < WidgetList.Num(); i++)
+	if (EquipWidget)
 	{
-		if (WidgetList[i]->GetWeaponItem())
-		{
-			GEngine->AddOnScreenDebugMessage(i + 20, 3, FColor::Blue, FString::Printf(TEXT("Index %d : True"), i));
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(i + 20, 3, FColor::Blue, FString::Printf(TEXT("Index %d : False"), i));
-		}
-	}
-	for (int32 i = 0; i < ItemList.Num(); i++)
-	{
-		if (ItemList[i])
-		{
-			GEngine->AddOnScreenDebugMessage(i + 40, 3, FColor::Blue, FString::Printf(TEXT("Index %d : Item"), i));
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(i + 40, 3, FColor::Blue, FString::Printf(TEXT("Index %d : Null"), i));
-		}
+		MainWeaponSlot = EquipWidget->GetMainWeaponSlot();
+		SubWeaponSlot = EquipWidget->GetSubWeaponSlot();
+		RangedWeaponSlot = EquipWidget->GetRangedWeaponSlot();
+		bIsMainButtonState = EquipWidget->GetbIsButtonActiveMain();
+		bIsSubButtonState = EquipWidget->GetbIsButtonActiveSub();
+		bIsRangedButtonState = EquipWidget->GetbIsButtonActiveRanged();
 	}
 }
 
@@ -71,8 +58,6 @@ void UEquipmentContents::InitEssentialData()
 void UEquipmentContents::RefreshEquipmentSlot()
 {
 	InitEssentialData();
-	//FillEmptySlot();
-	// 이 부분 FillEmptySLot이랑 합칠 것
 	WidgetList.Empty();
 	ContentsBox->ClearChildren();
 	for (int32 i = 0; i < ListSize; i++)
@@ -82,19 +67,21 @@ void UEquipmentContents::RefreshEquipmentSlot()
 			EquipmentSlot = CreateWidget<UEquipmentSlot>(GetOwningPlayer(), EquipmentSlotWidget);
 			if (EquipmentSlot)
 			{
-				EquipmentSlot->InitializeEquipmentSlot(this, EquipWidget);
 				EquipmentSlot->OnAddWidget.AddUObject(this, &UEquipmentContents::AddWeaponWidget);
 				EquipmentSlot->OnRemoveWidget.AddUObject(this, &UEquipmentContents::RemoveWeaponWidget);
-
-				WidgetList.Add(EquipmentSlot);
 
 				if (ItemList.IsValidIndex(i))
 				{
 					if (ItemList[i])
 					{
-						WidgetList[i]->SetItemInfo(ItemList[i]);
+						EquipmentSlot->InitializeEquipmentSlot(this, ItemList[i]);
+
+						WidgetList.Add(EquipmentSlot);
 					}
-					GEngine->AddOnScreenDebugMessage(i + 300, 3, FColor::Black, FString("Is Valid"));
+				}
+				else
+				{
+					EquipmentSlot->InitializeEquipmentSlot(this, nullptr);
 				}
 				ContentsBox->AddChild(EquipmentSlot);
 			}
@@ -118,7 +105,7 @@ void UEquipmentContents::FillEmptySlot()
 				{
 					GEngine->AddOnScreenDebugMessage(i + 200, 3, FColor::Black, FString("Is Valid"));
 				}
-				EquipmentSlot->InitializeEquipmentSlot(this, EquipWidget);
+				//EquipmentSlot->InitializeEquipmentSlot(this, EquipWidget);
 				EquipmentSlot->OnAddWidget.AddUObject(this, &UEquipmentContents::AddWeaponWidget);
 				EquipmentSlot->OnRemoveWidget.AddUObject(this, &UEquipmentContents::RemoveWeaponWidget);
 
@@ -143,7 +130,6 @@ void UEquipmentContents::RemoveWeaponWidget(UEquipmentSlot *SlotWidget)
 			ItemList.RemoveAt(i);
 			ContentsBox->RemoveChildAt(i);
 			OnRemoveWeaponWidget.Broadcast(SlotWidget, i);
-			GEngine->AddOnScreenDebugMessage(82, 3, FColor::Green, FString("Remove!!!"));
 			return;
 		}
 	}
@@ -152,7 +138,5 @@ void UEquipmentContents::RemoveWeaponWidget(UEquipmentSlot *SlotWidget)
 void UEquipmentContents::AddWeaponWidget(UEquipmentSlot *SlotWidget)
 {
 	OnAddWeaponWidget.Broadcast(SlotWidget);
-	//ItemList.Add(SlotWidget->GetWeaponItem());
 	RefreshEquipmentSlot();
-	GEngine->AddOnScreenDebugMessage(83, 3, FColor::Green, FString("Add!!!"));
 }

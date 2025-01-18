@@ -24,7 +24,6 @@ void UEquipment::InitializeEquipment()
 	Player = Cast<APlayerCharacter>(GetOwningPlayerPawn());
 	if (Player)
 	{
-		InventoryComponent = Player->GetItemInventory();
 		WeaponComponent = Player->GetWeaponComponent();
 	}
 	MainWeaponButton->OnClicked.AddDynamic(this, &UEquipment::OnMainWeaponClicked);
@@ -72,26 +71,6 @@ FReply UEquipment::NativeOnMouseButtonDown(const FGeometry &InGeometry, const FP
 	bIsActiveSubWeapon_BTN = false;
 	bIsActiveRangedWeapon_BTN = false;
 	return FReply::Handled();
-}
-
-void UEquipment::NativeTick(const FGeometry &MyGeometry, float InDeltaTime)
-{
-	if (InventoryComponent)
-	{
-		GEngine->AddOnScreenDebugMessage(998, 3, FColor::Cyan, FString("True"));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(998, 3, FColor::Cyan, FString("False"));
-	}
-	if (MainWeaponSlot)
-	{
-		GEngine->AddOnScreenDebugMessage(101, 1, FColor::Green, FString("Weapon"));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(101, 1, FColor::Green, FString("NULL!!!"));
-	}
 }
 
 void UEquipment::ButtonInteraction(UCanvasPanel *InCanvas, UBorder *InBorder)
@@ -271,10 +250,6 @@ void UEquipment::AddWeaponItem(UEquipmentSlot *SlotWidget)
 	if (SlotWidget->GetWeaponItem())
 	{
 		OnAddWeaponItem.Broadcast(SlotWidget->GetWeaponItem());
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(93, 3, FColor::Green, FString("Item Is Null!!"));
 	}
 }
 
