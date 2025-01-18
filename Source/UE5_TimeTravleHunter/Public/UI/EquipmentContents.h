@@ -53,21 +53,44 @@ private:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	UPROPERTY()
 	APlayerCharacter *Player;
+
+	UPROPERTY()
 	UInventoryComponent *InventoryComponent;
+
+	UPROPERTY()
 	UEquipmentSlot *EquipmentSlot;
+
+	UPROPERTY()
 	TArray<APickUpItem *> ItemList;
+
+	UPROPERTY()
 	TArray<UEquipmentSlot *> WidgetList;
+
+	UPROPERTY()
 	int32 ListSize;
+
+	UPROPERTY()
 	UEquipment *EquipWidget;
 
 	// Equipment Widget Data
+	UPROPERTY()
 	UEquipmentSlot *MainWeaponSlot;
+
+	UPROPERTY()
 	UEquipmentSlot *SubWeaponSlot;
+
+	UPROPERTY()
 	UEquipmentSlot *RangedWeaponSlot;
 
+	UPROPERTY()
 	bool bIsMainButtonState;
+
+	UPROPERTY()
 	bool bIsSubButtonState;
+
+	UPROPERTY()
 	bool bIsRangedButtonState;
 	
 	//======================================================

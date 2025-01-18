@@ -85,12 +85,25 @@ private:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	UPROPERTY()
 	APlayerCharacter *Player;
+
+	UPROPERTY()
 	UInventoryComponent *InventoryComponent;
+
+	UPROPERTY()
 	UWeaponComponent *WeaponComponent;
+
+	UPROPERTY()
 	UEquipmentContents *EquipmentContents;
+
+	UPROPERTY()
 	UEquipmentSlot *MainWeaponSlot;
+
+	UPROPERTY()
 	UEquipmentSlot *SubWeaponSlot;
+
+	UPROPERTY()
 	UEquipmentSlot *RangedWeaponSlot;
 
 	UPROPERTY(EditAnywhere, Category = "Equipment | Property", meta = (AllowPrivateAccess = "true"))
@@ -99,8 +112,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Equipment | Property", meta = (AllowPrivateAccess = "true"))
 	FVector2D ItemListPos;
 
+	UPROPERTY()
 	bool bIsActiveMainWeapon_BTN;
+
+	UPROPERTY()
 	bool bIsActiveSubWeapon_BTN;
+
+	UPROPERTY()
 	bool bIsActiveRangedWeapon_BTN;
 	//======================================================
 	//=					- Functionary -					   =
@@ -113,7 +131,7 @@ private:
 	void OnRangedWeaponClicked();
 
 	virtual FReply NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent);
-
+	virtual void NativeTick(const FGeometry &MyGeometry, float InDeltaTime);
 	void ButtonInteraction(UCanvasPanel* InCanvas, UBorder *InBorder);
 	void RemoveItemListWIdget(UCanvasPanel *InCanvas);
 	bool CanCheckCreateWidget(UCanvasPanel *InCanvas);
