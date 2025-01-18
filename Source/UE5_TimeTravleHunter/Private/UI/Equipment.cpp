@@ -74,6 +74,26 @@ FReply UEquipment::NativeOnMouseButtonDown(const FGeometry &InGeometry, const FP
 	return FReply::Handled();
 }
 
+void UEquipment::NativeTick(const FGeometry &MyGeometry, float InDeltaTime)
+{
+	if (InventoryComponent)
+	{
+		GEngine->AddOnScreenDebugMessage(998, 3, FColor::Cyan, FString("True"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(998, 3, FColor::Cyan, FString("False"));
+	}
+	if (MainWeaponSlot)
+	{
+		GEngine->AddOnScreenDebugMessage(101, 1, FColor::Green, FString("Weapon"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(101, 1, FColor::Green, FString("NULL!!!"));
+	}
+}
+
 void UEquipment::ButtonInteraction(UCanvasPanel *InCanvas, UBorder *InBorder)
 {
 	if (CanCheckCreateWidget(InCanvas))

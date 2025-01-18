@@ -71,14 +71,32 @@ void UEquipmentContents::InitEssentialData()
 void UEquipmentContents::RefreshEquipmentSlot()
 {
 	InitEssentialData();
-	FillEmptySlot();
-	for (int32 i = 0; i < ItemList.Num(); i++)
+	//FillEmptySlot();
+	// 이 부분 FillEmptySLot이랑 합칠 것
+	WidgetList.Empty();
+	ContentsBox->ClearChildren();
+	for (int32 i = 0; i < ListSize; i++)
 	{
-		if (ItemList[i])
+		if (EquipmentSlotWidget)
 		{
-			if (WidgetList[i] && !WidgetList[i]->GetWeaponItem())
+			EquipmentSlot = CreateWidget<UEquipmentSlot>(GetOwningPlayer(), EquipmentSlotWidget);
+			if (EquipmentSlot)
 			{
-				WidgetList[i]->SetItemInfo(ItemList[i]);
+				EquipmentSlot->InitializeEquipmentSlot(this, EquipWidget);
+				EquipmentSlot->OnAddWidget.AddUObject(this, &UEquipmentContents::AddWeaponWidget);
+				EquipmentSlot->OnRemoveWidget.AddUObject(this, &UEquipmentContents::RemoveWeaponWidget);
+
+				WidgetList.Add(EquipmentSlot);
+
+				if (ItemList.IsValidIndex(i))
+				{
+					if (ItemList[i])
+					{
+						WidgetList[i]->SetItemInfo(ItemList[i]);
+					}
+					GEngine->AddOnScreenDebugMessage(i + 300, 3, FColor::Black, FString("Is Valid"));
+				}
+				ContentsBox->AddChild(EquipmentSlot);
 			}
 		}
 	}
@@ -96,7 +114,11 @@ void UEquipmentContents::FillEmptySlot()
 
 			if (EquipmentSlot)
 			{
-				EquipmentSlot->InitializeEquipmentSlot(this);
+				if (ItemList.IsValidIndex(i))
+				{
+					GEngine->AddOnScreenDebugMessage(i + 200, 3, FColor::Black, FString("Is Valid"));
+				}
+				EquipmentSlot->InitializeEquipmentSlot(this, EquipWidget);
 				EquipmentSlot->OnAddWidget.AddUObject(this, &UEquipmentContents::AddWeaponWidget);
 				EquipmentSlot->OnRemoveWidget.AddUObject(this, &UEquipmentContents::RemoveWeaponWidget);
 
@@ -130,7 +152,7 @@ void UEquipmentContents::RemoveWeaponWidget(UEquipmentSlot *SlotWidget)
 void UEquipmentContents::AddWeaponWidget(UEquipmentSlot *SlotWidget)
 {
 	OnAddWeaponWidget.Broadcast(SlotWidget);
-	ItemList.Add(SlotWidget->GetWeaponItem());
-
+	//ItemList.Add(SlotWidget->GetWeaponItem());
+	RefreshEquipmentSlot();
 	GEngine->AddOnScreenDebugMessage(83, 3, FColor::Green, FString("Add!!!"));
 }
