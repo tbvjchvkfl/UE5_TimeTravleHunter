@@ -5,11 +5,13 @@
 #include "Character/Armor/WeaponBase.h"
 #include "Character/Player/PlayerCharacter.h"
 #include "Component/InventoryComponent.h"
+#include "Component/ItemPoolComponent.h"
 
 // Engine
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Engine/DataTable.h"
+#include "UObject/StrongObjectPtr.h"
 
 APickUpItem::APickUpItem()
 {
@@ -28,8 +30,8 @@ APickUpItem::APickUpItem()
 void APickUpItem::BeginPlay()
 {
 	Super::BeginPlay();
-	InitializeItemData();
-	DesiredItemShape();
+	//InitializeItemData();
+	//DesiredItemShape();
 	CollisionSphere->OnComponentBeginOverlap.AddDynamic(this, &APickUpItem::OnOverlapBegin);
 }
 
@@ -120,6 +122,40 @@ FIntPoint APickUpItem::GetMaxSize(float Rotation, bool DefaultOverride)
 	return ReturnValue;
 }
 
+void APickUpItem::SetActivateItem(bool ActivationState)
+{
+	if (ActivationState)
+	{
+		SetActorHiddenInGame(false);
+		SetActorEnableCollision(true);
+		SetActorTickEnabled(true);
+	}
+	else
+	{
+		SetActorHiddenInGame(true);
+		SetActorEnableCollision(false);
+		SetActorTickEnabled(false);
+	}
+}
+
+void APickUpItem::SetItemData(FName ItemRow, FItemData *ItemData)
+{
+	if (ItemData)
+	{
+		ItemRowName = ItemRow;
+		ItemNumber = ItemData->ItemNumber;
+		ItemSize = ItemData->ItemSize;
+		MaxQuantity = ItemData->ItemStackData.MaxQuantity;
+		ItemType = ItemData->ItemType;
+		WeaponType = ItemData->WeaponType;
+		ItemName = ItemData->ItemTextData.ItemName;
+		ItemDescription = ItemData->ItemTextData.ItemDescription;
+		ItemTexture = ItemData->ItemAssetData.ItemIcon;
+		ItemMesh->SetStaticMesh(ItemData->ItemAssetData.ItemMesh);
+	}
+	DesiredItemShape();
+}
+
 void APickUpItem::InitializeItemData()
 {
 	if (ItemDataTable && !DesiredItemID.IsNone())
@@ -147,10 +183,11 @@ void APickUpItem::PickUpInteraction(APlayerCharacter *Player)
 		if (auto ItemInventory = Player->GetItemInventory())
 		{
 			ItemInventory->CheckItem(this);
-			// Destroy가 아니라 Hidden으로 바꿀 것.
-			SetActorHiddenInGame(true);
-			SetActorEnableCollision(false);
-			//Destroy();
+
+			if (auto ItemPoolComp = Player->GetItemPoolComponent())
+			{
+				ItemPoolComp->ReturnItemToPool(this);
+			}
 		}
 	}
 }
