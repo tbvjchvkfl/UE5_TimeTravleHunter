@@ -5,7 +5,8 @@
 #include "Component/WeaponComponent.h"
 #include "Character/Armor/WeaponBase.h"
 #include "Character/Player/PlayerCharacter.h"
-
+#include "Character/AnimInstance/PlayerAnimInstance.h"
+#include "Character/Controller/PlayerCharacterController.h"
 
 // Engine
 
@@ -18,7 +19,9 @@ UWeaponComponent::UWeaponComponent()
 void UWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
+	PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+	PlayerCharacterController = Cast<APlayerCharacterController>(PlayerCharacter->GetController());
+	PlayerCharacterAnimInstance = Cast<UPlayerAnimInstance>(PlayerCharacter->GetMesh()->GetAnimInstance());
 }
 
 void UWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -26,30 +29,53 @@ void UWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UWeaponComponent::EquipKatana()
+void UWeaponComponent::EquipMainKatana()
 {
 	if (KatanaWeapon)
 	{
 		Katana = GetWorld()->SpawnActor<AWeaponBase>(KatanaWeapon);
-		Katana->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "WeaponSocket_Katana");
+		Katana->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "WeaponSocket_Katana");
+		PlayerCharacterAnimInstance->PlayEquipKatana();
+		PlayerCharacter->KatanaCoverMesh->SetVisibility(true);
+		PlayerCharacterController->bIsKatanaState = true;
+		PlayerCharacterController->bIsSpearState = false;
 	}
 }
 
-void UWeaponComponent::EquipSpear()
+void UWeaponComponent::EquipMainSpear()
 {
 	if (SpearWeapon)
 	{
 		Spear = GetWorld()->SpawnActor<AWeaponBase>(KatanaWeapon);
-		Spear->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "WeaponSocket_Spear");
+		Spear->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "WeaponSocket_Spear");
+
+		PlayerCharacterController->bIsKatanaState = false;
+		PlayerCharacterController->bIsSpearState = true;
 	}
 }
 
-void UWeaponComponent::EquipBow()
+void UWeaponComponent::EquipMainBow()
 {
 	if (BowWeapon)
 	{
 		Bow = GetWorld()->SpawnActor<AWeaponBase>(KatanaWeapon);
-		Bow->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "MainWeapon_Bow");
+		Bow->AttachToComponent(PlayerCharacter->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, "MainWeapon_Bow");
 	}
+}
+
+void UWeaponComponent::EquipSubKatana()
+{
+}
+
+void UWeaponComponent::EquipSubSpear()
+{
+}
+
+void UWeaponComponent::EquipRangedSpear()
+{
+}
+
+void UWeaponComponent::EquipRangedBow()
+{
 }
 

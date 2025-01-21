@@ -2,7 +2,9 @@
 
 
 #include "Component/InventoryComponent.h"
+#include "Component/ItemPoolComponent.h"
 #include "Object/PickUpItem.h"
+#include "Character/Player/PlayerCharacter.h"
 
 
 UInventoryComponent::UInventoryComponent()
@@ -19,6 +21,7 @@ void UInventoryComponent::BeginPlay()
 	Super::BeginPlay();
 	InitializeInventory();
 	InitilaizeEquipInventory();
+	SetPropertyData();
 }
 
 void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
@@ -58,9 +61,17 @@ void UInventoryComponent::InitilaizeEquipInventory()
 	{
 		for (int32 i = 0; i < EquipInventorySize; i++)
 		{
-			//EquipInventory.Add(nullptr);
 			RoomCheckingInventory.Add(false);
 		}
+	}
+}
+
+void UInventoryComponent::SetPropertyData()
+{
+	Player = Cast<APlayerCharacter>(GetOwner());
+	if (Player)
+	{
+		ItemPoolComponent = Player->GetItemPoolComponent();
 	}
 }
 
@@ -136,6 +147,13 @@ void UInventoryComponent::RemoveWeaponInventory(int32 InventoryIndex)
 
 void UInventoryComponent::CheckItem(class APickUpItem *Item)
 {
+	//for (auto ItemData : ItemPoolComponent->GetItemPool())
+	//{
+	//	if (Item == ItemData)
+	//	{
+	//		
+	//	}
+	//}
 	switch (Item->GetItemType())
 	{
 		case EItemType::Coin:
@@ -206,13 +224,16 @@ void UInventoryComponent::AddItem(APickUpItem *Items)
 
 void UInventoryComponent::AddWeapon(APickUpItem* Item)
 {
-	EquipInventory.Add(Item);
-	for (int32 i = 0; i < RoomCheckingInventory.Num(); i++)
+	if (Item && IsValid(Item))
 	{
-		if (!RoomCheckingInventory[i])
+		EquipInventory.Add(Item);
+		for (int32 i = 0; i < RoomCheckingInventory.Num(); i++)
 		{
-			RoomCheckingInventory[i] = true;
-			return;
+			if (!RoomCheckingInventory[i])
+			{
+				RoomCheckingInventory[i] = true;
+				return;
+			}
 		}
 	}
 }
