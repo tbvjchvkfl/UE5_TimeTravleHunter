@@ -12,12 +12,15 @@ class UStaticMeshComponent;
 class UInputMappingContext;
 class UInputAction;
 class UInventoryComponent;
+class UWeaponComponent;
+class UItemPoolComponent;
 class ATTH_HUD;
 class APlayerCharacterController;
 class UMotionWarpingComponent;
 class UPlayerAnimInstance;
 class AEnemyCharacter;
-class AWeaponBase;
+class USceneCaptureComponent2D;
+
 struct FInputActionValue;
 struct FInputActionInstance;
 
@@ -40,6 +43,22 @@ public:
 
 	// AnimInstance Value
 	float MoveElapsedTime;
+	
+	// WeaponMesh
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh")
+	UStaticMeshComponent *KatanaMesh_Unarmed;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh")
+	UStaticMeshComponent *KatanaCoverMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh")
+	UStaticMeshComponent *BowMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh")
+	UStaticMeshComponent *SpearMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh")
+	UStaticMeshComponent *AssasinKnife;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -58,8 +77,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetMaxStamina() { return MaxStamina; };
 
-	UFUNCTION()
-	FORCEINLINE UInventoryComponent* GetItemInventory() { return ItemInventory; }
+	FORCEINLINE UInventoryComponent *GetItemInventory() const { return ItemInventory; };
+	FORCEINLINE UWeaponComponent *GetWeaponComponent() const { return WeaponComponent; };
+	FORCEINLINE UItemPoolComponent *GetItemPoolComponent() const { return ItemPoolComponent; };
 
 protected:
 	//======================================================
@@ -72,35 +92,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Character | Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent *CameraBoom;
-
-	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent *MainWeaponMesh;
-
-	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent *SubWeaponMesh;
-
-	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent *KatanaMesh_Unarmed;
-
-	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent *KatanaCoverMesh;
-
-	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent *BowMesh;
-
-	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent *SpearMesh;
-
-	UPROPERTY(EditAnywhere, Category = "Character | WeaponMesh", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent *AssasinKnife;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Weapon", meta = (AllowPrivateAccess = "true"))
-	AWeaponBase *MainWeapon;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Weapon", meta = (AllowPrivateAccess = "true"))
-	AWeaponBase *SubWeapon;
-
-	
 
 	// Input
 	UPROPERTY(EditAnywhere, Category = "Character | Input", meta = (AllowPrivateAccess = "true"))
@@ -170,7 +161,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
-
+	
 	// Locomotion
 	void Move(const FInputActionInstance &Action);
 	void Look(const FInputActionValue &Value);
@@ -197,7 +188,7 @@ protected:
 	void SwitchingWeaponMain();
 	void SwitchingWeaponSub();
 	
-	void ComboAttack();
+	void BasicAttack();
 	void HoldAction();
 	void SpecialAttack(const FInputActionInstance& Action);
 
@@ -214,6 +205,12 @@ private:
 	// Character Component
 	UPROPERTY(VisibleAnywhere, Category = "Character | Inventory", meta = (AllowPrivateAccess = "true"))
 	UInventoryComponent *ItemInventory;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Weapon", meta = (AllowPrivateAccess = "true"))
+	UWeaponComponent *WeaponComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Weapon", meta = (AllowPrivateAccess = "true"))
+	UItemPoolComponent *ItemPoolComponent;
 
 	UPROPERTY(VisibleAnywhere, Category = "Character | MotionWarping", meta = (AllowPrivateAccess = "true"))
 	UMotionWarpingComponent *CharacterMotionWarping;
