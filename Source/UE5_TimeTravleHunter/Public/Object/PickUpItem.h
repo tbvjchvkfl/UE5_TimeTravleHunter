@@ -35,15 +35,17 @@ public:
 	FORCEINLINE int32 GetItemNumber() const { return ItemNumber; };
 	FORCEINLINE UTexture2D* GetItemTexture() const { return ItemTexture; };
 	FORCEINLINE float GetItemRotation() const { return ItemRotation; };
-	
-
+	FORCEINLINE FName GetItemRowName() const { return ItemRowName; };
 
 	FORCEINLINE int32 SetCurrentQuantity(int32 NewQuantity) { return CurrentQuantity = FMath::Clamp(NewQuantity, 0, MaxQuantity); };
-
 	FORCEINLINE float SetItemRotation(float NewRotateValue) { return ItemRotation = FMath::Clamp(NewRotateValue, 0.0f, 90.0f); };
 
 	TArray<FVector2D> GetShape(float Rotation) const;
 	FIntPoint GetMaxSize(float Rotation, bool DefaultOverride);
+
+	void SetActivateItem(bool ActivationState);
+	void SetItemData(FName ItemRow, FItemData *ItemData);
+	
 protected:
 	//======================================================
 	//=					- Variables -					   =
@@ -61,6 +63,9 @@ protected:
 
 	UPROPERTY(EditInstanceOnly, Category = "ItemBaseInfo | ItemData")
 	FName DesiredItemID;
+
+	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | ItemData")
+	FName ItemRowName;
 
 	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Consumable")
 	int32 ItemNumber;
@@ -96,7 +101,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "ItemBaseInfo | Item Property")
 	float ItemRotation;
 
-
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -104,8 +108,9 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	void InitializeItemData();
-	virtual void PickUpInteraction(class APlayerCharacter *Player) override;
 	void DesiredItemShape();
+	virtual void PickUpInteraction(class APlayerCharacter *Player) override;
+	
 
 
 	UFUNCTION()
