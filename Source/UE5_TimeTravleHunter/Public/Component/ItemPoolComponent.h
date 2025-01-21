@@ -9,6 +9,30 @@
 
 class APickUpItem;
 
+USTRUCT()
+struct FItemPoolStruct
+{
+	GENERATED_USTRUCT_BODY()
+
+	TArray<APickUpItem *> ItemList;
+	FItemPoolStruct()
+	{
+		ItemList.Empty();
+	}
+	void AddToItemList(APickUpItem* Item)
+	{
+		ItemList.Add(Item);
+	}
+	void RemoveToItemList()
+	{
+		ItemList.Pop();
+	}
+	bool ItemListIsEmpty()
+	{
+		return ItemList.IsEmpty();
+	}
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UE5_TIMETRAVLEHUNTER_API UItemPoolComponent : public UActorComponent
 {
@@ -23,12 +47,20 @@ public:
 
 	UPROPERTY()
 	bool bIsFillItemPool;
+
+	UPROPERTY(EditAnywhere, Category = "Class | BasicProperty")
+	TMap<FName, int32> EditList;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	UItemPoolComponent();
-	FORCEINLINE TArray<APickUpItem *> GetItemPool()const { return ItemPool; };
-	FORCEINLINE APickUpItem *GetItemAccessToIndex(int32 Index)const { return ItemPool[Index]; };
+	void ReturnItemToPool(APickUpItem *Item);
+	APickUpItem *UseItemOfPool(FName ItemRowName);
+	bool CheckItemPoolIsEmpty();
+
+	FORCEINLINE TMap<FName, FItemPoolStruct> GetItemPool()const { return ItemPool; };
+
 private:
 	//======================================================
 	//=					- Variables -					   =
@@ -36,16 +68,19 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Item Data", meta = (AllowPrivateAccess = "true"))
 	UDataTable *ItemDataTable;
 
-	UPROPERTY(VisibleAnywhere, Category = "Pool Data", meta = (AllowPrivateAccess = "true"))
-	TArray<APickUpItem *> ItemPool;
+	UPROPERTY(VisibleAnywhere, Category = "PoolMap")
+	TMap<FName, FItemPoolStruct> ItemPool;
 
 	UPROPERTY()
 	APickUpItem *PickUpItem;
+
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	void InitializedItemData();
+	
+	void InitializePool();
+	
 };

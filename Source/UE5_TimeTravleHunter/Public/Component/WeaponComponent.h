@@ -8,6 +8,8 @@
 
 class AWeaponBase;
 class APlayerCharacter;
+class APlayerCharacterController;
+class UPlayerAnimInstance;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UE5_TIMETRAVLEHUNTER_API UWeaponComponent : public UActorComponent
@@ -33,10 +35,13 @@ public:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 
-	void EquipKatana();
-	void EquipSpear();
-	void EquipBow();
-
+	void EquipMainKatana();
+	void EquipMainSpear();
+	void EquipMainBow();
+	void EquipSubKatana();
+	void EquipSubSpear();
+	void EquipRangedSpear();
+	void EquipRangedBow();
 private:
 	//======================================================
 	//=					- Variables -					   =
@@ -51,7 +56,14 @@ private:
 	AWeaponBase *Bow;
 
 	UPROPERTY()
-	APlayerCharacter *OwnerCharacter;
+	APlayerCharacter *PlayerCharacter;
+
+	UPROPERTY()
+	APlayerCharacterController *PlayerCharacterController;
+
+	UPROPERTY()
+	UPlayerAnimInstance *PlayerCharacterAnimInstance;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
