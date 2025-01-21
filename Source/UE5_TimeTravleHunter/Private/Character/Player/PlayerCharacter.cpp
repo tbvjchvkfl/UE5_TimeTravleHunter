@@ -8,6 +8,8 @@
 #include "Interface/InteractionInterface.h"
 #include "Interface/CharacterActionInterface.h"
 #include "Component/InventoryComponent.h"
+#include "Component/WeaponComponent.h"
+#include "Component/ItemPoolComponent.h"
 #include "Object/PickUpItem.h"
 #include "Object/ParkourWall.h"
 #include "UI/TTH_HUD.h"
@@ -17,6 +19,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "MotionWarpingComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "EnhancedInputSubsystems.h"
@@ -44,20 +47,18 @@ APlayerCharacter::APlayerCharacter() :
 	MainCamera->SetupAttachment(CameraBoom);
 	MainCamera->bUsePawnControlRotation = false;
 
-	MainWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MainWeapon"));
-	MainWeaponMesh->SetupAttachment(GetMesh(), "WeaponSocket");
-
-	SubWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SubWeapon"));
-	SubWeaponMesh->SetupAttachment(GetMesh(), "SubWeaponSocket");
-
 	KatanaMesh_Unarmed = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("KatanaMesh"));
 	KatanaMesh_Unarmed->SetupAttachment(GetMesh(), "KatanaSocket_Unarmed");
+	KatanaMesh_Unarmed->SetVisibility(false);
 	KatanaCoverMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("KatanaCoverMesh"));
 	KatanaCoverMesh->SetupAttachment(GetMesh(), "KatanaSocket_Cover");
+	KatanaCoverMesh->SetVisibility(false);
 	BowMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BowMesh"));
 	BowMesh->SetupAttachment(GetMesh(), "SubWeaponBowSocket");
+	BowMesh->SetVisibility(false);
 	SpearMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SpearMesh"));
 	SpearMesh->SetupAttachment(GetMesh(), "SubWeaponSpearSocket");
+	SpearMesh->SetVisibility(false);
 	AssasinKnife = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AssasinKnife"));
 	AssasinKnife->SetupAttachment(GetMesh(), "AssasinKnifeSocket");
 
@@ -80,7 +81,8 @@ APlayerCharacter::APlayerCharacter() :
 	GetCharacterMovement()->AirControl = 0.0f;
 
 	ItemInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
-
+	WeaponComponent = CreateDefaultSubobject<UWeaponComponent>(TEXT("WeaponComponent"));
+	ItemPoolComponent = CreateDefaultSubobject<UItemPoolComponent>(TEXT("ItemPoolComponent"));
 	CharacterMotionWarping = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComponent"));
 }
 
@@ -110,7 +112,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	}
 	if (GetCharacterMovement()->IsFalling())
 	{
-		GEngine->AddOnScreenDebugMessage(10, 3, FColor::Green, FString::Printf(TEXT("Falling")), true);
+		GEngine->AddOnScreenDebugMessage(999, 3, FColor::Green, FString::Printf(TEXT("Falling")), true);
 	}
 }
 
@@ -150,7 +152,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(SwitchingMainWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchingWeaponMain);
 		EnhancedInputComponent->BindAction(SwitchingSubWeapon, ETriggerEvent::Triggered, this, &APlayerCharacter::SwitchingWeaponSub);
 
-		EnhancedInputComponent->BindAction(NormalAttack, ETriggerEvent::Triggered, this, &APlayerCharacter::ComboAttack);
+		EnhancedInputComponent->BindAction(NormalAttack, ETriggerEvent::Triggered, this, &APlayerCharacter::BasicAttack);
 		EnhancedInputComponent->BindAction(HoldingAction, ETriggerEvent::Triggered, this, &APlayerCharacter::HoldAction);
 		EnhancedInputComponent->BindAction(SpecialAttacking, ETriggerEvent::Triggered, this, &APlayerCharacter::SpecialAttack);
 
@@ -461,27 +463,36 @@ void APlayerCharacter::StopAimming()
 
 void APlayerCharacter::SwitchingWeaponMain()
 {
-	OwningController->bIsKatanaState = true;
+	//OwningController->bIsKatanaState = true;
 }
 
 void APlayerCharacter::SwitchingWeaponSub()
 {
-	OwningController->bIsSpearState = true;
+	//OwningController->bIsSpearState = true;
 }
 
-void APlayerCharacter::ComboAttack()
+void APlayerCharacter::BasicAttack()
 {
-	OwningAnimInstance->PlayComboAttack();
+	if (OwningController->bIsKatanaState)
+	{
+		OwningAnimInstance->PlayBasicAttack();
+	}
 }
 
 void APlayerCharacter::HoldAction()
 {
-	OwningAnimInstance->SpecialAttackHold();
+	if (OwningController->bIsKatanaState)
+	{
+		OwningAnimInstance->SpecialAttackHold();
+	}
 }
 
 void APlayerCharacter::SpecialAttack(const FInputActionInstance &Action)
 {
-	OwningAnimInstance->PlaySpecialAttack(Action.GetElapsedTime());
+	if (OwningController->bIsKatanaState)
+	{
+		OwningAnimInstance->PlaySpecialAttack(Action.GetElapsedTime());
+	}
 }
 
 void APlayerCharacter::SprintCameraMoving()
