@@ -22,36 +22,29 @@ EBTNodeResult::Type UT_MoveToTargetLocation::ExecuteTask(UBehaviorTreeComponent 
 {
 	EBTNodeResult::Type Result = EBTNodeResult::Failed;
 	TreeComp = &OwnerComp;
-	if (const auto Controller = Cast<AEnemyCharacterController>(OwnerComp.GetAIOwner()))
+	if (auto Controller = Cast<AEnemyCharacterController>(OwnerComp.GetAIOwner()))
 	{
 		AEnemyCharacter *OwningCharacter = Controller->GetOwningCharacter();
 		APlayerCharacter *PlayerCharacter = Controller->GetTargetCharacter();
-		UNavigationSystemV1 *NavigationSystem = UNavigationSystemV1::GetNavigationSystem(GetWorld());
-
 		if (OwningCharacter && PlayerCharacter)
 		{
 			Result = EBTNodeResult::InProgress;
-
 			OwnerComp.GetBlackboardComponent()->SetValueAsVector("PlayerLocation", PlayerCharacter->GetActorLocation());
 			FVector DestinationPos = OwnerComp.GetBlackboardComponent()->GetValueAsVector("PlayerLocation");
-			
 			Controller->MoveToLocation(DestinationPos, AcceptableTargetRadius, true, true, false, false);
 		}
-
-		const EPathFollowingStatus::Type PathStatus = Controller->GetPathFollowingComponent()->GetStatus();
-
-		if (PathStatus == EPathFollowingStatus::Idle || PathStatus == EPathFollowingStatus::Waiting)
-		{
-			Result = EBTNodeResult::Succeeded;
-		}
-
-		//if (const auto Controller = Cast<AEnemyCharacterController>(OwnerComp.GetAIOwner()))
-		//{
-		//	if (!Controller->GetPathFollowingComponent()->IsPathFollowingAllowed())
-		//	{
-		//		return EBTNodeResult::Succeeded;
-		//	}
-		//}
 	}
 	return Result;
+}
+
+void UT_MoveToTargetLocation::ModifyNodeResult(const FPathFollowingResult &Result)
+{
+	if (Result.IsSuccess())
+	{
+		FinishLatentTask(*TreeComp, EBTNodeResult::Succeeded);
+	}
+	else
+	{
+		FinishLatentTask(*TreeComp, EBTNodeResult::Failed);
+	}
 }
