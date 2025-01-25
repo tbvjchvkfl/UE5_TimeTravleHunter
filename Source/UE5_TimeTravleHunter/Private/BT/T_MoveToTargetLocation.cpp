@@ -12,6 +12,7 @@
 #include "NavigationSystem.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UT_MoveToTargetLocation::UT_MoveToTargetLocation(FObjectInitializer const &ObjectInitializer)
 {
@@ -29,6 +30,10 @@ EBTNodeResult::Type UT_MoveToTargetLocation::ExecuteTask(UBehaviorTreeComponent 
 		if (OwningCharacter && PlayerCharacter)
 		{
 			Result = EBTNodeResult::InProgress;
+			if (!Controller->bIsRun)
+			{
+				Controller->bIsRun = true;
+			}
 			OwnerComp.GetBlackboardComponent()->SetValueAsVector("PlayerLocation", PlayerCharacter->GetActorLocation());
 			FVector DestinationPos = OwnerComp.GetBlackboardComponent()->GetValueAsVector("PlayerLocation");
 			Controller->MoveToLocation(DestinationPos, AcceptableTargetRadius, true, true, false, false);
