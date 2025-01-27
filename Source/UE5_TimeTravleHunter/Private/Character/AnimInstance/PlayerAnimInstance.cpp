@@ -4,6 +4,7 @@
 #include "Character/AnimInstance/PlayerAnimInstance.h"
 #include "Character/Controller/PlayerCharacterController.h"
 #include "Character/Player/PlayerCharacter.h"
+#include "Character/Armor/WeaponBase.h"
 
 // Engine
 #include "GameFramework/CharacterMovementComponent.h"
@@ -53,15 +54,6 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	{
 		SetMovementData();
 		FootIK(DeltaSeconds);
-		if (OwnerController->bIsBasicAttack)
-		{
-			GEngine->AddOnScreenDebugMessage(0, 10, FColor::Green, FString("bIsBasicAttack : True"));
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(0, 10, FColor::Green, FString("bIsBasicAttack : False"));
-		}
-		GEngine->AddOnScreenDebugMessage(1, 10, FColor::Green, FString::Printf(TEXT("BasicAttackIndex : %d"), BasicAttackIndex));
 	}
 }
 
@@ -365,6 +357,11 @@ TTuple<float, FVector> UPlayerAnimInstance::FootTrace(FName SocketName)
 	return MakeTuple(999.0f, FVector::ZeroVector);
 }
 
+void UPlayerAnimInstance::StartTrace()
+{
+	OwnerCharacter->CreateTrace();
+}
+
 void UPlayerAnimInstance::PlayCrouchVaulting()
 {
 	if (CrouchVaulting_Anim)
@@ -470,7 +467,7 @@ void UPlayerAnimInstance::PlayMiddleAttack()
 {
 	if (BasicAttackIndex == 1)
 	{
-		if (Montage_GetPosition(BasicKatanaAnimArray[0]) > 0.6f)
+		if (Montage_GetPosition(BasicKatanaAnimArray[0]) > 0.5f)
 		{
 			Montage_Stop(0.2f, BasicKatanaAnimArray[0]);
 			Montage_Play(BasicKatanaAnimArray[1], 1.0f);
@@ -581,4 +578,17 @@ void UPlayerAnimInstance::ResetSpecialAttack(int32 AnimIndex)
 			GetWorld()->GetTimerManager().ClearTimer(BasicAttackTimer);
 		},
 		SpecialKatanaAnimArray[AnimIndex]->GetPlayLength(), false);
+}
+
+void UPlayerAnimInstance::PlayHitReaction()
+{
+	if (HitReaction)
+	{
+		OwnerCharacter->HitFlag = true;
+		if (!Montage_IsPlaying(HitReaction))
+		{
+			Montage_Play(HitReaction, 1.0f);
+		}
+	}
+	OwnerCharacter->HitFlag = false;
 }
