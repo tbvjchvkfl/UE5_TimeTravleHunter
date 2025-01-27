@@ -134,6 +134,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
 	TArray<UAnimMontage *> BasicBowAnimArray;
 
+	UPROPERTY(EditAnywhere, Category = "Animation | Hit Reaction")
+	UAnimMontage *HitReaction;
+
 	UPROPERTY(EditAnywhere, Category = "Animation | Attack")
 	FCombineAttackStruct CombineAttackStruct;
 
@@ -158,6 +161,7 @@ public:
 	void PlaySpecialAttack(float ButtonElapsedTime);
 	void ResetSpecialAttack(int32 AnimIndex);
 
+	void PlayHitReaction();
 
 private:
 	//======================================================
@@ -299,5 +303,6 @@ private:
 	float CapsuleDistance(FName SocketName);
 	TTuple<float, FVector> FootTrace(FName SocketName);
 
-	
+	UFUNCTION(BlueprintCallable)
+	void StartTrace();
 };
