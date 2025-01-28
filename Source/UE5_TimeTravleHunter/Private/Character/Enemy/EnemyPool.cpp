@@ -91,27 +91,45 @@ AEnemyCharacter *AEnemyPool::UseEnemyPool(TSubclassOf<AEnemyCharacter> Character
 	{
 		if (EnemyElem.Key == CharacterClass)
 		{
-			ECharacter = EnemyElem.Value.NPCList[EnemyElem.Value.NPCList.Num() - 1];
-			ECharacter->SetActorHiddenInGame(false);
-			ECharacter->SetActorEnableCollision(true);
-			EnemyElem.Value.RemoveToNPCList();
+			if (!EnemyElem.Value.NPCListIsEmpty())
+			{
+				ECharacter = EnemyElem.Value.NPCList[EnemyElem.Value.NPCList.Num() - 1];
+				ECharacter->SetActorHiddenInGame(false);
+				ECharacter->SetActorEnableCollision(true);
+				EnemyElem.Value.RemoveToNPCList();
+			}
 		}
 	}
 	return ECharacter;
 }
 
-bool AEnemyPool::CheckEnemyPoolIsEmpty()
+bool AEnemyPool::CheckEnemyPoolIsEmpty(TSubclassOf<AEnemyCharacter> CharacterClass)
 {
-	return false;
+	bool ReturnValue = false;
+	for (auto EnemyElem : EnemyPool)
+	{
+		if (CharacterClass == EnemyElem.Key)
+		{
+			if (EnemyElem.Value.NPCListIsEmpty())
+			{
+				ReturnValue = false;
+			}
+			else
+			{
+				ReturnValue = true;
+			}
+		}
+	}
+	return ReturnValue;
 }
 
 void AEnemyPool::ReturnBossEnemyPool(TSubclassOf<ABossEnemyCharacter> BossCharacterClass, ABossEnemyCharacter *Character)
 {
-	for (auto EnemyElem : BossEnemyPool)
+	for (auto BossEnemyElem : BossEnemyPool)
 	{
-		if (EnemyElem.Key == BossCharacterClass)
+		if (BossEnemyElem.Key == BossCharacterClass)
 		{
-			EnemyElem.Value.AddToBossNPCList(Character);
+			BossEnemyElem.Value.AddToBossNPCList(Character);
 		}
 	}
 }
@@ -119,20 +137,38 @@ void AEnemyPool::ReturnBossEnemyPool(TSubclassOf<ABossEnemyCharacter> BossCharac
 ABossEnemyCharacter *AEnemyPool::UseBossEnemyPool(TSubclassOf<ABossEnemyCharacter> BossCharacterClass)
 {
 	ABossEnemyCharacter *BECharacter{};
-	for (auto EnemyElem : BossEnemyPool)
+	for (auto BossEnemyElem : BossEnemyPool)
 	{
-		if (EnemyElem.Key == BossCharacterClass)
+		if (BossEnemyElem.Key == BossCharacterClass)
 		{
-			BECharacter = EnemyElem.Value.BossNPCList[EnemyElem.Value.BossNPCList.Num() - 1];
-			BECharacter->SetActorHiddenInGame(false);
-			BECharacter->SetActorEnableCollision(true);
-			EnemyElem.Value.RemoveToBossNPCList();
+			if (!BossEnemyElem.Value.BossNPCListIsEmpty())
+			{
+				BECharacter = BossEnemyElem.Value.BossNPCList[BossEnemyElem.Value.BossNPCList.Num() - 1];
+				BECharacter->SetActorHiddenInGame(false);
+				BECharacter->SetActorEnableCollision(true);
+				BossEnemyElem.Value.RemoveToBossNPCList();
+			}
 		}
 	}
 	return BECharacter;
 }
 
-bool AEnemyPool::CheckBossEnemyPoolIsEmpty()
+bool AEnemyPool::CheckBossEnemyPoolIsEmpty(TSubclassOf<ABossEnemyCharacter> BossCharacterClass)
 {
-	return false;
+	bool ReturnValue = false;
+	for (auto BossEnemyElem : BossEnemyPool)
+	{
+		if (BossCharacterClass == BossEnemyElem.Key)
+		{
+			if (BossEnemyElem.Value.BossNPCListIsEmpty())
+			{
+				ReturnValue = false;
+			}
+			else
+			{
+				ReturnValue = true;
+			}
+		}
+	}
+	return ReturnValue;
 }
