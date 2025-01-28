@@ -10,6 +10,9 @@
 class USphereComponent;
 class APlayerCharacter;
 class UEnemyAnimInstance;
+class AEnemyCharacterController;
+class UWidgetComponent;
+class AWeaponBase;
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API AEnemyCharacter : public ACharacter, public ICharacterActionInterface
@@ -20,16 +23,32 @@ public:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
+	FTimerHandle RagDollTimer;
+	FTimerHandle WidgetVisibilityTimer;
 
+	UPROPERTY()
 	bool bIsAssasinationable;
 
-	FTimerHandle RagDollTimer;
+	UPROPERTY()
+	bool bIsTargetDetecting;
+
+	UPROPERTY()
+	bool bIsLockFromTarget;
+
+	
+
+	UPROPERTY(EditAnywhere, Category = "Character | Weapon")
+	TSubclassOf<AWeaponBase> WeaponBaseClass;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	AEnemyCharacter();
-	
+	void ActiveStrafe(bool ActivationValue);
+	FVector StrafeMovement();
 
+	FORCEINLINE APlayerCharacter *GetTargetCharacter()const { return TargetCharacter; };
+	FORCEINLINE FName GetEnemyName() const { return EnemyName; };
 protected:
 	//======================================================
 	//=					- Variables -					   =
@@ -37,11 +56,26 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Character | Component")
 	USphereComponent *AssasinationCollision;
 
+	UPROPERTY(EditAnywhere, Category = "Character | Component")
+	USphereComponent *DetectingCollision;
+
+	UPROPERTY(EditAnywhere, Category = "Character | Component")
+	UWidgetComponent *DetectingWidget;
+
+	UPROPERTY(EditAnywhere, Category = "Character | Component")
+	UWidgetComponent *LockOnWidget;
+
 	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
 	APlayerCharacter *TargetCharacter;
 
 	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
-	UEnemyAnimInstance *EOwningAnimInstance;
+	UEnemyAnimInstance *OwningAnimInstance;
+
+	UPROPERTY(VisibleAnywhere, Category = "Character | Property")
+	AEnemyCharacterController *OwningController;
+
+	UPROPERTY(EditAnywhere, Category = "Character | Property")
+	float TimeForDetectIcon;
 
 	//======================================================
 	//=					- Functionary -					   =
@@ -63,9 +97,17 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Character | ActionReference", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent *AssasinationPosMesh;
 
+	UPROPERTY()
+	AWeaponBase *WeaponBase;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void StealthAssain(FVector &Location, FRotator &Rotation) override;
 	void RagDoll();
+	void ToggleDetectIcon();
+	void RotationDetectIcon();
+	void ModifyMovementSpeed();
+	void EquipWeapon();
+	void ToggleLockIcon(bool CheckInput);
 };
