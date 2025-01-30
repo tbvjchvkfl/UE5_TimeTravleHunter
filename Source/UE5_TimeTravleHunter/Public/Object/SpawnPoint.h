@@ -8,7 +8,10 @@
 
 class APickUpItem;
 class APlayerCharacter;
+class AEnemyCharacter;
+class AEnemyCharacterController;
 class UItemPoolComponent;
+class AEnemyPool;
 
 UENUM()
 enum class ESpawnType : uint8
@@ -36,6 +39,15 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Basic Info | Item Spawn Info")
 	int32 ItemQuantity;
 
+	UPROPERTY(EditAnywhere, Category = "Basic Info | Item Spawn Info")
+	TSubclassOf<AEnemyCharacter> SpawnCharacterClass;
+
+	UPROPERTY(EditAnywhere, Category = "Basic Info | Item Spawn Info")
+	TSubclassOf<AEnemyPool> EnemyPoolClass;
+
+	UPROPERTY(EditAnywhere, Category = "Basic Info | Item Spawn Info")
+	TSubclassOf<AEnemyCharacterController> EnemyControllerClass;
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -57,10 +69,21 @@ protected:
 	UPROPERTY()
 	TArray<APickUpItem *>ItemPoolList;
 
+	UPROPERTY()
+	AEnemyCharacter *SpawnCharacter;
+
+	UPROPERTY()
+	AEnemyCharacterController *SpawnCharacterController;
+
+	UPROPERTY()
+	AEnemyPool *EnemyPool;
+
+
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	void SpawnObject();
+	void PossessNPCController(APawn *InPawn);
 };
