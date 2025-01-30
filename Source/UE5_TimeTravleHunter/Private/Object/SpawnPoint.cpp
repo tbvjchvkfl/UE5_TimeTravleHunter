@@ -5,6 +5,10 @@
 #include "Character/Player/PlayerCharacter.h"
 #include "Component/ItemPoolComponent.h"
 #include "Object/PickUpItem.h"
+#include "Character/Enemy/EnemyPool.h"
+#include "Character/Enemy/EnemyCharacter.h"
+#include "Character/Controller/EnemyCharacterController.h"
+
 
 // Engine
 #include "Kismet/GameplayStatics.h"
@@ -54,11 +58,41 @@ void ASpawnPoint::SpawnObject()
 	}
 	if (ItemSpawnType == ESpawnType::EnemyCharacter)
 	{
-
+		if (EnemyPoolClass)
+		{
+			TArray<AActor *>ActorArray;
+			UGameplayStatics::GetAllActorsOfClass(GetWorld(), EnemyPoolClass, ActorArray);
+			for (auto ActorElem : ActorArray)
+			{
+				if (ActorElem)
+				{
+					EnemyPool = Cast<AEnemyPool>(ActorElem);
+					break;
+				}
+			}
+			if (EnemyPool)
+			{
+				if (SpawnCharacterClass && !EnemyPool->CheckEnemyPoolIsEmpty(SpawnCharacterClass))
+				{
+					SpawnCharacter = EnemyPool->UseEnemyPool(SpawnCharacterClass);
+					SpawnCharacter->SetActorLocation(GetActorLocation());
+					this->Destroy();
+				}
+			}
+		}
 	}
 	if (ItemSpawnType == ESpawnType::BossCharacter)
 	{
 
+	}
+}
+
+void ASpawnPoint::PossessNPCController(APawn *InPawn)
+{
+	if (EnemyControllerClass)
+	{
+		SpawnCharacterController = GetWorld()->SpawnActor<AEnemyCharacterController>(EnemyControllerClass);
+		SpawnCharacterController->OnPossess(InPawn);
 	}
 }
 
