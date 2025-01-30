@@ -67,9 +67,6 @@ public:
 	//=					- Variables -					   =
 	//======================================================
 	UPROPERTY(EditAnywhere, Category = "PoolDefault | Spawn Info")
-	TSubclassOf<AEnemyCharacter> SpawnCharacterEnemyClass;
-
-	UPROPERTY(EditAnywhere, Category = "PoolDefault | Spawn Info")
 	TMap<TSubclassOf<AEnemyCharacter>, int32> EditEnemyPoolList;
 
 	UPROPERTY(EditAnywhere, Category = "PoolDefault | Spawn Info")

@@ -48,16 +48,12 @@ public:
 	FVector StrafeMovement();
 
 	FORCEINLINE APlayerCharacter *GetTargetCharacter()const { return TargetCharacter; };
-	FORCEINLINE FName GetEnemyName() const { return EnemyName; };
 protected:
 	//======================================================
 	//=					- Variables -					   =
 	//======================================================
 	UPROPERTY(EditAnywhere, Category = "Character | Component")
 	USphereComponent *AssasinationCollision;
-
-	UPROPERTY(EditAnywhere, Category = "Character | Component")
-	USphereComponent *DetectingCollision;
 
 	UPROPERTY(EditAnywhere, Category = "Character | Component")
 	UWidgetComponent *DetectingWidget;
