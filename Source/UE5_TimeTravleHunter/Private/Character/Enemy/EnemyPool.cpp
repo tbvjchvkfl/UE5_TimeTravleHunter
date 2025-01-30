@@ -42,10 +42,13 @@ void AEnemyPool::InitEnemyPool()
 				EnemyPool.Add(EnemyElem.Key);
 				for (int32 i = 0; i < EnemyElem.Value; i++)
 				{
-					AEnemyCharacter *SpawnCharacter = GetWorld()->SpawnActor<AEnemyCharacter>(EnemyElem.Key);
-					SpawnCharacter->SetActorHiddenInGame(true);
-					SpawnCharacter->SetActorEnableCollision(false);
-					EnemyPool[EnemyElem.Key].AddToNPCList(SpawnCharacter);
+					SpawnCharacterEnemy = GetWorld()->SpawnActor<AEnemyCharacter>(EnemyElem.Key, GetActorLocation(), GetActorRotation());
+					if (SpawnCharacterEnemy)
+					{
+						SpawnCharacterEnemy->SetActorHiddenInGame(true);
+						SpawnCharacterEnemy->SetActorEnableCollision(false);
+						EnemyPool[EnemyElem.Key].AddToNPCList(SpawnCharacterEnemy);
+					}
 				}
 			}
 		}
@@ -111,10 +114,6 @@ bool AEnemyPool::CheckEnemyPoolIsEmpty(TSubclassOf<AEnemyCharacter> CharacterCla
 		if (CharacterClass == EnemyElem.Key)
 		{
 			if (EnemyElem.Value.NPCListIsEmpty())
-			{
-				ReturnValue = false;
-			}
-			else
 			{
 				ReturnValue = true;
 			}

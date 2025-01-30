@@ -34,8 +34,16 @@ AEnemyCharacter::AEnemyCharacter() : bIsTargetDetecting(false)
 	LockOnWidget->SetRelativeLocation(FVector(20.0f, 0.0f, 20.0f));
 	LockOnWidget->SetVisibility(false);
 
-	AIControllerClass = AEnemyCharacterController::StaticClass();
-
+	static ConstructorHelpers::FClassFinder<AEnemyCharacterController>EnemyControllerClass(TEXT("/Game/TimeTravleHunter/Controller/BP_EnemyCharacterController.BP_EnemyCharacterController_C"));
+	if (EnemyControllerClass.Succeeded())
+	{
+		AIControllerClass = EnemyControllerClass.Class;
+	}
+	else
+	{
+		AIControllerClass = AEnemyCharacterController::StaticClass();
+	}
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	bIsAssasinationable = false;
 	bIsTargetDetecting = true;
 	bIsLockFromTarget = false;
@@ -83,7 +91,6 @@ void AEnemyCharacter::BeginPlay()
 	TargetCharacter = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	OwningAnimInstance = Cast<UEnemyAnimInstance>(GetMesh()->GetAnimInstance());
 	OwningController = Cast<AEnemyCharacterController>(GetController());
-
 	if (OwningController)
 	{
 		OwningController->OnDetecting.AddUObject(this, &AEnemyCharacter::ToggleDetectIcon);
@@ -98,6 +105,10 @@ void AEnemyCharacter::BeginPlay()
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (!OwningController)
+	{
+		OwningController = Cast<AEnemyCharacterController>(GetController());
+	}
 	if (OwningController)
 	{
 		ModifyMovementSpeed();
