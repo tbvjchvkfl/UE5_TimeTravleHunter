@@ -163,7 +163,10 @@ EnemyCharacter
    		}
    	}
    }
-
       
  </code>
 </pre>
+
+> - ### Enemy Pool ###
+> - ItemPool과는 다르게 AActor를 상속받아 만든 클래스에 작업했습니다.
+> - 
