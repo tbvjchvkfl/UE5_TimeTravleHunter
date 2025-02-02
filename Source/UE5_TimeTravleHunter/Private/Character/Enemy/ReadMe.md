@@ -1,7 +1,7 @@
 EnemyCharacter
 -
 
-코드 상세
+핵심 코드
 -
  === 이미지 예시 ===
 
@@ -167,6 +167,254 @@ EnemyCharacter
  </code>
 </pre>
 
-> - ### Enemy Pool ###
-> - ItemPool과는 다르게 AActor를 상속받아 만든 클래스에 작업했습니다.
-> - 
+### Enemy Pool
+> - 이미지 예시
+> - 어느 레벨에서든 간단하게 배치할 수 있도록 AActor를 상속받아 만든 클래스에 TMap을 사용해서 EditEnemyPoolList와 EnemyPool을 만들어주었습니다.
+> - EditEnemyPoolList는 게임 디자이너(게임 기획자)가 레벨에 배치할 Enemy클래스와 개수를 정할 수 있도록 TSubclassOf<AEnemyCharacter>와 int32를 Key와 Value로 선언했고, EnemyPool은 EditEnemyPoolList와 같은 타입의 Key와 실제 Spawn될 EnemyCharcter의 인스턴스들을 담을 배열을 구조체로 만들어 Value에 넣어 선언했습니다.
+
+<pre>
+ <code>
+         ========= EnemyPool.h =========
+
+    struct FEnemyPoolStruct
+    {
+    	TArray<AEnemyCharacter *> NPCList;
+    	FEnemyPoolStruct()
+    	{
+    		NPCList.Empty();
+    	}
+    	void AddToNPCList(AEnemyCharacter *Character)
+    	{
+    		NPCList.Add(Character);
+    	}
+    	void RemoveToNPCList()
+    	{
+    		NPCList.Pop();
+    	}
+    	bool NPCListIsEmpty()
+    	{
+    		return NPCList.IsEmpty();
+    	}
+    };
+      
+   class UE5_TIMETRAVLEHUNTER_API AEnemyPool : public AActor
+   {
+    UPROPERTY(EditAnywhere, Category = "PoolDefault | Spawn Info")
+   	TMap<TSubclassOf<AEnemyCharacter>, int32> EditEnemyPoolList;
+
+   	UPROPERTY()
+   	AEnemyCharacter *SpawnCharacterEnemy;
+   
+   	UPROPERTY()
+   	TMap<TSubclassOf<AEnemyCharacter>, FEnemyPoolStruct> EnemyPool;
+   };
+ </code>
+</pre>
+
+> - EnemyPool의 BeginPlay함수에서 InitEnemyPool을 호출하여 PoolActor를 레벨에 배치한 후 게임이 시작되면 EditEnemyPoolList를 순회하며 정해진 개수 만큼 해당 클래스의 인스턴스를 만들어 배열에 담아주었습니다.
+> - 각 EnemyCharacter의 인스턴스들은 배열에 담겨져있는 상태에선 콜리전을 끄고 Visibility를 Hidden으로 바꿔 게임에서 보이지 않는 상태로 만들어주었습니다.
+
+<pre>
+ <code>
+         ========= EnemyPool.cpp =========
+
+   void AEnemyPool::InitEnemyPool()
+   {
+   	if (!EditEnemyPoolList.IsEmpty())
+   	{
+   		for (auto EnemyElem : EditEnemyPoolList)
+   		{
+   			if (EnemyElem.Key)
+   			{
+   				EnemyPool.Add(EnemyElem.Key);
+   				for (int32 i = 0; i < EnemyElem.Value; i++)
+   				{
+   					SpawnCharacterEnemy = GetWorld()->SpawnActor<AEnemyCharacter>(EnemyElem.Key, GetActorLocation(), GetActorRotation());
+   					if (SpawnCharacterEnemy)
+   					{
+   						SpawnCharacterEnemy->SetActorHiddenInGame(true);
+   						SpawnCharacterEnemy->SetActorEnableCollision(false);
+   						EnemyPool[EnemyElem.Key].AddToNPCList(SpawnCharacterEnemy);
+   					}
+   				}
+   			}
+   		}
+   	}
+   }
+ </code>
+</pre>
+
+> - 레벨에 배치된 ActorPool에서 EnemyCharacter가 Spawn될 때에는 UseEnemyPool함수로 EnemyCharacter를 담고 있는 배열의 가장 마지막 Index부터 Visibiltiy와 콜리전을 모두 켠 상태에서 SpawnPoint로 넘겨주었고, 배열에서는 Pop하여 SpawnCount를 체크해주었습니다.
+
+<pre>
+ <code>
+         ========= EnemyPool.cpp =========
+   
+   AEnemyCharacter *AEnemyPool::UseEnemyPool(TSubclassOf<AEnemyCharacter> CharacterClass)
+   {
+   	AEnemyCharacter *ECharacter{};
+   	for (auto EnemyElem : EnemyPool)
+   	{
+   		if (EnemyElem.Key == CharacterClass)
+   		{
+   			if (!EnemyElem.Value.NPCListIsEmpty())
+   			{
+   				ECharacter = EnemyElem.Value.NPCList[EnemyElem.Value.NPCList.Num() - 1];
+   				ECharacter->SetActorHiddenInGame(false);
+   				ECharacter->SetActorEnableCollision(true);
+   				EnemyElem.Value.RemoveToNPCList();
+   			}
+   		}
+   	}
+   	return ECharacter;
+   }
+
+    ========= SpawnPoint.cpp =========
+   void ASpawnPoint::SpawnObject()
+   {
+   	if (ItemSpawnType == ESpawnType::EnemyCharacter)
+   	{
+   		if (EnemyPoolClass)
+   		{
+   			TArray<AActor *>ActorArray;
+   			UGameplayStatics::GetAllActorsOfClass(GetWorld(), EnemyPoolClass, ActorArray);
+   			for (auto ActorElem : ActorArray)
+   			{
+   				if (ActorElem)
+   				{
+   					EnemyPool = Cast<AEnemyPool>(ActorElem);
+   					break;
+   				}
+   			}
+   			if (EnemyPool)
+   			{
+   				if (SpawnCharacterClass && !EnemyPool->CheckEnemyPoolIsEmpty(SpawnCharacterClass))
+   				{
+   					SpawnCharacter = EnemyPool->UseEnemyPool(SpawnCharacterClass);
+   					SpawnCharacter->SetActorLocation(GetActorLocation());
+   					this->Destroy();
+   				}
+   			}
+   		}
+   	}
+   }
+ </code>
+</pre>
+
+> - 레벨에 배치된 ActorPool에서 EnemyCharacter가 Spawn될 때에는 UseEnemyPool함수로 EnemyCharacter를 담고 있는 배열의 가장 마지막 Index부터 Visibiltiy와 콜리전을 모두 켠 상태에서 SpawnPoint로 넘겨주었고, 배열에서는 Pop하여 SpawnCount를 체크해주었습니다.
+> - SpawnPoint에서 EnemyCharacter를 Spawn할 때에는 아래 SpawnObject함수를 BeginPlay에서 호출해 주었는데, 실제 개발 과정에서 Pool에 있는 개수보다 SpawnPoint가 많아지는 경우를 고려하여 CheckEnemyPoolIsEmpty함수를 통해 EnemyCharacter를 담고 있는 배열이 비어있는게 아니라면 Spawn할 수 있도록 구현했습니다.
+
+<pre>
+ <code>
+         ========= EnemyPool.cpp =========
+   
+   AEnemyCharacter *AEnemyPool::UseEnemyPool(TSubclassOf<AEnemyCharacter> CharacterClass)
+   {
+   	AEnemyCharacter *ECharacter{};
+   	for (auto EnemyElem : EnemyPool)
+   	{
+   		if (EnemyElem.Key == CharacterClass)
+   		{
+   			if (!EnemyElem.Value.NPCListIsEmpty())
+   			{
+   				ECharacter = EnemyElem.Value.NPCList[EnemyElem.Value.NPCList.Num() - 1];
+   				ECharacter->SetActorHiddenInGame(false);
+   				ECharacter->SetActorEnableCollision(true);
+   				EnemyElem.Value.RemoveToNPCList();
+   			}
+   		}
+   	}
+   	return ECharacter;
+   }
+    
+   bool AEnemyPool::CheckEnemyPoolIsEmpty(TSubclassOf<AEnemyCharacter> CharacterClass)
+   {
+   	bool ReturnValue = false;
+   	for (auto EnemyElem : EnemyPool)
+   	{
+   		if (CharacterClass == EnemyElem.Key)
+   		{
+   			if (EnemyElem.Value.NPCListIsEmpty())
+   			{
+   				ReturnValue = true;
+   			}
+   		}
+   	}
+   	return ReturnValue;
+   }
+    
+    ========= SpawnPoint.cpp =========
+   void ASpawnPoint::SpawnObject()
+   {
+   	if (ItemSpawnType == ESpawnType::EnemyCharacter)
+   	{
+   		if (EnemyPoolClass)
+   		{
+   			TArray<AActor *>ActorArray;
+   			UGameplayStatics::GetAllActorsOfClass(GetWorld(), EnemyPoolClass, ActorArray);
+   			for (auto ActorElem : ActorArray)
+   			{
+   				if (ActorElem)
+   				{
+   					EnemyPool = Cast<AEnemyPool>(ActorElem);
+   					break;
+   				}
+   			}
+   			if (EnemyPool)
+   			{
+   				if (SpawnCharacterClass && !EnemyPool->CheckEnemyPoolIsEmpty(SpawnCharacterClass))
+   				{
+   					SpawnCharacter = EnemyPool->UseEnemyPool(SpawnCharacterClass);
+   					SpawnCharacter->SetActorLocation(GetActorLocation());
+   					this->Destroy();
+   				}
+   			}
+   		}
+   	}
+   }
+ </code>
+</pre>
+
+> - 마지막으로 레벨에 배치된 EnemyCharacter가 게임 상에서 죽었을 때, 해당 캐릭터의 Visibility와 콜리전을 배열에 담겨져 있던 초기 상태로 되돌린 후, EnemyPool에 ReturnEnemyPool함수를 호출하여 재사용할 수 있도록 해주었습니다.
+
+<pre>
+ <code>
+    ========= EnemyPool.cpp =========
+   void AEnemyPool::ReturnEnemyPool(TSubclassOf<AEnemyCharacter> CharacterClass, AEnemyCharacter *Character)
+   {
+   	for (auto EnemyElem : EnemyPool)
+   	{
+   		if (EnemyElem.Key == CharacterClass)
+   		{
+   			EnemyElem.Value.AddToNPCList(Character);
+   		}
+   	}
+   }
+    
+    ========= EnemyCharacter.cpp =========
+   void AEnemyCharacter::RagDoll()
+   {
+   	GetMesh()->SetSimulatePhysics(true);
+   	FTimerHandle DeathTimer;
+   	GetWorld()->GetTimerManager().SetTimer(DeathTimer, [this]() {
+   		SetActorEnableCollision(false);
+   		SetActorHiddenInGame(true);
+   		TArray<AActor *>ActorArray;
+   		UGameplayStatics::GetAllActorsOfClass(GetWorld(), EnemyPoolClass, ActorArray);
+   		for (auto ActorElem : ActorArray)
+   		{
+   			if (ActorElem)
+   			{
+   				EnemyPool = Cast<AEnemyPool>(ActorElem);
+   				break;
+   			}
+   		}
+   		if (EnemyPool)
+   		{
+   			EnemyPool->ReturnEnemyPool(PoolKey, this);
+   		}
+   		}, 5.0f, false);
+   }
+    
+ </code>
+</pre>
