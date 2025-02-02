@@ -1,13 +1,13 @@
 Contents
 -
 
-### 1. Inventory System
-### 2. Equipment System
+### [1. Inventory System] (#Inventory System)
+### [2. Equipment System] (#Equipment-System)
 </br>
 </br>
 </br>
 
-Inventory System
+## Inventory System <a name="Inventory System"></a>
 -
 Unreal Engine 자료구조 TMap을 활용한 레지던트 이블 스타일의 공간 인벤토리입니다.
 Mouse Hover, Click에 의한 상호작용 기능을 구현했습니다.
@@ -285,6 +285,8 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
 
 EquipmentSystem
 -
+Unreal Engine 자료구조 TArray를 활용한 창작 장비창 UI 입니다.
+버튼 인터렉션과 스크롤 기능, 3D캐릭터 표시 등을 구현하였습니다.
 
 예시 영상
 -
@@ -296,3 +298,224 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
 
 핵심 기능
 -
+- ### Equipment
+  > - 무기를 장착할 수 있는 각 부위들을 버튼으로 만들어 클릭 시 무기 리스트UI( UEquipmentContents )가 표시되게 구현했습니다.
+  > - 각 버튼을 캔버스 패널의 슬롯으로 배치하고 해당 버튼을 클릭했을 때, 캔버스 패널의 좌표 공간을 사용해서 무기 리스트 UI의 크기와 위치를 설정해주었습니다.
+  > - 무기 리스트 UI는 버튼 클릭 시 해당 UI의 인스턴스를 생성해주었고, 무기 리스트 UI에서 InitializeEquipmentContents함수를 호출하여 해당 클래스가 필요한 정보를 얻어왔습니다.
+  
+  <pre>
+    <code>
+      void UEquipment::ButtonInteraction(UCanvasPanel *InCanvas, UBorder *InBorder)
+      {
+      	if (CanCheckCreateWidget(InCanvas))
+      	{
+      		if (EquipmentContentsWidget)
+      		{
+      			EquipmentContents = CreateWidget<UEquipmentContents>(GetOwningPlayer(), EquipmentContentsWidget);
+      			if (EquipmentContents)
+      			{
+      				EquipmentContents->InitializeEquipmentContents(this);
+      				EquipmentContents->OnAddWeaponWidget.AddUObject(this, &UEquipment::AddWeaponItem);
+      				EquipmentContents->OnRemoveWeaponWidget.AddUObject(this, &UEquipment::RemoveWeaponItem);
+      
+      				if (auto SlotPanel = InCanvas->AddChildToCanvas(EquipmentContents))
+      				{
+      					if (auto ButtonSlot = Cast<UCanvasPanelSlot>(InBorder->Slot))
+      					{
+      						SlotPanel->SetSize(FVector2D(ItemListSize.X, ItemListSize.Y));
+      						SlotPanel->SetPosition(FVector2D(ButtonSlot->GetPosition().X + ItemListPos.X, ButtonSlot->GetPosition().Y + ItemListPos.Y));
+      					}
+      				}
+      			}
+      		}
+      	}
+      }
+    </code>
+  </pre> 
+  
+- ### EquipmentContents
+  > - InitializeEquipmentContents함수가 호출될 때, RefreshEquipmentSlot함수를 함께 호출하여 무기 리스트에서 필요한 정보들을 가져왔고, 리스트의 각 슬롯들을 만들어주었습니다.
+  > - 무기 리스트에 표시되는 슬롯은 InventoryComponent에서 설정했던 InventorySize를 가져와서 해당 변수의 값 만큼 생성해주었고, TArray::IsValidIndex함수를 활용하여 배열의 Index가 유효한지 체크하여 Index의 값이 nullptr이 아니고 Index가 유효하다면 ItemList의 Index 정보를 무기 슬롯에 넘겨주었고, 그게 아니라면 무기 슬롯에 nullptr을 넘겨주어 빈 공간으로 표시되게 구현했습니다.
+  
+  <pre>
+    <code>
+      void UEquipmentContents::InitializeEquipmentContents(UEquipment* EquipmentWidget)
+      {
+                                            .
+                                            .
+                                            .
+      	RefreshEquipmentSlot();
+      	OnEquipWeaponWidget.AddUObject(this, &UEquipmentContents::EquipWeaponWidget);
+      }
+      
+      void UEquipmentContents::InitEssentialData()
+      {
+      	Player = Cast<APlayerCharacter>(GetOwningPlayerPawn());
+      	if (Player)
+      	{
+      		InventoryComponent = Player->GetItemInventory();
+      		if (InventoryComponent)
+      		{
+      			ItemList = InventoryComponent->GetWeaponInventory();
+      			ListSize = InventoryComponent->GetWeaponInventorySize();
+      
+      			InventoryComponent->OnInventoryUpdate.AddUObject(this, &UEquipmentContents::RefreshEquipmentSlot);
+      		}
+      	}
+      }
+      
+      void UEquipmentContents::RefreshEquipmentSlot()
+      {
+      	InitEssentialData();
+      	WidgetList.Empty();
+      	ContentsBox->ClearChildren();
+      	for (int32 i = 0; i < ListSize; i++)
+      	{
+      		if (EquipmentSlotWidget)
+      		{
+      			EquipmentSlot = CreateWidget<UEquipmentSlot>(GetOwningPlayer(), EquipmentSlotWidget);
+      			if (EquipmentSlot)
+      			{
+      				EquipmentSlot->OnAddWidget.AddUObject(this, &UEquipmentContents::AddWeaponWidget);
+      				EquipmentSlot->OnRemoveWidget.AddUObject(this, &UEquipmentContents::RemoveWeaponWidget);
+      
+      				if (ItemList.IsValidIndex(i))
+      				{
+      					if (ItemList[i])
+      					{
+      						EquipmentSlot->InitializeEquipmentSlot(this, ItemList[i]);
+      
+      						WidgetList.Add(EquipmentSlot);
+      					}
+      				}
+      				else
+      				{
+      					EquipmentSlot->InitializeEquipmentSlot(this, nullptr);
+      				}
+      				ContentsBox->AddChild(EquipmentSlot);
+      			}
+      		}
+      	}
+      }
+    </code>
+  </pre> 
+  
+  - ### EquipmentSlot
+  > - InitializeEquipmentSlot함수가 호출 될 때, SetIteminfo함수를 함께 호출하여 EquipmentContents에서 받아온 정보를 위젯 요소들에 적용시켜주었고, 받아온 값이 nullptr일 경우에는 투명도를 0으로 만들어 보이지 않게 해주었습니다.
+  > - 해당 클래스는 버튼으로 만들지 않고, 마우스 상호작용과 관련된 Native함수들을 이용하여 버튼 처럼 보일 수 있게 구현했습니다.
+  > - 화면에 위치한 EquipmentSlot을 클릭했을 때, 델리게이트를 이용하여 해당 클래스가 가지고 있는 ItemInfo를 상위 클래스로 다시 넘겨주는 방식으로 값을 이동시켜주었습니다.
+  
+  
+  <pre>
+    <code>
+      void UEquipmentSlot::InitializeEquipmentSlot(UEquipmentContents *EquipContentsWidget, APickUpItem *WeaponItem)
+      {
+      	if (EquipContentsWidget)
+      	{
+      		EquipContents = EquipContentsWidget;
+      		ItemInfo = WeaponItem;
+      		if (EquipContents)
+      		{
+      			MainWeaponSlotState = EquipContents->GetWeaponButtonStateMain() && EquipContents->GetEquipSlotMain();
+      			SubWeaponSlotState = EquipContents->GetWeaponButtonStateSub() && EquipContents->GetEquipSlotSub();
+      			RangedWeaponSlotState = EquipContents->GetWeaponButtonStateRanged() && EquipContents->GetEquipSlotRanged();
+      		}
+      		WeaponImage->SetRenderOpacity(0.0f);
+      		HoverImage->SetRenderOpacity(0.0f);
+      
+      		SetItemInfo(ItemInfo);
+      	}
+      }
+      void UEquipmentSlot::SetItemInfo(APickUpItem *Item)
+      {
+      	if (Item)
+      	{
+      		WeaponImage->SetRenderOpacity(1.0f);
+      		WeaponImage->SetBrushFromTexture(Item->GetItemTexture());
+      	}
+      	else
+      	{
+      		WeaponImage->SetRenderOpacity(0.0f);
+      	}
+      }
+
+      FReply UEquipmentSlot::NativeOnMouseButtonDown(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent)
+      {
+      	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+      	{
+      		if (ItemInfo && EquipContents)
+      		{
+      			if (MainWeaponSlotState)
+      			{
+      				OnAddWidget.Broadcast(EquipContents->GetEquipSlotMain());
+      			}
+      			if (SubWeaponSlotState)
+      			{
+      				OnAddWidget.Broadcast(EquipContents->GetEquipSlotSub());
+      			}
+      			if (RangedWeaponSlotState)
+      			{
+      				OnAddWidget.Broadcast(EquipContents->GetEquipSlotRanged());
+      			}
+      			EquipContents->OnEquipWeaponWidget.Broadcast(this);
+      			OnRemoveWidget.Broadcast(this);
+      			return FReply::Handled();
+      		}
+      	}
+      	return FReply::Unhandled();
+      }
+    </code>
+  </pre> 
+
+  - ### Equipment
+  > - EquipmentSlot에서 보낸 정보를 FSlateBrush 구조체를 사용하여 Button의 각 상태별 이미지를 바꿔주었습니다.
+  
+  <pre>
+    <code>
+      void UEquipment::EquipWeaponItem(UEquipmentSlot *SlotWidget)
+      {
+      	if (bIsActiveMainWeapon_BTN && SlotWidget)
+      	{
+      		MainWeaponSlot = SlotWidget;
+      		SetButtonStyle(MainWeaponSlot, MainWeaponButton);
+      		EquipMainWeapon();
+      	}
+      	if (bIsActiveSubWeapon_BTN && SlotWidget)
+      	{
+      		SubWeaponSlot = SlotWidget;
+      		SetButtonStyle(SubWeaponSlot, SubWeaponButton);
+      		EquipSubWeapon();
+      	}
+      	if (bIsActiveRangedWeapon_BTN && SlotWidget)
+      	{
+      		RangedWeaponSlot = SlotWidget;
+      		SetButtonStyle(RangedWeaponSlot, RangedWeaponButton);
+      		EquipRangedWeapon();
+      	}
+      }
+      
+      void UEquipment::SetButtonStyle(UEquipmentSlot *SlotWidget, UButton *ToButton)
+      {
+      	if (ToButton)
+      	{
+      		FSlateBrush NormalBrush;
+      		NormalBrush.SetResourceObject(SlotWidget->GetWeaponItem()->GetItemTexture());
+      		NormalBrush.TintColor = FLinearColor(1.0f, 1.0f, 1.0f, 1.0f); 
+      
+      		FSlateBrush HoverBrush;
+      		HoverBrush.SetResourceObject(SlotWidget->GetWeaponItem()->GetItemTexture());
+      		HoverBrush.TintColor = FLinearColor(0.4f, 0.4f, 0.4f, 1.0f);
+      
+      		FSlateBrush PressedBrush;
+      		PressedBrush.SetResourceObject(SlotWidget->GetWeaponItem()->GetItemTexture());
+      		PressedBrush.TintColor = FLinearColor(0.1f, 0.1f, 0.1f, 1.0f);
+      
+      		FButtonStyle ButtonStyle;
+      		ButtonStyle.Normal = NormalBrush;
+      		ButtonStyle.Hovered = HoverBrush;
+      		ButtonStyle.Pressed = PressedBrush;
+      		ToButton->SetStyle(ButtonStyle);
+      	}
+      }
+    </code>
+  </pre> 
