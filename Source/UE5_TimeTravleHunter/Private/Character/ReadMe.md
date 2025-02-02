@@ -4,11 +4,10 @@ PlayerCharacter
 
 Contents
 -
-- [Advanced Locomotion](#advanced-locomotion)
-- FootIK
-- Traversal (Vaulting, Hurdling, Mantling), Assasination With MotionWarping
-- RagDoll System
-- Combat Combo Action
+### [1. Advanced Locomotion](#advanced-locomotion)
+### [2. FootIK](#footik)
+### [3. Traversal System](#traversal-system)
+### [4. Combat Combo Action](#combat-combo-action)
 
 
 
