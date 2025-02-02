@@ -2,7 +2,10 @@ Contents
 -
 
 ### 1. Inventory System
-
+### 2. Equipment System
+</br>
+</br>
+</br>
 
 Inventory System
 -
@@ -276,4 +279,20 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
       }
    </code>
   </pre>
+</br>
+</br>
+</br>
 
+EquipmentSystem
+-
+
+예시 영상
+-
+https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
+
+클래스 구조도
+-
+![Inventory_System drawio](https://github.com/user-attachments/assets/5bf79fca-0350-4ad1-8149-55530f5d8961)
+
+핵심 기능
+-
