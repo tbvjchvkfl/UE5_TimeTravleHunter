@@ -1,8 +1,8 @@
 Contents
 -
 
-### [1. Inventory System](Inventory-System)
-### [2. Equipment System](Equipment-System)
+### [1. Inventory System](#inventory-system)
+### [2. Equipment System](#equipment-system)
 
 </br>
 </br>
@@ -284,7 +284,7 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
 </br>
 </br>
 
-EquipmentSystem
+Equipment System
 -
 Unreal Engine 자료구조 TArray를 활용한 창작 장비창 UI 입니다.
 버튼 인터렉션과 스크롤 기능, 3D캐릭터 표시 등을 구현하였습니다.
