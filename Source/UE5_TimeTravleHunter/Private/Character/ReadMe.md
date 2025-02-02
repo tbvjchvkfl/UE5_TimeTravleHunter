@@ -4,7 +4,7 @@ PlayerCharacter
 
 Contents
 -
-- Advanced Locomotion
+- [Advanced Locomotion](#advanced-locomotion)
 - FootIK
 - Traversal (Vaulting, Hurdling, Mantling), Assasination With MotionWarping
 - RagDoll System
