@@ -44,7 +44,7 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
    </code>
   </pre>
 
-    > - 캐릭터가 APickUpItem과 인터렉션 하면 CheckItem 함수를 통해 Item의 타입을 확인하여 Coin이면 CoinInventory에 값이 추가되고 그 외 타입이면 AddItem함수가 호출되도록 구현해주었습니다.
+    > - 캐릭터가 APickUpItem과 인터렉션 하면 CheckItem 함수를 통해 Item의 타입을 확인하여 타입에 따라 별도 함수를 호출해주었습니다.
     > - 멀티 캐스트 델리게이트를 바인딩하여 아이템을 획득할 때마다 위젯 인벤토리의 내용이 업데이트 될 수 있도록 구현했습니다.
     <pre>
    <code>
@@ -59,7 +59,7 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
       		break;
       		case EItemType::Weapon:
       		{
-      			AddItem(Item);
+      			AddWeapon(Item);
       		}
       		break;
       		case EItemType::Consumable:
@@ -78,35 +78,6 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
    </code>
   </pre>
   
-    > - Inventory Component의 초기화 작업을 할 때, 처음에는 FVector2D 타입이나 FIntPoint타입의 변수를 사용하여 인벤토리의 크기를 설정해주려하였으나, 그렇게 되면 이중 for루프를 돌게 되어 시간 복잡도가 n^2이 되어 아래 코드와 같은 방식으로 for루프를 한번만 돌도록 구현하였습니다.
-  <pre>
-   <code>
-      void UInventoryComponent::InitializeInventory()
-      {
-      	ItemInventory.Empty();
-      	InventoryState.Empty();
-      	if (InventoryState.IsEmpty())
-      	{
-      		int32 Column = 0;
-      		int32 Row = 0;
-      		for (int32 i = 0; i < InventorySize; i++)
-      		{
-      			InventoryState.Add(FVector2D(Column, Row), false);
-      			if (Column == InventoryWidth - 1)
-      			{
-      				Column = 0; 
-      				Row++;
-      			}
-      			else
-      			{
-      				Column++;
-      			}
-      		}
-      	}
-      }
-   </code>
-  </pre>
-
     > - CheckItem 이후, AddItem 함수가 호출 되면 우선적으로 ItemInventory를 순회하며 Inventory안에 Item이 있거나, 해당 아이템의 값이 nullptr이 아닐 경우 아이템 중복 체크를 위해 만들어둔 ItemNumber를 서로 비교하여 만약, 같은 아이템이라면 아이템의 수량만 증가되도록 구현하였습니다.
     > - Inventory가 비어있거나, 획득한 아이템이 기존의 아이템과 같은 아이템이 아니라면 bIsRoomAvailable함수를 호출하여 현재 Inventory에 획득한 아이템이 들어갈 수 있는 공간이 있는지 확인하였고, 해당 함수가 true를 리턴하면 아이템이 추가되도록 구현하였습니다.
         
@@ -299,8 +270,6 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
       				Corner = ShapeContain[i];
       			}
       		}
-      
-      		
       		FVector2D CalculateVector(Corner.X * ItemGridSize, Corner.Y * ItemGridSize);
       		ItemQuantityText->SetRenderTranslation(FVector2D(CalculateVector.X + 40.0f, CalculateVector.Y + 60.0f));
       	}
