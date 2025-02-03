@@ -17,7 +17,6 @@
 
 void UEquipWeaponWidget::InitializeEquipmenWidget()
 {
-	CurrentWeaponWidget->InitializeCurrentWeaponImage();
 	RefreshInventory();
 	InventoryComponent->OnInventoryUpdate.AddUObject(this, &UEquipWeaponWidget::RefreshInventory);
 }
@@ -48,9 +47,10 @@ void UEquipWeaponWidget::RefreshInventory()
 				WeaponItem = CreateWidget<UWeaponItemWidget>(GetOwningPlayer(), WeaponItemWidget);
 				if (WeaponItem)
 				{
-					WeaponItem->InitializeWeaponItem(this, CurrentWeaponWidget, EquipWeaponInventory[i]);
+					WeaponItem->InitializeWeaponItem(this, EquipWeaponInventory[i]);
 					WeaponItem->OnAddItemWidget.AddUObject(this, &UEquipWeaponWidget::AddEquipItem);
 					WeaponItem->OnRemoveItemWidget.AddUObject(this, &UEquipWeaponWidget::RemoveEquipItem);
+					WeaponItem->OnShowWeaponItem.AddUObject(this, &UEquipWeaponWidget::ShowItem);
 
 					WeaponItemInventory[i] = WeaponItem;
 				}
@@ -91,4 +91,9 @@ void UEquipWeaponWidget::RemoveEquipItem(UWeaponItemWidget *Widget)
 			OnRemoveWeaponItem.Broadcast(i);
 		}
 	}
+}
+
+void UEquipWeaponWidget::ShowItem(APickUpItem *Item)
+{
+	OnShowWeaponMesh.Broadcast(Item);
 }

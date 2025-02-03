@@ -2,7 +2,7 @@
 
 
 #include "UI/InventorySlot.h"
-#include "Controller/PlayerCharacterController.h"
+#include "Character/Controller/PlayerCharacterController.h"
 
 
 void UInventorySlot::InitializeSlot(int32 Slot_X, int32 Slot_Y)

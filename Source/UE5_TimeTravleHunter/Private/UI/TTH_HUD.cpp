@@ -6,7 +6,7 @@
 #include "UI/TTH_HUD.h"
 #include "UI/GameHUD.h"
 #include "UI/Inventory.h"
-#include "Controller/PlayerCharacterController.h"
+#include "Character/Controller/PlayerCharacterController.h"
 
 
 // Engine

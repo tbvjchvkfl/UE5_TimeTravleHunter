@@ -10,12 +10,11 @@
 // Engine
 #include "Components/Image.h"
 
-void UWeaponItemWidget::InitializeWeaponItem(UEquipWeaponWidget *EquipWidget, UCurrentWeaponWidget *CurWeaponWidget, APickUpItem *WeaponItem)
+void UWeaponItemWidget::InitializeWeaponItem(UEquipWeaponWidget *EquipWidget, APickUpItem *WeaponItem)
 {
-	if (EquipWidget && CurWeaponWidget && WeaponItem)
+	if (EquipWidget && WeaponItem)
 	{
 		EquipWeaponWidget = EquipWidget;
-		CurrentWeaponItem = CurWeaponWidget;
 		WeaponInfo = WeaponItem;
 		WeaponImage->SetBrushFromTexture(WeaponItem->GetItemTexture());
 		HoverImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
@@ -25,6 +24,7 @@ void UWeaponItemWidget::InitializeWeaponItem(UEquipWeaponWidget *EquipWidget, UC
 void UWeaponItemWidget::NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent)
 {
 	HoverImage->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.4f));
+	OnShowWeaponItem.Broadcast(WeaponInfo);
 }
 
 void UWeaponItemWidget::NativeOnMouseLeave(const FPointerEvent &InMouseEvent)
@@ -36,12 +36,12 @@ FReply UWeaponItemWidget::NativeOnMouseButtonDown(const FGeometry &InGeometry, c
 {
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
-		if (CurrentWeaponItem->PrevWidget)
-		{
-			OnAddItemWidget.Broadcast(CurrentWeaponItem->PrevWidget);
-		}
-		CurrentWeaponItem->OnEquipWeapon.Broadcast(this);
-		OnRemoveItemWidget.Broadcast(this);
+		//if (CurrentWeaponItem->PrevWidget)
+		//{
+			//OnAddItemWidget.Broadcast(CurrentWeaponItem->PrevWidget);
+		//}
+		//CurrentWeapwzonItem->OnEquipWeapon.Broadcast(this);
+		//OnRemoveItemWidget.Broadcast(this);
 	}
 	return FReply::Handled();
 }

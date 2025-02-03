@@ -5,7 +5,7 @@
 #include "UI/ItemVisibility.h"
 #include "UI/DropDown.h"
 #include "Object/PickUpItem.h"
-#include "Controller/PlayerCharacterController.h"
+#include "Character/Controller/PlayerCharacterController.h"
 
 // Engine
 #include "Components/Image.h"
@@ -51,6 +51,7 @@ void UInventoryItem::InitializeInventoryItem(FVector2D Loc, APickUpItem *PickUpI
 void UInventoryItem::NativeOnMouseEnter(const FGeometry &InGeometry, const FPointerEvent &InMouseEvent)
 {
 	HoverItem();
+	OnShowMesh.Broadcast(PickUpItems);
 }
 
 void UInventoryItem::NativeOnMouseLeave(const FPointerEvent &InMouseEvent)

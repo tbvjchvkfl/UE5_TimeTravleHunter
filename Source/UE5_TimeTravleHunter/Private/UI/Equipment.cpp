@@ -5,6 +5,7 @@
 #include "UI/Equipment.h"
 #include "UI/EquipmentContents.h"
 #include "UI/EquipmentSlot.h"
+#include "UI/ViewUI.h"
 #include "Character/Player/PlayerCharacter.h"
 #include "Component/InventoryComponent.h"
 #include "Component/WeaponComponent.h"
@@ -26,6 +27,8 @@ void UEquipment::InitializeEquipment()
 	{
 		WeaponComponent = Player->GetWeaponComponent();
 	}
+	ViewUI->InitializeViewUI();
+
 	MainWeaponButton->OnClicked.AddDynamic(this, &UEquipment::OnMainWeaponClicked);
 	SubWeaponButton->OnClicked.AddDynamic(this, &UEquipment::OnSubWeaponClicked);
 	RangedWeaponButton->OnClicked.AddDynamic(this, &UEquipment::OnRangedWeaponClicked);

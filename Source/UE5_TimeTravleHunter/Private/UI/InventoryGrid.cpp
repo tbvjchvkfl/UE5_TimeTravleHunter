@@ -53,6 +53,7 @@ void UInventoryGrid::RefreshGrid()
 				ItemWidget->OnRemoved.AddUObject(this, &UInventoryGrid::ItemRemoved);
 				ItemWidget->OnMoved.AddUObject(this, &UInventoryGrid::ItemMoved);
 				ItemWidget->OnDropped.AddUObject(this, &UInventoryGrid::ItemDropped);
+				ItemWidget->OnShowMesh.AddUObject(this, &UInventoryGrid::ShowDummyItem);
 
 				AddToInventory(ItemWidget);
 
@@ -323,4 +324,9 @@ void UInventoryGrid::RemoveFromState(FVector2D WidgetLoc, APickUpItem *Item)
 			GridState.Add(ItemShapeElem + WidgetLoc, false);
 		}
 	}
+}
+
+void UInventoryGrid::ShowDummyItem(APickUpItem *Item)
+{
+	OnShowDummyItem.Broadcast(Item);
 }
