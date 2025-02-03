@@ -308,31 +308,11 @@ Contents
 </pre>
 
 > - 레벨에 배치된 ActorPool에서 EnemyCharacter가 Spawn될 때에는 UseEnemyPool함수로 EnemyCharacter를 담고 있는 배열의 가장 마지막 Index부터 Visibiltiy와 콜리전을 모두 켠 상태에서 SpawnPoint로 넘겨주었고, 배열에서는 Pop하여 SpawnCount를 체크해주었습니다.
-> - SpawnPoint에서 EnemyCharacter를 Spawn할 때에는 아래 SpawnObject함수를 BeginPlay에서 호출해 주었는데, 실제 개발 과정에서 Pool에 있는 개수보다 SpawnPoint가 많아지는 경우를 고려하여 CheckEnemyPoolIsEmpty함수를 통해 EnemyCharacter를 담고 있는 배열이 비어있는게 아니라면 Spawn할 수 있도록 구현했습니다.
+> - SpawnPoint에서 EnemyCharacter를 Spawn할 때에는 Pool에 있는 개수보다 SpawnPoint가 많아지는 경우를 고려하여 CheckEnemyPoolIsEmpty함수를 통해 EnemyCharacter를 담고 있는 배열이 비어있는게 아니라면 Spawn할 수 있도록 구현했습니다.
 
 <pre>
  <code>
-         ========= EnemyPool.cpp =========
-   
-   AEnemyCharacter *AEnemyPool::UseEnemyPool(TSubclassOf<AEnemyCharacter> CharacterClass)
-   {
-   	AEnemyCharacter *ECharacter{};
-   	for (auto EnemyElem : EnemyPool)
-   	{
-   		if (EnemyElem.Key == CharacterClass)
-   		{
-   			if (!EnemyElem.Value.NPCListIsEmpty())
-   			{
-   				ECharacter = EnemyElem.Value.NPCList[EnemyElem.Value.NPCList.Num() - 1];
-   				ECharacter->SetActorHiddenInGame(false);
-   				ECharacter->SetActorEnableCollision(true);
-   				EnemyElem.Value.RemoveToNPCList();
-   			}
-   		}
-   	}
-   	return ECharacter;
-   }
-    
+  
    bool AEnemyPool::CheckEnemyPoolIsEmpty(TSubclassOf<AEnemyCharacter> CharacterClass)
    {
    	bool ReturnValue = false;
@@ -349,35 +329,6 @@ Contents
    	return ReturnValue;
    }
     
-    ========= SpawnPoint.cpp =========
-   void ASpawnPoint::SpawnObject()
-   {
-   	if (ItemSpawnType == ESpawnType::EnemyCharacter)
-   	{
-   		if (EnemyPoolClass)
-   		{
-   			TArray<AActor *>ActorArray;
-   			UGameplayStatics::GetAllActorsOfClass(GetWorld(), EnemyPoolClass, ActorArray);
-   			for (auto ActorElem : ActorArray)
-   			{
-   				if (ActorElem)
-   				{
-   					EnemyPool = Cast<AEnemyPool>(ActorElem);
-   					break;
-   				}
-   			}
-   			if (EnemyPool)
-   			{
-   				if (SpawnCharacterClass && !EnemyPool->CheckEnemyPoolIsEmpty(SpawnCharacterClass))
-   				{
-   					SpawnCharacter = EnemyPool->UseEnemyPool(SpawnCharacterClass);
-   					SpawnCharacter->SetActorLocation(GetActorLocation());
-   					this->Destroy();
-   				}
-   			}
-   		}
-   	}
-   }
  </code>
 </pre>
 
