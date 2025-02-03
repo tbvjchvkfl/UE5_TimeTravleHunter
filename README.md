@@ -14,5 +14,3 @@ This Game Is Adventure Action of Third Person
 ### [2. EnemyCharacter](https://github.com/tbvjchvkfl/UE5_TimeTravleHunter/blob/master/Source/UE5_TimeTravleHunter/Private/Character/Enemy/ReadMe.md)
 
 ### [3. UI](https://github.com/tbvjchvkfl/UE5_TimeTravleHunter/blob/master/Source/UE5_TimeTravleHunter/Private/UI/ReadMe.md)
-
-### [4. Item](https://github.com/tbvjchvkfl/UE5_TimeTravleHunter/blob/master/Source/UE5_TimeTravleHunter/Private/Object/ReadMe.md)
