@@ -19,6 +19,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnMoved, UInventoryItem *);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnReMoved, UInventoryItem *);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnDropped, UInventoryItem *);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAdded, UInventoryItem *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowMesh, APickUpItem *);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UInventoryItem : public UUserWidget
@@ -32,6 +33,7 @@ public:
 	FOnReMoved OnRemoved;
 	FOnDropped OnDropped;
 	FOnAdded OnAdded;
+	FOnShowMesh OnShowMesh;
 
 	UPROPERTY(meta = (BindWidget))
 	USizeBox *BackGroundSizeBox;

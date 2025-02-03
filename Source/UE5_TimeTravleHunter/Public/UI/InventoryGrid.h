@@ -16,6 +16,7 @@ class APlayerCharacter;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnDropItem, FVector2D);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemoveItem, FVector2D);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnAddItem, FVector2D, APickUpItem *);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowDummyItem, APickUpItem *);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UInventoryGrid : public UUserWidget
@@ -28,6 +29,7 @@ public:
 	FOnDropItem OnDropItem;
 	FOnRemoveItem OnRemoveItem;
 	FOnAddItem OnAddItem;
+	FOnShowDummyItem OnShowDummyItem;
 
 	UPROPERTY(meta = (BindWidget))
 	UGridPanel *InventoryGrid;
@@ -100,4 +102,5 @@ protected:
 	void RemoveFromInventory(FVector2D WidgetLoc);
 	void AddToState(FVector2D WidgetLoc, APickUpItem *Item);
 	void RemoveFromState(FVector2D WidgetLoc, APickUpItem *Item);
+	void ShowDummyItem(APickUpItem *Item);
 };

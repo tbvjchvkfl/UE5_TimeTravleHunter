@@ -11,8 +11,12 @@ class APlayerCharacter;
 class UInventoryGrid;
 class UEquipWeaponWidget;
 class UCurrentWeaponWidget;
+class UEquipment;
+class UItemViewUI;
 class APickUpItem;
 class UImage;
+class UButton;
+class APickUpItemDummy;
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UInventory : public UUserWidget
@@ -28,6 +32,26 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UEquipWeaponWidget *EquipmentWidget;
 
+	UPROPERTY(meta = (BindWidget))
+	UEquipment *Equipment;
+
+	UPROPERTY(meta = (BindWidget))
+	UItemViewUI *ItemViewUI;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton *BTN_Equip;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton *BTN_Map;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton *BTN_Inventory;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton *BTN_Setting;
+
+	UPROPERTY(EditAnywhere, Category = "Widget | Property")
+	TSubclassOf<APickUpItemDummy> PickUpItemDummyClass;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
@@ -46,8 +70,17 @@ protected:
 	UPROPERTY()
 	APlayerCharacter *Player;
 
+	UPROPERTY()
+	APickUpItemDummy *PickUpItemDummy;
 	//======================================================
 	//=					- Functionary -					   =
 	//======================================================
 	virtual void NativeConstruct() override;
+	void CheckItemDummyActor();
+	void DesiredItemMesh(APickUpItem* Item);
+
+	UFUNCTION()
+	void ShowEquipment();
+	UFUNCTION()
+	void ShowInventory();
 };

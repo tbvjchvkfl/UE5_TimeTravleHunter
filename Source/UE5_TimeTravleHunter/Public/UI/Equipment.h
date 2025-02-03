@@ -17,7 +17,7 @@ class UWeaponComponent;
 class UEquipmentSlot;
 class UEquipmentContents;
 class APickUpItem;
-
+class UViewUI;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEquipWeapon, UEquipmentSlot *);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAddWeaponItem, APickUpItem *);
@@ -36,6 +36,9 @@ public:
 	FOnRemoveWeaponItem OnRemoveWeaponItem;
 
 	UPROPERTY(meta = (BindWidget))
+	UViewUI *ViewUI;
+
+	UPROPERTY(meta = (BindWidget))
 	UCanvasPanel *MainWeaponCanvas;
 
 	UPROPERTY(meta = (BindWidget))
@@ -52,15 +55,6 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UBorder *RangedWeaponBorder;
-
-	/*UPROPERTY(meta = (BindWidget))
-	UEquipmentContents *MainEquipmentContents;
-
-	UPROPERTY(meta = (BindWidget))
-	UEquipmentContents *SubEquipmentContents;
-
-	UPROPERTY(meta = (BindWidget))
-	UEquipmentContents *RangedEquipmentContents;*/
 
 	UPROPERTY(meta = (BindWidget))
 	UButton *MainWeaponButton;

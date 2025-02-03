@@ -18,6 +18,7 @@ class UCurrentWeaponWidget;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAddWeaponItem, APickUpItem *);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRemoveWeaponItem, int32);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowWeaponMesh, APickUpItem *);
 
 UCLASS()
 class UE5_TIMETRAVLEHUNTER_API UEquipWeaponWidget : public UUserWidget
@@ -29,15 +30,13 @@ public:
 	//======================================================
 	FOnAddWeaponItem OnAddWeaponItem;
 	FOnRemoveWeaponItem OnRemoveWeaponItem;
+	FOnShowWeaponMesh OnShowWeaponMesh;
 
 	UPROPERTY(meta = (BindWidget))
 	UWrapBox *SlotWrapPanel;
 
 	UPROPERTY(meta = (BindWidget))
 	UWrapBox *WeaponWrapPanel;
-
-	UPROPERTY(meta = (BindWidget))
-	UCurrentWeaponWidget *CurrentWeaponWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Widget")
 	TSubclassOf<UEquipmentSlot> EquipmentSlotWidget;
@@ -79,4 +78,5 @@ public:
 	void FillEmptySlot();
 	void AddEquipItem(UWeaponItemWidget *Widget);
 	void RemoveEquipItem(UWeaponItemWidget *Widget);
+	void ShowItem(APickUpItem *Item);
 };
