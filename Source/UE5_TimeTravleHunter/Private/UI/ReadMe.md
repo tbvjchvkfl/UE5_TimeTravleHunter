@@ -3,6 +3,7 @@ Contents
 
 ### [1. Inventory System](#inventory-system)
 ### [2. Equipment System](#equipment-system)
+### [3. Item Pool](#item-pool)
 
 </br>
 </br>
@@ -516,6 +517,196 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
       		ButtonStyle.Hovered = HoverBrush;
       		ButtonStyle.Pressed = PressedBrush;
       		ToButton->SetStyle(ButtonStyle);
+      	}
+      }
+    </code>
+  </pre> 
+
+Item Pool
+-
+- ### Item Pool Component
+  > - TMap을 활용해서 EditList와 ItemPool을 만들어 주었습니다.
+  > - EditList는 게임 디자이너(게임 기획자)가 레벨에 배치할 Item의 데이터와 개수를 정할 수 있도록 FName과 int32를 Key와 Value로 선언했고, 같은 타입의 Key와 실제 Spawn될 Item의 인스턴스들을 담을 배열 정보를 구조체로 만들어 Value로 가지고 있는 ItemPool을 선언해주었습니다.
+  
+ <pre>
+    <code>
+      struct FItemPoolStruct
+      {
+      	GENERATED_USTRUCT_BODY()
+      
+      	TArray<APickUpItem *> ItemList;
+      	FItemPoolStruct()
+      	{
+      		ItemList.Empty();
+      	}
+      	void AddToItemList(APickUpItem* Item)
+      	{
+      		ItemList.Add(Item);
+      	}
+      	void RemoveToItemList()
+      	{
+      		ItemList.Pop();
+      	}
+      	bool ItemListIsEmpty()
+      	{
+      		return ItemList.IsEmpty();
+      	}
+      };
+          
+      class UE5_TIMETRAVLEHUNTER_API UItemPoolComponent : public UActorComponent
+      {
+      public:	
+      	UPROPERTY(EditAnywhere, Category = "Class | BasicProperty")
+      	TMap<FName, int32> EditList;
+      
+      private:
+      	UPROPERTY(EditAnywhere, Category = "Item Data", meta = (AllowPrivateAccess = "true"))
+      	UDataTable *ItemDataTable;
+      
+      	UPROPERTY(VisibleAnywhere, Category = "PoolMap")
+      	TMap<FName, FItemPoolStruct> ItemPool;
+      };
+          
+    </code>
+  </pre> 
+  
+> - 다음으로 UDataTable::GetRowMap함수를 활용하여 DataTable의 Row들을 Map으로 받아왔고, Item의 인스턴스가 생성될 때 해당 Map을 순회하며 각 Row에 담겨져 있는 정보를 Item에 넣어주었습니다.
+> - GetRowMap으로 DataTable을 받아올 경우 Value가 uint8타입으로 넘어오는 바람에 언리얼 엔진의 Cast를 사용할 수 없었습니다. 그래서 어쩔 수 없이 reinterpret_cast를 사용하여 강제로 형변환 해서 사용했습니다.
+> - Item들은 AActor::SpawnActor를 사용하여 인스턴스화 해주었고, Item의 인스턴스를 배열에 담기전에 Visibility와 Collision을 모두 비활성화 시켜 게임에서는 보이지 않게 만들었습니다.
+
+  <pre>
+    <code>
+      void UItemPoolComponent::InitializePool()
+      {
+      	for (const auto &e : EditList)
+      	{
+      		ItemPool.Add(e.Key);
+      	}
+      	TArray<FName> SubArray;
+      	EditList.GetKeys(SubArray);
+      	TMap<FName, uint8 *> RowMap = ItemDataTable->GetRowMap();
+      	TArray<FName> MapArray;
+      	RowMap.GetKeys(MapArray);
+      	for (int32 i = 0; i < SubArray.Num(); i++)
+      	{
+      		FItemPoolStruct ItemPoolStruct;
+      		for (int32 j = 0; j < EditList[SubArray[i]]; j++)
+      		{
+      			PickUpItem = GetWorld()->SpawnActor<APickUpItem>(PickUpItemClass);
+      			PickUpItem->SetActivateItem(false);
+      			ItemPoolStruct.AddToItemList(PickUpItem);
+      		}
+      		if (RowMap.Contains(SubArray[i])) 
+      		{
+      			if (auto RowData = reinterpret_cast<FItemData *>(RowMap[SubArray[i]]))
+      			{
+      				for (APickUpItem *Item : ItemPoolStruct.ItemList)
+      				{
+      					Item->SetItemData(SubArray[i], RowData);
+      				}
+      			}
+      		}
+      		ItemPool[SubArray[i]] = ItemPoolStruct;
+      	}
+      	bIsFillItemPool = true;
+      }
+    </code>
+  </pre> 
+
+  > - 레벨에 Item이 Spawn될 때에는 UseItemOfPool 함수를 호출하여 Item의 인스턴스를 담고 있는 배열의 마지막 Index부터 빼내어 SpawnPoint로 넘겨주었습니다.
+  > - Item의 인스턴스를 넘겨줄 때에는 기존에 꺼두었던 Visibility와 Collision을 다시 활성화 시켜 게임에서 보일 수 있게 해주었습니다.
+
+  <pre>
+    <code>
+         ========= ItemPoolComponent.cpp =========
+      
+      APickUpItem *UItemPoolComponent::UseItemOfPool(FName ItemRowName)
+      {
+      	TArray<FName> RowArray;
+      	ItemPool.GetKeys(RowArray);
+      	APickUpItem *PickItem{};
+      	for (int32 i = 0; i < RowArray.Num(); i++)
+      	{
+      		if (RowArray[i] == ItemRowName)
+      		{
+      			if (!ItemPool[RowArray[i]].ItemListIsEmpty())
+      			{
+      				PickItem = ItemPool[RowArray[i]].ItemList[ItemPool[RowArray[i]].ItemList.Num() - 1];
+      				PickItem->SetActivateItem(true);
+      				ItemPool[RowArray[i]].RemoveToItemList();
+      			}
+      		}
+      	}
+      	return PickItem;
+      }
+          
+          ========= SpawnPoint.cpp =========
+          
+      void ASpawnPoint::SpawnObject()
+      {
+      	if (ItemSpawnType == ESpawnType::PickUpItem)
+      	{
+      		SpawnItem = ItemPoolComponent->UseItemOfPool(ItemRowName);
+      		if (SpawnItem)
+      		{
+      			SpawnItem->SetActorLocation(GetActorLocation());
+      			SpawnItem->SetCurrentQuantity(ItemQuantity);
+      			this->Destroy();
+      		}
+      	}
+      }
+    </code>
+  </pre> 
+
+> - SpawnPoint에서 Item을 Spawn할 때에는 Pool에 있는 개수보다 SpawnPoint가 많아지는 경우를 고려하여 CheckItemPoolIsEmpty함수를 통해 Item을 담고 있는 배열이 비어있는게 아니라면 Spawn할 수 있도록 구현했습니다.
+
+  <pre>
+    <code>
+      
+      bool UItemPoolComponent::CheckItemPoolIsEmpty()
+      {
+      	bool bIsItemPoolEmpty{ false };
+      	TArray<FName> RowArray;
+      	ItemPool.GetKeys(RowArray);
+      	for (int32 i = 0; i < RowArray.Num(); i++)
+      	{
+      		if (ItemPool[RowArray[i]].ItemListIsEmpty())
+      		{
+      			bIsItemPoolEmpty = true;
+      			bIsFillItemPool = false;
+      		}
+      		else
+      		{
+      			bIsItemPoolEmpty = false;
+      			bIsFillItemPool = true;
+      		}
+      	}
+      	return bIsItemPoolEmpty;
+      }
+
+    </code>
+  </pre> 
+
+> - 마지막으로 Player와 아이템이 상호작용하면 다시 Item의 Visibility와 Collision을 비활성화 시켜 게임에서 사라진 것 처럼 보일 수 있게 해주었고, ReturnItemToPool 함수를 사용하여 다시 ItemPool에 집어넣어 재사용할 수 있게 해주었습니다.
+
+  <pre>
+    <code>
+         ========= ItemPoolComponent.cpp =========
+      
+      void UItemPoolComponent::ReturnItemToPool(APickUpItem *Item)
+      {
+      	if (Item)
+      	{
+      		TArray<FName> RowArray;
+      		ItemPool.GetKeys(RowArray);
+      		for (int32 i = 0; i < RowArray.Num(); i++)
+      		{
+      			if (RowArray[i] == Item->GetItemRowName())
+      			{
+      				Item->SetActivateItem(false);
+      				ItemPool[RowArray[i]].AddToItemList(Item);
+      			}
+      		}
       	}
       }
     </code>
