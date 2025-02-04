@@ -12,7 +12,7 @@ https://github.com/user-attachments/assets/8f84466c-fad8-4caa-ae29-0e67a5adb4c8
 
 핵심 코드
 -
-### Behavior Tree
+## Behavior Tree
 ![Image](https://github.com/user-attachments/assets/12012732-35d3-4392-b282-74a9615581f6)
 
 
@@ -177,7 +177,7 @@ https://github.com/user-attachments/assets/8f84466c-fad8-4caa-ae29-0e67a5adb4c8
  </code>
 </pre>
 
-### Enemy Pool
+## Enemy Pool
 ![Image](https://github.com/user-attachments/assets/217cd106-ceb6-4cee-abc3-6780a84f0156)
 > - 어느 레벨에서든 간단하게 배치할 수 있도록 AActor를 상속받아 만든 클래스에 TMap을 사용해서 EditEnemyPoolList와 EnemyPool을 만들어주었습니다.
 > - EditEnemyPoolList는 게임 디자이너(게임 기획자)가 레벨에 배치할 Enemy클래스와 개수를 정할 수 있도록 TSubclassOf<AEnemyCharacter>와 int32를 Key와 Value로 선언했고, EnemyPool은 EditEnemyPoolList와 같은 타입의 Key와 실제 Spawn될 EnemyCharcter의 인스턴스들을 담을 배열을 구조체로 만들어 Value에 넣어 선언했습니다.
