@@ -44,4 +44,4 @@ https://github.com/user-attachments/assets/237acf4e-ccd1-401b-80d9-e2615921135b
 
 ### [2. EnemyCharacter](https://github.com/tbvjchvkfl/UE5_TimeTravleHunter/blob/master/Source/UE5_TimeTravleHunter/Private/Character/Enemy/ReadMe.md)
 
-### [3. UI](https://github.com/tbvjchvkfl/UE5_TimeTravleHunter/blob/master/Source/UE5_TimeTravleHunter/Private/UI/ReadMe.md)
+### [3. UI & Item](https://github.com/tbvjchvkfl/UE5_TimeTravleHunter/blob/master/Source/UE5_TimeTravleHunter/Private/UI/ReadMe.md)
