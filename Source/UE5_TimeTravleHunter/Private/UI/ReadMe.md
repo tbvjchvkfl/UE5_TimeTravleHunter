@@ -294,7 +294,7 @@ https://github.com/user-attachments/assets/43cdbc05-c1af-4fad-b369-e822d5ce609b
 
 클래스 구조도
 -
-![Inventory_System drawio](https://github.com/user-attachments/assets/5bf79fca-0350-4ad1-8149-55530f5d8961)
+![Image](https://github.com/user-attachments/assets/96db9cd1-e2cc-408b-b5c2-e5695f1042a6)
 
 핵심 기능
 -
