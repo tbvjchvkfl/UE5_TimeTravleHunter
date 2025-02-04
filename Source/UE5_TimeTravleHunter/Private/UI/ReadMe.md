@@ -6,8 +6,6 @@ Contents
 ### [3. Item Pool](#item-pool)
 
 </br>
-</br>
-</br>
 
 Inventory System
 -
