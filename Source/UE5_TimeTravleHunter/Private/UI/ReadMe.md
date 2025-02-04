@@ -11,7 +11,7 @@ Contents
 
 Inventory System
 -
-Unreal Engine 자료구조 TMap을 활용한 레지던트 이블 스타일의 공간 인벤토리입니다.
+Unreal Engine 자료구조 TMap을 활용한 레지던트 이블 스타일의 공간 인벤토리와 WrapBox를 활용한 슬롯 인벤토리입니다.
 Mouse Hover, Click에 의한 상호작용 기능을 구현했습니다.
 
 
