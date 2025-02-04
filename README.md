@@ -11,7 +11,7 @@
 
 영상 예시
 -
-
+https://github.com/user-attachments/assets/237acf4e-ccd1-401b-80d9-e2615921135b
 
 구현 기능 링크
 -
