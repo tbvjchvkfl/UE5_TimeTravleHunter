@@ -3,11 +3,35 @@
 개요
 -
 3인칭 액션 게임들을 참고하여 제작한 게임 프로토 타입입니다.</br>
-상세 코드는 아래 구현 내용에 대한 링크를 통해 확인 부탁드립니다.
+캐릭터의 이동, 전투, 아이템획득과 UI, NPC&Item의 메모리 최적화를 구현했습니다.</br>
+상세 코드와 설명은 아래 구현 내용에 대한 링크를 통해 확인 부탁드립니다.
 
-전체 개발 기간
+개발 내역
 -
-3개월(2024.11 ~ 2025.01)
+### - 총 개발 기간 : 3개월 ( 2024.11 ~ 2025.01 )
+
+
+> #### PlayerCharacter ( 2024.11.04 ~ 2024.12.04 )
+> - Advanced Locomotion
+> - Traversal System
+> - Foot IK
+> - Combo Action & Combine Action
+
+
+> #### UI & Item ( 2024.12.05 ~` 2025.01.06 )
+> - Item & DataTable
+> - Grid Inventory
+> - Weapon Inventory
+> - Equipment UI
+> - 3D UI ( SceneCapture Component & RenderTarget )
+> - Item Pool ( Item Pool Component )
+
+
+> #### EnemyCharacter ( 2025.01.07 ~ 2025.02.01 )
+> - Behavior Tree
+> - AI Controller
+> - Enemy Pool
+> - Hit Reaction & Parry System With Notify State
 
 영상 예시
 -
