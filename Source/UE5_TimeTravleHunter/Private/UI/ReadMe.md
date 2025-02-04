@@ -524,6 +524,7 @@ https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
 
 Item Pool
 -
+![Image](https://github.com/user-attachments/assets/77f2f276-c5e1-4c6d-be38-1d8229c3a76f)
 - ### Item Pool Component
   > - TMap을 활용해서 EditList와 ItemPool을 만들어 주었습니다.
   > - EditList는 게임 디자이너(게임 기획자)가 레벨에 배치할 Item의 데이터와 개수를 정할 수 있도록 FName과 int32를 Key와 Value로 선언했고, 같은 타입의 Key와 실제 Spawn될 Item의 인스턴스들을 담을 배열 정보를 구조체로 만들어 Value로 가지고 있는 ItemPool을 선언해주었습니다.
