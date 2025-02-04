@@ -6,6 +6,10 @@
 캐릭터의 이동, 전투, 아이템획득과 UI, NPC&Item의 메모리 최적화를 구현했습니다.</br>
 상세 코드와 설명은 아래 구현 내용에 대한 링크를 통해 확인 부탁드립니다.
 
+영상 예시
+-
+https://github.com/user-attachments/assets/237acf4e-ccd1-401b-80d9-e2615921135b
+
 개발 내역
 -
 ### - 총 개발 기간 : 3개월 ( 2024.11 ~ 2025.01 )
@@ -33,9 +37,6 @@
 > - Enemy Pool
 > - Hit Reaction & Parry System With Notify State
 
-영상 예시
--
-https://github.com/user-attachments/assets/237acf4e-ccd1-401b-80d9-e2615921135b
 
 구현 기능 링크
 -
