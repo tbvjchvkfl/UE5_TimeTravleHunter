@@ -17,7 +17,7 @@ Mouse Hover, Click에 의한 상호작용 기능을 구현했습니다.
 
 예시 영상
 -
-https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
+https://github.com/user-attachments/assets/ad5c97a2-220e-4e43-8d67-c58303ac12f3
 
 클래스 구조도
 -
@@ -292,7 +292,7 @@ Unreal Engine 자료구조 TArray를 활용한 창작 장비창 UI 입니다.
 
 예시 영상
 -
-https://github.com/user-attachments/assets/8a375730-31f5-479b-ac80-7c0da8ed6a13
+https://github.com/user-attachments/assets/43cdbc05-c1af-4fad-b369-e822d5ce609b
 
 클래스 구조도
 -
