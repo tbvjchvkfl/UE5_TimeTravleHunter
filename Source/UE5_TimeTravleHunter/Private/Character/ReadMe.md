@@ -13,6 +13,7 @@ Contents
 
 예시 영상
 -
+https://github.com/user-attachments/assets/cff08643-065f-4378-9a17-caf0186b512d
 
 핵심 코드
 -
